@@ -1,0 +1,3439 @@
+swagger: '2.0'
+info:
+  title: Clac3Service
+  description: ''
+  x-ibm-name: clac3service
+  version: 1.0.0
+schemes:
+  - https
+basePath: /Clac3Service
+produces:
+  - application/xml
+consumes:
+  - text/xml
+securityDefinitions:
+  clientID:
+    type: apiKey
+    name: X-IBM-Client-Id
+    in: header
+    description: ''
+security:
+  - clientID: []
+x-ibm-configuration:
+  type: wsdl
+  phase: realized
+  enforced: true
+  testable: true
+  gateway: datapower-gateway
+  cors:
+    enabled: true
+  wsdl-definition:
+    wsdl: Clac3.xml
+    service: Clac3Service
+    port: Clac3Soap11
+    soap-version: '1.1'
+  assembly:
+    execute:
+      - proxy:
+          title: proxy
+          target-url: http://chalmerslosers.com:9000/jsb-ws/Clac3/
+  x-ibm-apiconnect-wsdl:
+    package-version: 1.8.31
+    options: {}
+    messages:
+      info: []
+      warning: []
+      error: []
+paths:
+  /GetEntries:
+    post:
+      summary: Operation GetEntries
+      description: ''
+      operationId: GetEntries
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}GetEntriesRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetEntriesInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetEntriesFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/GetEntriesOutput'
+  /GetKumpaner:
+    post:
+      summary: Operation GetKumpaner
+      description: ''
+      operationId: GetKumpaner
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}GetKumpanerRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetKumpanerInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetKumpanerFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/GetKumpanerOutput'
+  /CreateEntry:
+    post:
+      summary: Operation CreateEntry
+      description: ''
+      operationId: CreateEntry
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateEntryRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateEntryInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateEntryFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateEntryOutput'
+  /CreateLike:
+    post:
+      summary: Operation CreateLike
+      description: ''
+      operationId: CreateLike
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateLikeRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateLikeInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateLikeFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateLikeOutput'
+  /TestSendFCM:
+    post:
+      summary: Operation TestSendFCM
+      description: ''
+      operationId: TestSendFCM
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}TestSendFCMRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/TestSendFCMInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/TestSendFCMFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/TestSendFCMOutput'
+  /CreateOrUpdateArr:
+    post:
+      summary: Operation CreateOrUpdateArr
+      description: ''
+      operationId: CreateOrUpdateArr
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateOrUpdateArrRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrUpdateArrInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateArrFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateArrOutput'
+  /GetSnP:
+    post:
+      summary: Operation GetSnP
+      description: ''
+      operationId: GetSnP
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}GetSnPRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetSnPInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetSnPFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/GetSnPOutput'
+  /CreateOrUpdateSuspect:
+    post:
+      summary: Operation CreateOrUpdateSuspect
+      description: ''
+      operationId: CreateOrUpdateSuspect
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateOrUpdateSuspectRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrUpdateSuspectInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateSuspectFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateSuspectOutput'
+  /CreateOrUpdateProspect:
+    post:
+      summary: Operation CreateOrUpdateProspect
+      description: ''
+      operationId: CreateOrUpdateProspect
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateOrUpdateProspectRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrUpdateProspectInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateProspectFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateProspectOutput'
+  /CreateOrUpdateMember:
+    post:
+      summary: Operation CreateOrUpdateMember
+      description: ''
+      operationId: CreateOrUpdateMember
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateOrUpdateMemberRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrUpdateMemberInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateMemberFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateMemberOutput'
+  /GetArr:
+    post:
+      summary: Operation GetArr
+      description: ''
+      operationId: GetArr
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}GetArrRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetArrInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetArrFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/GetArrOutput'
+  /RegisterUnregisterArr:
+    post:
+      summary: Operation RegisterUnregisterArr
+      description: ''
+      operationId: RegisterUnregisterArr
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}RegisterUnregisterArrRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/RegisterUnregisterArrInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/RegisterUnregisterArrFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/RegisterUnregisterArrOutput'
+  /GetArticles:
+    post:
+      summary: Operation GetArticles
+      description: ''
+      operationId: GetArticles
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}GetArticlesRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetArticlesInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetArticlesFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/GetArticlesOutput'
+  /CreateOrUpdateArticle:
+    post:
+      summary: Operation CreateOrUpdateArticle
+      description: ''
+      operationId: CreateOrUpdateArticle
+      x-ibm-soap:
+        soap-action: ''
+        soap-operation: '{http://chalmerslosers.com/clac3}CreateOrUpdateArticleRequest'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrUpdateArticleInput'
+      responses:
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateArticleFault'
+        default:
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateOrUpdateArticleOutput'
+definitions:
+  Security:
+    xml:
+      namespace: >-
+        http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+      prefix: wsse
+    description: Header for WS-Security
+    type: object
+    properties:
+      UsernameToken:
+        xml:
+          namespace: >-
+            http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+          prefix: wsse
+        type: object
+        properties:
+          Username:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+              prefix: wsse
+            type: string
+          Password:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+              prefix: wsse
+            type: string
+          Nonce:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+              prefix: wsse
+            type: string
+            properties:
+              EncodingType:
+                xml:
+                  namespace: ''
+                  attribute: true
+                type: string
+          Created:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+              prefix: wsu
+            type: string
+      Timestamp:
+        xml:
+          namespace: >-
+            http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+          prefix: wsu
+        type: object
+        properties:
+          Created:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+              prefix: wsu
+            type: string
+          Expires:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+              prefix: wsu
+            type: string
+          Id:
+            xml:
+              namespace: >-
+                http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+              prefix: wsu
+              attribute: true
+            type: string
+  GetEntriesInput:
+    description: Input message for wsdl operation GetEntriesRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/GetEntriesHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetEntriesRequest:
+                $ref: '#/definitions/GetEntriesRequest_element_sch0'
+            required:
+              - GetEntriesRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetEntriesRequest
+      wsdl-message-direction-or-name: GetEntriesRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:GetEntriesRequest xmlns:sch0="http://chalmerslosers.com/clac3" Skip="3" Take="3"><!-- mandatory --></sch0:GetEntriesRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetEntriesHeader:
+    description: Input headers for wsdl operation GetEntriesRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  GetEntriesOutput:
+    description: Output message for wsdl operation GetEntriesRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetEntriesResponse:
+                $ref: '#/definitions/GetEntriesResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetEntriesRequest
+      wsdl-message-direction-or-name: GetEntriesRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:GetEntriesResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+         <sch0:Entries Id="3" Signature="string" Latitude="3" Longitude="3" Message="string" Time="string" Date="2016-04-18T14:07:37" Secret="true" PersonalSecret="true" Status="3" Enheter="3" Likes="3"><!-- between zero and unlimited repetitions of this element -->
+          <sch0:SideKicks Number="string" Signature="3"><!-- between zero and unlimited repetitions of this element --></sch0:SideKicks>
+         </sch0:Entries>
+        </sch0:GetEntriesResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetEntriesFault:
+    description: Fault message for wsdl operation GetEntriesRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetEntriesRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  GetKumpanerInput:
+    description: Input message for wsdl operation GetKumpanerRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/GetKumpanerHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetKumpanerRequest:
+                $ref: '#/definitions/GetKumpanerRequest_element_sch0'
+            required:
+              - GetKumpanerRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetKumpanerRequest
+      wsdl-message-direction-or-name: GetKumpanerRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:GetKumpanerRequest xmlns:sch0="http://chalmerslosers.com/clac3" OnlyValidUsers="true"><!-- mandatory --></sch0:GetKumpanerRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetKumpanerHeader:
+    description: Input headers for wsdl operation GetKumpanerRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  GetKumpanerOutput:
+    description: Output message for wsdl operation GetKumpanerRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetKumpanerResponse:
+                $ref: '#/definitions/GetKumpanerResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetKumpanerRequest
+      wsdl-message-direction-or-name: GetKumpanerRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:GetKumpanerResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+         <sch0:Kumpaner Number="3" Name="string" Winner="true" Title="string" Im="string" Phone="string" Address="string" Email="string"><!-- between zero and unlimited repetitions of this element --></sch0:Kumpaner>
+        </sch0:GetKumpanerResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetKumpanerFault:
+    description: Fault message for wsdl operation GetKumpanerRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetKumpanerRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateEntryInput:
+    description: Input message for wsdl operation CreateEntryRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateEntryHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateEntryRequest:
+                $ref: '#/definitions/CreateEntryRequest_element_sch0'
+            required:
+              - CreateEntryRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateEntryRequest
+      wsdl-message-direction-or-name: CreateEntryRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateEntryRequest xmlns:sch0="http://chalmerslosers.com/clac3" Message="string" Latitude="3" Longitude="3" Enheter="3" Status="3" Secret="true"><!-- mandatory -->
+         <sch0:SideKicks Number="string" Signature="3"><!-- between zero and unlimited repetitions of this element --></sch0:SideKicks>
+        </sch0:CreateEntryRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateEntryHeader:
+    description: Input headers for wsdl operation CreateEntryRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateEntryOutput:
+    description: Output message for wsdl operation CreateEntryRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateEntryResponse:
+                $ref: '#/definitions/CreateEntryResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateEntryRequest
+      wsdl-message-direction-or-name: CreateEntryRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateEntryResponse xmlns:sch0="http://chalmerslosers.com/clac3" Id="string"></sch0:CreateEntryResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateEntryFault:
+    description: Fault message for wsdl operation CreateEntryRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateEntryRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateLikeInput:
+    description: Input message for wsdl operation CreateLikeRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateLikeHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateLikeRequest:
+                $ref: '#/definitions/CreateLikeRequest_element_sch0'
+            required:
+              - CreateLikeRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateLikeRequest
+      wsdl-message-direction-or-name: CreateLikeRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateLikeRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="string"><!-- mandatory --></sch0:CreateLikeRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateLikeHeader:
+    description: Input headers for wsdl operation CreateLikeRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateLikeOutput:
+    description: Output message for wsdl operation CreateLikeRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateLikeResponse:
+                $ref: '#/definitions/CreateLikeResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateLikeRequest
+      wsdl-message-direction-or-name: CreateLikeRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateLikeResponse xmlns:sch0="http://chalmerslosers.com/clac3"></sch0:CreateLikeResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateLikeFault:
+    description: Fault message for wsdl operation CreateLikeRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateLikeRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  TestSendFCMInput:
+    description: Input message for wsdl operation TestSendFCMRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/TestSendFCMHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              TestSendFCMRequest:
+                $ref: '#/definitions/TestSendFCMRequest_element_sch0'
+            required:
+              - TestSendFCMRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: TestSendFCMRequest
+      wsdl-message-direction-or-name: TestSendFCMRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:TestSendFCMRequest xmlns:sch0="http://chalmerslosers.com/clac3"><!-- mandatory --></sch0:TestSendFCMRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  TestSendFCMHeader:
+    description: Input headers for wsdl operation TestSendFCMRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  TestSendFCMOutput:
+    description: Output message for wsdl operation TestSendFCMRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              TestSendFCMResponse:
+                $ref: '#/definitions/TestSendFCMResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: TestSendFCMRequest
+      wsdl-message-direction-or-name: TestSendFCMRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:TestSendFCMResponse xmlns:sch0="http://chalmerslosers.com/clac3" Id="string"></sch0:TestSendFCMResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  TestSendFCMFault:
+    description: Fault message for wsdl operation TestSendFCMRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: TestSendFCMRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateOrUpdateArrInput:
+    description: Input message for wsdl operation CreateOrUpdateArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateOrUpdateArrHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateArrRequest:
+                $ref: '#/definitions/CreateOrUpdateArrRequest_element_sch0'
+            required:
+              - CreateOrUpdateArrRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateArrRequest
+      wsdl-message-direction-or-name: CreateOrUpdateArrRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateOrUpdateArrRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="string" Namn="string" Plats="string" Datum="string"><!-- mandatory --></sch0:CreateOrUpdateArrRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateArrHeader:
+    description: Input headers for wsdl operation CreateOrUpdateArrRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateOrUpdateArrOutput:
+    description: Output message for wsdl operation CreateOrUpdateArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateArrResponse:
+                $ref: '#/definitions/CreateOrUpdateArrResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateArrRequest
+      wsdl-message-direction-or-name: CreateOrUpdateArrRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateOrUpdateArrResponse xmlns:sch0="http://chalmerslosers.com/clac3"></sch0:CreateOrUpdateArrResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateArrFault:
+    description: Fault message for wsdl operation CreateOrUpdateArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateArrRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  GetSnPInput:
+    description: Input message for wsdl operation GetSnPRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/GetSnPHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetSnPRequest:
+                $ref: '#/definitions/GetSnPRequest_element_sch0'
+            required:
+              - GetSnPRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetSnPRequest
+      wsdl-message-direction-or-name: GetSnPRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:GetSnPRequest xmlns:sch0="http://chalmerslosers.com/clac3"><!-- mandatory --></sch0:GetSnPRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetSnPHeader:
+    description: Input headers for wsdl operation GetSnPRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  GetSnPOutput:
+    description: Output message for wsdl operation GetSnPRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetSnPResponse:
+                $ref: '#/definitions/GetSnPResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetSnPRequest
+      wsdl-message-direction-or-name: GetSnPRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:GetSnPResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+         <sch0:SnP Id="3" Status="string" Number="3" Name="string" Email="string" Phone="string" History="string"><!-- between zero and unlimited repetitions of this element --></sch0:SnP>
+        </sch0:GetSnPResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetSnPFault:
+    description: Fault message for wsdl operation GetSnPRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetSnPRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateOrUpdateSuspectInput:
+    description: Input message for wsdl operation CreateOrUpdateSuspectRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateOrUpdateSuspectHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateSuspectRequest:
+                $ref: '#/definitions/CreateOrUpdateSuspectRequest_element_sch0'
+            required:
+              - CreateOrUpdateSuspectRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateSuspectRequest
+      wsdl-message-direction-or-name: CreateOrUpdateSuspectRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateOrUpdateSuspectRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" Name="string" Email="string" Phone="string" History="string"><!-- mandatory --></sch0:CreateOrUpdateSuspectRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateSuspectHeader:
+    description: Input headers for wsdl operation CreateOrUpdateSuspectRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateOrUpdateSuspectOutput:
+    description: Output message for wsdl operation CreateOrUpdateSuspectRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateSuspectResponse:
+                $ref: '#/definitions/CreateOrUpdateSuspectResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateSuspectRequest
+      wsdl-message-direction-or-name: CreateOrUpdateSuspectRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateOrUpdateSuspectResponse xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" Number="3"></sch0:CreateOrUpdateSuspectResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateSuspectFault:
+    description: Fault message for wsdl operation CreateOrUpdateSuspectRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateSuspectRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateOrUpdateProspectInput:
+    description: Input message for wsdl operation CreateOrUpdateProspectRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateOrUpdateProspectHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateProspectRequest:
+                $ref: '#/definitions/CreateOrUpdateProspectRequest_element_sch0'
+            required:
+              - CreateOrUpdateProspectRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateProspectRequest
+      wsdl-message-direction-or-name: CreateOrUpdateProspectRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateOrUpdateProspectRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" Name="string" Email="string" Phone="string" History="string"><!-- mandatory --></sch0:CreateOrUpdateProspectRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateProspectHeader:
+    description: Input headers for wsdl operation CreateOrUpdateProspectRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateOrUpdateProspectOutput:
+    description: Output message for wsdl operation CreateOrUpdateProspectRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateProspectResponse:
+                $ref: '#/definitions/CreateOrUpdateProspectResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateProspectRequest
+      wsdl-message-direction-or-name: CreateOrUpdateProspectRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateOrUpdateProspectResponse xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" Number="3"></sch0:CreateOrUpdateProspectResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateProspectFault:
+    description: Fault message for wsdl operation CreateOrUpdateProspectRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateProspectRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateOrUpdateMemberInput:
+    description: Input message for wsdl operation CreateOrUpdateMemberRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateOrUpdateMemberHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateMemberRequest:
+                $ref: '#/definitions/CreateOrUpdateMemberRequest_element_sch0'
+            required:
+              - CreateOrUpdateMemberRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateMemberRequest
+      wsdl-message-direction-or-name: CreateOrUpdateMemberRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateOrUpdateMemberRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" SuspectId="string" Name="string" Email="string" Phone="string" History="string"><!-- mandatory --></sch0:CreateOrUpdateMemberRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateMemberHeader:
+    description: Input headers for wsdl operation CreateOrUpdateMemberRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateOrUpdateMemberOutput:
+    description: Output message for wsdl operation CreateOrUpdateMemberRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateMemberResponse:
+                $ref: '#/definitions/CreateOrUpdateMemberResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateMemberRequest
+      wsdl-message-direction-or-name: CreateOrUpdateMemberRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateOrUpdateMemberResponse xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" Number="3"></sch0:CreateOrUpdateMemberResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateMemberFault:
+    description: Fault message for wsdl operation CreateOrUpdateMemberRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateMemberRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  GetArrInput:
+    description: Input message for wsdl operation GetArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/GetArrHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetArrRequest:
+                $ref: '#/definitions/GetArrRequest_element_sch0'
+            required:
+              - GetArrRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetArrRequest
+      wsdl-message-direction-or-name: GetArrRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:GetArrRequest xmlns:sch0="http://chalmerslosers.com/clac3" fromDate="string"><!-- mandatory --></sch0:GetArrRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetArrHeader:
+    description: Input headers for wsdl operation GetArrRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  GetArrOutput:
+    description: Output message for wsdl operation GetArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetArrResponse:
+                $ref: '#/definitions/GetArrResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetArrRequest
+      wsdl-message-direction-or-name: GetArrRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:GetArrResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+         <sch0:Arr Id="3" Namn="string" Datum="string" Plats="string" Deltagare="string" Hetsade="string" Kanske="string"><!-- between zero and unlimited repetitions of this element --></sch0:Arr>
+        </sch0:GetArrResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetArrFault:
+    description: Fault message for wsdl operation GetArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetArrRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  RegisterUnregisterArrInput:
+    description: Input message for wsdl operation RegisterUnregisterArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/RegisterUnregisterArrHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              RegisterUnregisterArrRequest:
+                $ref: '#/definitions/RegisterUnregisterArrRequest_element_sch0'
+            required:
+              - RegisterUnregisterArrRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: RegisterUnregisterArrRequest
+      wsdl-message-direction-or-name: RegisterUnregisterArrRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:RegisterUnregisterArrRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="string"><!-- mandatory --></sch0:RegisterUnregisterArrRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  RegisterUnregisterArrHeader:
+    description: Input headers for wsdl operation RegisterUnregisterArrRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  RegisterUnregisterArrOutput:
+    description: Output message for wsdl operation RegisterUnregisterArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              RegisterUnregisterArrResponse:
+                $ref: '#/definitions/RegisterUnregisterArrResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: RegisterUnregisterArrRequest
+      wsdl-message-direction-or-name: RegisterUnregisterArrRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:RegisterUnregisterArrResponse xmlns:sch0="http://chalmerslosers.com/clac3" Deltagare="string"></sch0:RegisterUnregisterArrResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  RegisterUnregisterArrFault:
+    description: Fault message for wsdl operation RegisterUnregisterArrRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: RegisterUnregisterArrRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  GetArticlesInput:
+    description: Input message for wsdl operation GetArticlesRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/GetArticlesHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetArticlesRequest:
+                $ref: '#/definitions/GetArticlesRequest_element_sch0'
+            required:
+              - GetArticlesRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetArticlesRequest
+      wsdl-message-direction-or-name: GetArticlesRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:GetArticlesRequest xmlns:sch0="http://chalmerslosers.com/clac3" Skip="3" Take="3"><!-- mandatory --></sch0:GetArticlesRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetArticlesHeader:
+    description: Input headers for wsdl operation GetArticlesRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  GetArticlesOutput:
+    description: Output message for wsdl operation GetArticlesRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              GetArticlesResponse:
+                $ref: '#/definitions/GetArticlesResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetArticlesRequest
+      wsdl-message-direction-or-name: GetArticlesRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:GetArticlesResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+         <sch0:Articles Id="3" Header="string" Body="string" Date="2016-04-18T14:07:37" Time="string"><!-- between zero and unlimited repetitions of this element --></sch0:Articles>
+        </sch0:GetArticlesResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  GetArticlesFault:
+    description: Fault message for wsdl operation GetArticlesRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: GetArticlesRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  CreateOrUpdateArticleInput:
+    description: Input message for wsdl operation CreateOrUpdateArticleRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Header:
+            $ref: '#/definitions/CreateOrUpdateArticleHeader'
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateArticleRequest:
+                $ref: '#/definitions/CreateOrUpdateArticleRequest_element_sch0'
+            required:
+              - CreateOrUpdateArticleRequest
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateArticleRequest
+      wsdl-message-direction-or-name: CreateOrUpdateArticleRequestRequest
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header>
+        <!-- The Security element should be removed if WS-Security is not enabled on the SOAP target-url -->
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+         <wsse:UsernameToken>
+          <wsse:Username>string</wsse:Username>
+          <wsse:Password>string</wsse:Password>
+          <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+          <wsu:Created>string</wsu:Created>
+         </wsse:UsernameToken>
+         <wsu:Timestamp wsu:Id="string">
+          <wsu:Created>string</wsu:Created>
+          <wsu:Expires>string</wsu:Expires>
+         </wsu:Timestamp>
+        </wsse:Security>
+       </soapenv:Header>
+       <soapenv:Body>
+        <sch0:CreateOrUpdateArticleRequest xmlns:sch0="http://chalmerslosers.com/clac3" Id="3" Header="string" Body="string"><!-- mandatory --></sch0:CreateOrUpdateArticleRequest>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateArticleHeader:
+    description: Input headers for wsdl operation CreateOrUpdateArticleRequest
+    type: object
+    properties:
+      Security:
+        $ref: '#/definitions/Security'
+  CreateOrUpdateArticleOutput:
+    description: Output message for wsdl operation CreateOrUpdateArticleRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              CreateOrUpdateArticleResponse:
+                $ref: '#/definitions/CreateOrUpdateArticleResponse_element_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateArticleRequest
+      wsdl-message-direction-or-name: CreateOrUpdateArticleRequestResponse
+    example: >-
+
+      <soapenv:Envelope
+      xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Body>
+        <sch0:CreateOrUpdateArticleResponse xmlns:sch0="http://chalmerslosers.com/clac3" Id="3"></sch0:CreateOrUpdateArticleResponse>
+       </soapenv:Body>
+      </soapenv:Envelope>
+  CreateOrUpdateArticleFault:
+    description: Fault message for wsdl operation CreateOrUpdateArticleRequest
+    type: object
+    properties:
+      Envelope:
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+        type: object
+        properties:
+          Body:
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: soapenv
+            type: object
+            properties:
+              Fault:
+                xml:
+                  namespace: http://schemas.xmlsoap.org/soap/envelope/
+                  prefix: soapenv
+                type: object
+                properties:
+                  faultcode:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultstring:
+                    xml:
+                      namespace: ''
+                    type: string
+                  faultactor:
+                    xml:
+                      namespace: ''
+                    type: string
+                  detail:
+                    xml:
+                      namespace: ''
+                      prefix: ''
+                    type: object
+                    properties:
+                      ServiceFailureException:
+                        $ref: '#/definitions/ServiceFailureException_sch0'
+        required:
+          - Body
+    required:
+      - Envelope
+    x-ibm-schema:
+      wsdl-port: '{http://chalmerslosers.com/clac3}Clac3Soap11'
+      wsdl-operation: CreateOrUpdateArticleRequest
+      wsdl-message-direction-or-name: ServiceFailureException
+  GetEntriesRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetEntriesRequest
+    type: object
+    properties:
+      Skip:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Take:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    example: >-
+
+      <sch0:GetEntriesRequest Skip="3" Take="3"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:GetEntriesRequest>
+  GetEntriesResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetEntriesResponse
+    type: object
+    properties:
+      Entries:
+        type: array
+        items:
+          $ref: '#/definitions/Entry_type_sch0'
+    example: |-
+
+      <sch0:GetEntriesResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+       <sch0:Entries Id="3" Signature="string" Latitude="3" Longitude="3" Message="string" Time="string" Date="2016-04-18T14:07:37" Secret="true" PersonalSecret="true" Status="3" Enheter="3" Likes="3"><!-- between zero and unlimited repetitions of this element -->
+        <sch0:SideKicks Number="string" Signature="3"><!-- between zero and unlimited repetitions of this element --></sch0:SideKicks>
+       </sch0:Entries>
+      </sch0:GetEntriesResponse>
+  ServiceFailureException_sch0:
+    xml:
+      namespace: http://www.jeeves.se/schema/failure
+      prefix: sch1
+      name: ServiceFailure
+    type: object
+    properties:
+      message:
+        xml:
+          namespace: http://www.jeeves.se/schema/failure
+          prefix: sch1
+        type: string
+      properties:
+        type: array
+        items:
+          $ref: '#/definitions/Property_type_sch1'
+      errorCode:
+        xml:
+          namespace: ''
+          attribute: true
+        description: Service invocation error classifier.
+        type: integer
+        format: int32
+      sourceErrorCode:
+        xml:
+          namespace: ''
+          attribute: true
+        description: Source specific error classifier.
+        type: integer
+        format: int32
+      source:
+        xml:
+          namespace: ''
+          attribute: true
+        description: "The point in the invocation process where the error\n\t\t\t\t\t\toccurred."
+        type: string
+      timestamp:
+        xml:
+          namespace: ''
+          attribute: true
+        description: The point in time when the failure occurred.
+        type: string
+        format: date-time
+      failureId:
+        xml:
+          namespace: ''
+          attribute: true
+        description: "Identifier of the failure. If this id is provided\n\t\t\t\t\t\tit can be used to trace the error."
+        type: string
+    required:
+      - errorCode
+      - timestamp
+    example: >-
+
+      <sch1:ServiceFailure errorCode="3" sourceErrorCode="3" source="string"
+      timestamp="2016-04-18T14:07:37" failureId="string"
+      xmlns:sch1="http://www.jeeves.se/schema/failure">
+       <sch1:message>string</sch1:message>
+       <sch1:properties name="string"><!-- between zero and unlimited repetitions of this element -->
+        <sch1:value>string</sch1:value>
+       </sch1:properties>
+      </sch1:ServiceFailure>
+  GetKumpanerRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetKumpanerRequest
+    type: object
+    properties:
+      OnlyValidUsers:
+        xml:
+          namespace: ''
+          attribute: true
+        type: boolean
+    example: >-
+
+      <sch0:GetKumpanerRequest OnlyValidUsers="true"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:GetKumpanerRequest>
+  GetKumpanerResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetKumpanerResponse
+    type: object
+    properties:
+      Kumpaner:
+        type: array
+        items:
+          $ref: '#/definitions/Kumpaner_type_sch0'
+    example: |-
+
+      <sch0:GetKumpanerResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+       <sch0:Kumpaner Number="3" Name="string" Winner="true" Title="string" Im="string" Phone="string" Address="string" Email="string"><!-- between zero and unlimited repetitions of this element --></sch0:Kumpaner>
+      </sch0:GetKumpanerResponse>
+  CreateEntryRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateEntryRequest
+    type: object
+    properties:
+      SideKicks:
+        type: array
+        items:
+          $ref: '#/definitions/SideKick_type_sch0'
+      Message:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Latitude:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Longitude:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Enheter:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Status:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Secret:
+        xml:
+          namespace: ''
+          attribute: true
+        type: boolean
+    example: >-
+
+      <sch0:CreateEntryRequest Message="string" Latitude="3" Longitude="3"
+      Enheter="3" Status="3" Secret="true"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+       <sch0:SideKicks Number="string" Signature="3"><!-- between zero and unlimited repetitions of this element --></sch0:SideKicks>
+      </sch0:CreateEntryRequest>
+  CreateEntryResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateEntryResponse
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:CreateEntryResponse Id="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateEntryResponse>
+  CreateLikeRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateLikeRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:CreateLikeRequest Id="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateLikeRequest>
+  CreateLikeResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateLikeResponse
+    type: object
+    properties: {}
+    example: |-
+
+      <sch0:CreateLikeResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+      </sch0:CreateLikeResponse>
+  TestSendFCMRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: TestSendFCMRequest
+    type: object
+    properties: {}
+    example: |-
+
+      <sch0:TestSendFCMRequest xmlns:sch0="http://chalmerslosers.com/clac3">
+      </sch0:TestSendFCMRequest>
+  TestSendFCMResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: TestSendFCMResponse
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:TestSendFCMResponse Id="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:TestSendFCMResponse>
+  CreateOrUpdateArrRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateArrRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Namn:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Plats:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Datum:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:CreateOrUpdateArrRequest Id="string" Namn="string" Plats="string"
+      Datum="string" xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateArrRequest>
+  CreateOrUpdateArrResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateArrResponse
+    type: object
+    properties: {}
+    example: >-
+
+      <sch0:CreateOrUpdateArrResponse
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateArrResponse>
+  GetSnPRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetSnPRequest
+    type: object
+    properties: {}
+    example: |-
+
+      <sch0:GetSnPRequest xmlns:sch0="http://chalmerslosers.com/clac3">
+      </sch0:GetSnPRequest>
+  GetSnPResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetSnPResponse
+    type: object
+    properties:
+      SnP:
+        type: array
+        items:
+          $ref: '#/definitions/SnP_type_sch0'
+    example: |-
+
+      <sch0:GetSnPResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+       <sch0:SnP Id="3" Status="string" Number="3" Name="string" Email="string" Phone="string" History="string"><!-- between zero and unlimited repetitions of this element --></sch0:SnP>
+      </sch0:GetSnPResponse>
+  CreateOrUpdateSuspectRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateSuspectRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Name:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Email:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Phone:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      History:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:CreateOrUpdateSuspectRequest Id="3" Name="string" Email="string"
+      Phone="string" History="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateSuspectRequest>
+  CreateOrUpdateSuspectResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateSuspectResponse
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Number:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    example: >-
+
+      <sch0:CreateOrUpdateSuspectResponse Id="3" Number="3"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateSuspectResponse>
+  CreateOrUpdateProspectRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateProspectRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Name:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Email:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Phone:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      History:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    required:
+      - Id
+    example: >-
+
+      <sch0:CreateOrUpdateProspectRequest Id="3" Name="string" Email="string"
+      Phone="string" History="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateProspectRequest>
+  CreateOrUpdateProspectResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateProspectResponse
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Number:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    example: >-
+
+      <sch0:CreateOrUpdateProspectResponse Id="3" Number="3"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateProspectResponse>
+  CreateOrUpdateMemberRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateMemberRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      SuspectId:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Name:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Email:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Phone:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      History:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:CreateOrUpdateMemberRequest Id="3" SuspectId="string" Name="string"
+      Email="string" Phone="string" History="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateMemberRequest>
+  CreateOrUpdateMemberResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateMemberResponse
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Number:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    example: >-
+
+      <sch0:CreateOrUpdateMemberResponse Id="3" Number="3"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateMemberResponse>
+  GetArrRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetArrRequest
+    type: object
+    properties:
+      fromDate:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:GetArrRequest fromDate="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:GetArrRequest>
+  GetArrResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetArrResponse
+    type: object
+    properties:
+      Arr:
+        type: array
+        items:
+          $ref: '#/definitions/Arr_type_sch0'
+    example: |-
+
+      <sch0:GetArrResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+       <sch0:Arr Id="3" Namn="string" Datum="string" Plats="string" Deltagare="string" Hetsade="string" Kanske="string"><!-- between zero and unlimited repetitions of this element --></sch0:Arr>
+      </sch0:GetArrResponse>
+  RegisterUnregisterArrRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: RegisterUnregisterArrRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    required:
+      - Id
+    example: >-
+
+      <sch0:RegisterUnregisterArrRequest Id="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:RegisterUnregisterArrRequest>
+  RegisterUnregisterArrResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: RegisterUnregisterArrResponse
+    type: object
+    properties:
+      Deltagare:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:RegisterUnregisterArrResponse Deltagare="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:RegisterUnregisterArrResponse>
+  GetArticlesRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetArticlesRequest
+    type: object
+    properties:
+      Skip:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Take:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    example: >-
+
+      <sch0:GetArticlesRequest Skip="3" Take="3"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:GetArticlesRequest>
+  GetArticlesResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: GetArticlesResponse
+    type: object
+    properties:
+      Articles:
+        type: array
+        items:
+          $ref: '#/definitions/Article_type_sch0'
+    example: |-
+
+      <sch0:GetArticlesResponse xmlns:sch0="http://chalmerslosers.com/clac3">
+       <sch0:Articles Id="3" Header="string" Body="string" Date="2016-04-18T14:07:37" Time="string"><!-- between zero and unlimited repetitions of this element --></sch0:Articles>
+      </sch0:GetArticlesResponse>
+  CreateOrUpdateArticleRequest_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateArticleRequest
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Header:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Body:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    example: >-
+
+      <sch0:CreateOrUpdateArticleRequest Id="3" Header="string" Body="string"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateArticleRequest>
+  CreateOrUpdateArticleResponse_element_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+      name: CreateOrUpdateArticleResponse
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    example: >-
+
+      <sch0:CreateOrUpdateArticleResponse Id="3"
+      xmlns:sch0="http://chalmerslosers.com/clac3">
+
+      </sch0:CreateOrUpdateArticleResponse>
+  Entry_type_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    type: object
+    properties:
+      SideKicks:
+        type: array
+        items:
+          $ref: '#/definitions/SideKick_type_sch0'
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Signature:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Latitude:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Longitude:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Message:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Time:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Date:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+        format: date-time
+      Secret:
+        xml:
+          namespace: ''
+          attribute: true
+        type: boolean
+      PersonalSecret:
+        xml:
+          namespace: ''
+          attribute: true
+        type: boolean
+      Status:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Enheter:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Likes:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    x-xsi-type: Entry
+    x-xsi-type-xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    x-xsi-type-uniquename: Entry_type_sch0
+  Property_type_sch1:
+    xml:
+      namespace: http://www.jeeves.se/schema/failure
+      prefix: sch1
+    type: object
+    properties:
+      value:
+        xml:
+          namespace: http://www.jeeves.se/schema/failure
+          prefix: sch1
+        type: string
+      name:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    x-xsi-type: Property
+    x-xsi-type-xml:
+      namespace: http://www.jeeves.se/schema/failure
+      prefix: sch1
+    x-xsi-type-uniquename: Property_type_sch1
+  Kumpaner_type_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    type: object
+    properties:
+      Number:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Name:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Winner:
+        xml:
+          namespace: ''
+          attribute: true
+        type: boolean
+      Title:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Im:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Phone:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Address:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Email:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    x-xsi-type: Kumpaner
+    x-xsi-type-xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    x-xsi-type-uniquename: Kumpaner_type_sch0
+  SideKick_type_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    type: object
+    properties:
+      Number:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Signature:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+    x-xsi-type: SideKick
+    x-xsi-type-xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    x-xsi-type-uniquename: SideKick_type_sch0
+  SnP_type_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Status:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Number:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Name:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Email:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Phone:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      History:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    x-xsi-type: SnP
+    x-xsi-type-xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    x-xsi-type-uniquename: SnP_type_sch0
+  Arr_type_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Namn:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Datum:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Plats:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Deltagare:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Hetsade:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Kanske:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    x-xsi-type: Arr
+    x-xsi-type-xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    x-xsi-type-uniquename: Arr_type_sch0
+  Article_type_sch0:
+    xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    type: object
+    properties:
+      Id:
+        xml:
+          namespace: ''
+          attribute: true
+        type: number
+      Header:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Body:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+      Date:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+        format: date-time
+      Time:
+        xml:
+          namespace: ''
+          attribute: true
+        type: string
+    x-xsi-type: Article
+    x-xsi-type-xml:
+      namespace: http://chalmerslosers.com/clac3
+      prefix: sch0
+    x-xsi-type-uniquename: Article_type_sch0

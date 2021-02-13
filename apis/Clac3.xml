@@ -1,0 +1,948 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch0="http://chalmerslosers.com/clac3" xmlns:sch1="http://www.jeeves.se/schema/failure" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://chalmerslosers.com/clac3" targetNamespace="http://chalmerslosers.com/clac3">
+  <wsdl:types>
+    <xs:schema xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:q1="http://chalmerslosers.com/clac3" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" jxb:version="1.0" targetNamespace="http://chalmerslosers.com/clac3">
+
+	
+
+	
+	<xs:complexType name="Entry">
+		
+		
+		<xs:sequence>
+			
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="SideKicks" type="q1:SideKick"/>
+			
+		</xs:sequence>
+		
+		<xs:attribute name="Id" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Signature" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Latitude" type="xs:decimal" use="optional"/>
+		
+		<xs:attribute name="Longitude" type="xs:decimal" use="optional"/>
+		
+		<xs:attribute name="Message" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Time" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Date" type="xs:dateTime" use="optional"/>
+		
+		<xs:attribute name="Secret" type="xs:boolean" use="optional"/>
+		
+		<xs:attribute name="PersonalSecret" type="xs:boolean" use="optional"/>
+		
+		<xs:attribute name="Status" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Enheter" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Likes" type="xs:integer" use="optional"/>
+		
+		
+	</xs:complexType>
+	
+	<xs:complexType name="SideKick">
+		
+		
+		<xs:sequence>
+			
+		</xs:sequence>
+		
+		<xs:attribute name="Number" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Signature" type="xs:integer" use="optional"/>
+		
+		
+	</xs:complexType>
+	
+	<xs:complexType name="Kumpaner">
+		
+		
+		<xs:sequence>
+			
+		</xs:sequence>
+		
+		<xs:attribute name="Number" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Name" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Winner" type="xs:boolean" use="optional"/>
+		
+		<xs:attribute name="Title" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Im" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Phone" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Address" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Email" type="xs:string" use="optional"/>
+		
+		
+	</xs:complexType>
+	
+	<xs:complexType name="SnP">
+		
+		
+		<xs:sequence>
+			
+		</xs:sequence>
+		
+		<xs:attribute name="Id" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Status" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Number" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Name" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Email" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Phone" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="History" type="xs:string" use="optional"/>
+		
+		
+	</xs:complexType>
+	
+	<xs:complexType name="Arr">
+		
+		
+		<xs:sequence>
+			
+		</xs:sequence>
+		
+		<xs:attribute name="Id" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Namn" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Datum" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Plats" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Deltagare" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Hetsade" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Kanske" type="xs:string" use="optional"/>
+		
+		
+	</xs:complexType>
+	
+	<xs:complexType name="Article">
+		
+		
+		<xs:sequence>
+			
+		</xs:sequence>
+		
+		<xs:attribute name="Id" type="xs:integer" use="optional"/>
+		
+		<xs:attribute name="Header" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Body" type="xs:string" use="optional"/>
+		
+		<xs:attribute name="Date" type="xs:dateTime" use="optional"/>
+		
+		<xs:attribute name="Time" type="xs:string" use="optional"/>
+		
+		
+	</xs:complexType>
+	
+    <xs:element name="GetEntriesRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Skip" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Take" type="xs:integer" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetEntriesResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="Entries" type="q1:Entry"/>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetKumpanerRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="OnlyValidUsers" type="xs:boolean" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetKumpanerResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="Kumpaner" type="q1:Kumpaner"/>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateEntryRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="SideKicks" type="q1:SideKick"/>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Message" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Latitude" type="xs:decimal" use="optional"/>
+			
+			<xs:attribute name="Longitude" type="xs:decimal" use="optional"/>
+			
+			<xs:attribute name="Enheter" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Status" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Secret" type="xs:boolean" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateEntryResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateLikeRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateLikeResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="TestSendFCMRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="TestSendFCMResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateArrRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Namn" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Plats" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Datum" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateArrResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetSnPRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetSnPResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="SnP" type="q1:SnP"/>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateSuspectRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Name" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Email" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Phone" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="History" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateSuspectResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Number" type="xs:integer" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateProspectRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="required"/>
+			
+			<xs:attribute name="Name" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Email" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Phone" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="History" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateProspectResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Number" type="xs:integer" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateMemberRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="SuspectId" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Name" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Email" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Phone" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="History" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateMemberResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Number" type="xs:integer" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetArrRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="fromDate" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetArrResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="Arr" type="q1:Arr"/>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="RegisterUnregisterArrRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:string" use="required"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="RegisterUnregisterArrResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Deltagare" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetArticlesRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Skip" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Take" type="xs:integer" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="GetArticlesResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="Articles" type="q1:Article"/>
+				
+			</xs:sequence>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateArticleRequest">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+			<xs:attribute name="Header" type="xs:string" use="optional"/>
+			
+			<xs:attribute name="Body" type="xs:string" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="CreateOrUpdateArticleResponse">
+		<xs:complexType>
+			<xs:sequence>
+				
+			</xs:sequence>
+			
+			<xs:attribute name="Id" type="xs:integer" use="optional"/>
+			
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
+    <xs:schema xmlns:fail="http://www.jeeves.se/schema/failure" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.jeeves.se/schema/failure">
+
+	<xs:complexType name="Property">
+		<xs:sequence>
+			<xs:element minOccurs="0" name="value" type="xs:string"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string"/>
+	</xs:complexType>
+	
+
+	<xs:element name="ServiceFailure">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element minOccurs="0" name="message" type="xs:string"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="properties" type="fail:Property"/>
+			</xs:sequence>
+			<xs:attribute name="errorCode" type="xs:int" use="required">
+				<xs:annotation>
+					<xs:documentation>
+						Service invocation error classifier.
+				</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="sourceErrorCode" type="xs:int">
+				<xs:annotation>
+					<xs:documentation>
+						Source specific error classifier.
+				</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="source" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						The point in the invocation process where the error
+						occurred.
+				</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="timestamp" type="xs:dateTime" use="required">
+				<xs:annotation>
+					<xs:documentation>
+						The point in time when the failure occurred.
+				</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="failureId" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Identifier of the failure. If this id is provided
+						it can be used to trace the error.
+				</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>  
+
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="CreateOrUpdateMemberRequest">
+    <wsdl:part element="tns:CreateOrUpdateMemberRequest" name="CreateOrUpdateMemberRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="TestSendFCMResponse">
+    <wsdl:part element="tns:TestSendFCMResponse" name="TestSendFCMResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetArticlesRequest">
+    <wsdl:part element="tns:GetArticlesRequest" name="GetArticlesRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetArticlesResponse">
+    <wsdl:part element="tns:GetArticlesResponse" name="GetArticlesResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetEntriesResponse">
+    <wsdl:part element="tns:GetEntriesResponse" name="GetEntriesResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateMemberResponse">
+    <wsdl:part element="tns:CreateOrUpdateMemberResponse" name="CreateOrUpdateMemberResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateArrResponse">
+    <wsdl:part element="tns:CreateOrUpdateArrResponse" name="CreateOrUpdateArrResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetKumpanerRequest">
+    <wsdl:part element="tns:GetKumpanerRequest" name="GetKumpanerRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateArticleResponse">
+    <wsdl:part element="tns:CreateOrUpdateArticleResponse" name="CreateOrUpdateArticleResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="TestSendFCMRequest">
+    <wsdl:part element="tns:TestSendFCMRequest" name="TestSendFCMRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateEntryRequest">
+    <wsdl:part element="tns:CreateEntryRequest" name="CreateEntryRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetEntriesRequest">
+    <wsdl:part element="tns:GetEntriesRequest" name="GetEntriesRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateEntryResponse">
+    <wsdl:part element="tns:CreateEntryResponse" name="CreateEntryResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetSnPRequest">
+    <wsdl:part element="tns:GetSnPRequest" name="GetSnPRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="ServiceFailureException">
+    <wsdl:part element="sch1:ServiceFailure" name="ServiceFailure">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateSuspectResponse">
+    <wsdl:part element="tns:CreateOrUpdateSuspectResponse" name="CreateOrUpdateSuspectResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateArticleRequest">
+    <wsdl:part element="tns:CreateOrUpdateArticleRequest" name="CreateOrUpdateArticleRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="RegisterUnregisterArrRequest">
+    <wsdl:part element="tns:RegisterUnregisterArrRequest" name="RegisterUnregisterArrRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateProspectResponse">
+    <wsdl:part element="tns:CreateOrUpdateProspectResponse" name="CreateOrUpdateProspectResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateLikeResponse">
+    <wsdl:part element="tns:CreateLikeResponse" name="CreateLikeResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetKumpanerResponse">
+    <wsdl:part element="tns:GetKumpanerResponse" name="GetKumpanerResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateProspectRequest">
+    <wsdl:part element="tns:CreateOrUpdateProspectRequest" name="CreateOrUpdateProspectRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetArrRequest">
+    <wsdl:part element="tns:GetArrRequest" name="GetArrRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetSnPResponse">
+    <wsdl:part element="tns:GetSnPResponse" name="GetSnPResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateLikeRequest">
+    <wsdl:part element="tns:CreateLikeRequest" name="CreateLikeRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="RegisterUnregisterArrResponse">
+    <wsdl:part element="tns:RegisterUnregisterArrResponse" name="RegisterUnregisterArrResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateSuspectRequest">
+    <wsdl:part element="tns:CreateOrUpdateSuspectRequest" name="CreateOrUpdateSuspectRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateOrUpdateArrRequest">
+    <wsdl:part element="tns:CreateOrUpdateArrRequest" name="CreateOrUpdateArrRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="GetArrResponse">
+    <wsdl:part element="tns:GetArrResponse" name="GetArrResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="Clac3">
+    <wsdl:operation name="GetEntries">
+      <wsdl:input message="tns:GetEntriesRequest" name="GetEntriesRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:GetEntriesResponse" name="GetEntriesResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetKumpaner">
+      <wsdl:input message="tns:GetKumpanerRequest" name="GetKumpanerRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:GetKumpanerResponse" name="GetKumpanerResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateEntry">
+      <wsdl:input message="tns:CreateEntryRequest" name="CreateEntryRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateEntryResponse" name="CreateEntryResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateLike">
+      <wsdl:input message="tns:CreateLikeRequest" name="CreateLikeRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateLikeResponse" name="CreateLikeResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="TestSendFCM">
+      <wsdl:input message="tns:TestSendFCMRequest" name="TestSendFCMRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:TestSendFCMResponse" name="TestSendFCMResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateArr">
+      <wsdl:input message="tns:CreateOrUpdateArrRequest" name="CreateOrUpdateArrRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateOrUpdateArrResponse" name="CreateOrUpdateArrResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetSnP">
+      <wsdl:input message="tns:GetSnPRequest" name="GetSnPRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:GetSnPResponse" name="GetSnPResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateSuspect">
+      <wsdl:input message="tns:CreateOrUpdateSuspectRequest" name="CreateOrUpdateSuspectRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateOrUpdateSuspectResponse" name="CreateOrUpdateSuspectResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateProspect">
+      <wsdl:input message="tns:CreateOrUpdateProspectRequest" name="CreateOrUpdateProspectRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateOrUpdateProspectResponse" name="CreateOrUpdateProspectResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateMember">
+      <wsdl:input message="tns:CreateOrUpdateMemberRequest" name="CreateOrUpdateMemberRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateOrUpdateMemberResponse" name="CreateOrUpdateMemberResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetArr">
+      <wsdl:input message="tns:GetArrRequest" name="GetArrRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:GetArrResponse" name="GetArrResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="RegisterUnregisterArr">
+      <wsdl:input message="tns:RegisterUnregisterArrRequest" name="RegisterUnregisterArrRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:RegisterUnregisterArrResponse" name="RegisterUnregisterArrResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetArticles">
+      <wsdl:input message="tns:GetArticlesRequest" name="GetArticlesRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:GetArticlesResponse" name="GetArticlesResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateArticle">
+      <wsdl:input message="tns:CreateOrUpdateArticleRequest" name="CreateOrUpdateArticleRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:CreateOrUpdateArticleResponse" name="CreateOrUpdateArticleResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:ServiceFailureException" name="ServiceFailureException">
+    </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="Clac3Soap11" type="tns:Clac3">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetEntries">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="GetEntriesRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetEntriesResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetKumpaner">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="GetKumpanerRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetKumpanerResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateEntry">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateEntryRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateEntryResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateLike">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateLikeRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateLikeResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="TestSendFCM">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="TestSendFCMRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="TestSendFCMResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateArr">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateOrUpdateArrRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateOrUpdateArrResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetSnP">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="GetSnPRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetSnPResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateSuspect">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateOrUpdateSuspectRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateOrUpdateSuspectResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateProspect">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateOrUpdateProspectRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateOrUpdateProspectResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateMember">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateOrUpdateMemberRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateOrUpdateMemberResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetArr">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="GetArrRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetArrResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="RegisterUnregisterArr">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="RegisterUnregisterArrRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="RegisterUnregisterArrResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetArticles">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="GetArticlesRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetArticlesResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CreateOrUpdateArticle">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="CreateOrUpdateArticleRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateOrUpdateArticleResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ServiceFailureException">
+        <soap:fault name="ServiceFailureException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Clac3Service">
+    <wsdl:port binding="tns:Clac3Soap11" name="Clac3Soap11">
+      <soap:address location="http://chalmerslosers.com:9000/jsb-ws/Clac3/"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
