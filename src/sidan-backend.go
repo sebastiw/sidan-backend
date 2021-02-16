@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"html"
 	"log"
 	"net/http"
 
 	"github.com/spf13/viper"
 
 	c "github.com/sebastiw/sidan-backend/src/config"
+	r "github.com/sebastiw/sidan-backend/src/router"
 )
 
 func read_config(configuration *c.Configurations) {
@@ -48,13 +48,5 @@ func main() {
 	address := fmt.Sprintf(":%v", configuration.Server.Port)
 	log.Printf("Starting backend service at %v", address)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	})
-
-	http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hi")
-	})
-
-	log.Fatal(http.ListenAndServe(address, nil))
+	log.Fatal(http.ListenAndServe(address, r.Mux()))
 }
