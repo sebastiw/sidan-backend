@@ -1,0 +1,7 @@
+FROM mysql:5.7.33
+
+ENV MYSQL_ROOT_PASSWORD="locallocallocal"
+ENV MYSQL_USER="cl"
+ENV MYSQL_DATABASE="cl"
+
+EXPOSE 3306
