@@ -26,7 +26,7 @@ func main() {
 		configuration.Database.Host,
 		configuration.Database.Port,
 		configuration.Database.Schema)
-	log.Printf("Connect St%s", connectString)
+	log.Printf("Connect %s", connectString)
 	db, err := sql.Open("mysql", connectString)
 	if err != nil {
 		panic(err)
@@ -49,8 +49,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer rows.Close()
-
-	log.Printf("ROES: %s", rows)
 
 	address := fmt.Sprintf(":%v", configuration.Server.Port)
 	log.Printf("Starting backend service at %v", address)

@@ -48,7 +48,8 @@ func ReadConfig(configuration *Configurations) {
 	}
 
 	// Set undefined variables
-	viper.SetDefault("database.dbname", "test_db")
+	viper.SetDefault("database.host", "localhost")
+	viper.SetDefault("database.port", "3306")
 
 	err := viper.Unmarshal(configuration)
 	if err != nil {
