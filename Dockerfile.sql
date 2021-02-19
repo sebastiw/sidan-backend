@@ -1,7 +1,8 @@
 FROM mysql:5.7.33
 
-ENV MYSQL_ROOT_PASSWORD="locallocallocal"
-ENV MYSQL_USER="cl"
-ENV MYSQL_DATABASE="cl"
+ENV MYSQL_ROOT_PASSWORD="dbpassword"
+ENV MYSQL_PASSWORD="dbpassword"
+ENV MYSQL_USER="dbuser"
+ENV MYSQL_DATABASE="dbschema"
 
 EXPOSE 3306

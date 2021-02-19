@@ -2,9 +2,9 @@ server:
   port: 8080
 
 database:
-  dbname:
-  dbuser: "dbuser"
-  dbpassword: "dbpassword"
+  schema: "dbschema"
+  user: "dbuser"
+  password: "dbpassword"
 
 EXAMPLE_VAR: "variable from config.yml"
 EXAMPLE_PATH: "path from config.yml"

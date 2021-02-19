@@ -22,9 +22,11 @@ type ServerConfigurations struct {
 
 // DatabaseConfigurations exported
 type DatabaseConfigurations struct {
-	DBName     string
-	DBUser     string
-	DBPassword string
+	Host     string
+	Port     int
+	Schema   string
+	User     string
+	Password string
 }
 
 func ReadConfig(configuration *Configurations) {
