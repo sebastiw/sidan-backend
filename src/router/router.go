@@ -2,10 +2,17 @@ package router
 
 import(
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
+
+	d "github.com/sebastiw/sidan-backend/src/database/operations"
 )
 
 type key int
@@ -41,32 +48,32 @@ func logging(h http.Handler) http.Handler {
 	})
 }
 
-func Mux() http.Handler {
-	nextRequestID := func() string {
-		return fmt.Sprintf("%d", time.Now().UnixNano())
-	}
+func next_request_id() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
 
-	mux := http.NewServeMux()
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Placeholder")
+}
 
-	mux.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Authentication")
+func Mux(db *sql.DB) http.Handler {
+	r := mux.NewRouter()
+
+	// r.HandleFunc("/auth", defaultHandler)
+	// r.HandleFunc("/file", defaultHandler)
+	// r.HandleFunc("/mail", defaultHandler)
+	// r.HandleFunc("/notify", defaultHandler)
+	r.HandleFunc("/db/member/{id:[0-9]+}", func (w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr := vars["id"]
+		id, _ := strconv.Atoi(idStr)
+
+		member := d.Read(db, id)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(member)
 	})
+	// r.HandleFunc("/db", defaultHandler)
 
-	mux.HandleFunc("/file", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "File")
-	})
-
-	mux.HandleFunc("/mail", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Mail")
-	})
-
-	mux.HandleFunc("/notify", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Notification")
-	})
-
-	mux.HandleFunc("/db", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Database")
-	})
-
-	return tracing(nextRequestID)(logging(mux))
+	return tracing(next_request_id)(logging(r))
 }
