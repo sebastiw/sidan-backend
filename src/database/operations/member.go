@@ -21,10 +21,69 @@ func Create(db *sql.DB, name string) Member {
 func Read(db *sql.DB, id int) Member {
 	var m = Member{}
 
-	err := db.QueryRow("SELECT * FROM cl2007_members WHERE id = ?", id).Scan(&m.Id, &m.Number, &m.Name)
-	ErrorCheck(err)
+	err := db.QueryRow("SELECT * FROM cl2007_members WHERE id = ?", id).Scan(
+		&m.Id,
+		&m.Number,
+		&m.Name,
+		&m.Email,
+		&m.Im,
+		&m.Phone,
+		&m.Adress,
+		&m.Adressurl,
+		&m.Title,
+		&m.History,
+		&m.Picture,
+		&m.Password,
+		&m.Isvalid,
+		&m.Password_classic,
+		&m.Password_classic_resetstring,
+		&m.Password_resetstring)
 
+	switch {
+	case err == sql.ErrNoRows:
+	case err != nil:
+		ErrorCheck(err)
+	default:
+	}
 	return m
+}
+
+func ReadAll(db *sql.DB) []Member {
+	l := make([]Member, 0)
+
+	rows, err := db.Query("SELECT * FROM cl2007_members")
+	ErrorCheck(err)
+	defer rows.Close()
+
+	for rows.Next() {
+		var m = Member{}
+		err := rows.Scan(
+			&m.Id,
+			&m.Number,
+			&m.Name,
+			&m.Email,
+			&m.Im,
+			&m.Phone,
+			&m.Adress,
+			&m.Adressurl,
+			&m.Title,
+			&m.History,
+			&m.Picture,
+			&m.Password,
+			&m.Isvalid,
+			&m.Password_classic,
+			&m.Password_classic_resetstring,
+			&m.Password_resetstring)
+		switch {
+		case err == sql.ErrNoRows:
+		case err != nil:
+			ErrorCheck(err)
+		default:
+		}
+		l = append(l, m)
+	}
+
+	return l
 }
 
 func Update(db *sql.DB, name string) Member {

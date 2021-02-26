@@ -73,6 +73,13 @@ func Mux(db *sql.DB) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(member)
 	})
+	r.HandleFunc("/db/members", func (w http.ResponseWriter, r *http.Request) {
+		members := d.ReadAll(db)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(members)
+	})
+
 	// r.HandleFunc("/db", defaultHandler)
 
 	return tracing(next_request_id)(logging(r))
