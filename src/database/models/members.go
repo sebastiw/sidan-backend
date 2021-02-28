@@ -1,5 +1,10 @@
 package database
 
+import(
+	"fmt"
+	"strings"
+)
+
 type Member struct {
 	Id int64 `json:"id"`
 	Number *string `json:"number"`
@@ -19,3 +24,45 @@ type Member struct {
 	Password_resetstring *string `json:"password_resetstring"`
 }
 
+func (m Member) Fmt() string {
+	s := make([]string, 0)
+	isvalid := true
+	s = add_i(s, "Id", m.Id)
+	s = add_sp(s, "Number", m.Number)
+	s = add_sp(s, "Name", m.Name)
+	s = add_sp(s, "Email", m.Email)
+	s = add_s(s, "Im", m.Im)
+	s = add_sp(s, "Phone", m.Phone)
+	s = add_sp(s, "Adress", m.Adress)
+	s = add_sp(s, "Adressurl", m.Adressurl)
+	s = add_sp(s, "Title", m.Title)
+	s = add_sp(s, "History", m.History)
+	s = add_sp(s, "Picture", m.Picture)
+	s = add_bp(s, "Isvalid", m.Isvalid)
+	return fmt.Sprintf("Member{%s, Isvalid: %t}", strings.Join(s, ", "), isvalid)
+}
+
+func add_sp(s []string, t string, m *string) []string {
+	if(nil != m) {
+		s = append(s, fmt.Sprintf("%s: %s", t, *m))
+	}
+	return s
+}
+func add_s(s []string, t string, m string) []string {
+	if("" != m) {
+		s = append(s, fmt.Sprintf("%s: %s", t, m))
+	}
+	return s
+}
+func add_i(s []string, t string, m int64) []string {
+	if(0 != m) {
+		s = append(s, fmt.Sprintf("%s: %d", t, m))
+	}
+	return s
+}
+func add_bp(s []string, t string, m *bool) []string {
+	if(nil != m) {
+		s = append(s, fmt.Sprintf("%s: %t", t, *m))
+	}
+	return s
+}

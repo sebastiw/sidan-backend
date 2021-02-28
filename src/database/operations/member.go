@@ -7,14 +7,14 @@ import (
 	. "github.com/sebastiw/sidan-backend/src/database/models"
 )
 
-func Create(db *sql.DB, name string) Member {
-	res, err := db.Exec("INSERT INTO cl2007_members (`name`) VALUES (?)", name)
+func Create(db *sql.DB, m Member) Member {
+	res, err := db.Exec("INSERT INTO cl2007_members (`name`, `im`) VALUES (?, ?)", m.Name, m.Im)
 	ErrorCheck(err)
 
 	id, e := res.LastInsertId()
 	ErrorCheck(e)
 
-	var m = Member{Id: id}
+	m.Id = id
 	return m
 }
 

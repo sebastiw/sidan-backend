@@ -13,6 +13,7 @@ import(
 	"github.com/gorilla/mux"
 
 	d "github.com/sebastiw/sidan-backend/src/database/operations"
+	model "github.com/sebastiw/sidan-backend/src/database/models"
 )
 
 type key int
@@ -38,11 +39,7 @@ func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
 func logging(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			requestID, ok := r.Context().Value(requestIDKey).(string)
-			if !ok {
-				requestID = "unknown"
-			}
-			log.Println(requestID, r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+			log.Println(get_request_id(r), r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
 		}()
 		h.ServeHTTP(w, r)
 	})
@@ -50,6 +47,13 @@ func logging(h http.Handler) http.Handler {
 
 func next_request_id() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+func get_request_id(r *http.Request) string {
+	requestID, ok := r.Context().Value(requestIDKey).(string)
+	if !ok {
+		requestID = "unknown"
+	}
+	return requestID
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -63,16 +67,27 @@ func Mux(db *sql.DB) http.Handler {
 	// r.HandleFunc("/file", defaultHandler)
 	// r.HandleFunc("/mail", defaultHandler)
 	// r.HandleFunc("/notify", defaultHandler)
+	r.HandleFunc("/db/member", func (w http.ResponseWriter, r *http.Request) {
+		var m model.Member
+		_ = json.NewDecoder(r.Body).Decode(&m)
+
+		log.Println(get_request_id(r), m.Fmt())
+		member := d.Create(db, m)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(member)
+	}).Methods("POST")
+
 	r.HandleFunc("/db/member/{id:[0-9]+}", func (w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		idStr := vars["id"]
-		id, _ := strconv.Atoi(idStr)
+		id, _ := strconv.Atoi(vars["id"])
 
 		member := d.Read(db, id)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(member)
-	})
+	}).Methods("GET")
+
 	r.HandleFunc("/db/members", func (w http.ResponseWriter, r *http.Request) {
 		members := d.ReadAll(db)
 
