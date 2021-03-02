@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: Sidan
+  description: |
+    Backend OpenAPI document for Sidan
+  version: 0.1.0
+components:
+  schemas:
+    member:
+      id:
+        type: integer
+        description: |
+          The member id
+        minimum: 0
+  parameters:
+    idParam:
+      name: id
+      description: |
+        Generic internal id as represented in the database.
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+paths:
+  /db/member:
+    put:
+      summary: Create member
+      description: Creates a new member profile
+      responses:
+        "200":
+          description: Everything went fine
+          content:
+            application/json:
+              schema:
+                description: |
+                  The member's new profile
+                type: object
+                properties:
+                  $ref: "#/components/schemas/member"
+  /db/members:
+    get:
+      summary: Read all members
+      description: Read all members profiles at once
+      responses:
+        "200":
+          description: Everything went fine
+          content:
+            application/json:
+              schema:
+                description: |
+                  All member's current profiles
+                type: object
+                properties:
+                  $ref: "#/components/schemas/member"
+  /db/member/{id}:
+    get:
+      summary: Read member
+      description: Fetch a members data
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+      responses:
+        "200":
+          description: Everything went fine
+          content:
+            application/json:
+              schema:
+                description: |
+                  The member's current profile
+                type: object
+                properties:
+                  $ref: "#/components/schemas/member"
+    post:
+      summary: Update member
+      description: Update a members data and returns the previous profile
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+      responses:
+        "200":
+          description: Everything went fine
+          content:
+            application/json:
+              schema:
+                description: |
+                  The updated members previous profile
+                type: object
+                properties:
+                  $ref: "#/components/schemas/member"
+    delete:
+      summary: Delete member
+      description: Deletes a member and returns the previous profile
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+      responses:
+        "200":
+          description: Everything went fine
+          content:
+            application/json:
+              schema:
+                description: |
+                  The deleted members profile
+                type: object
+                properties:
+                  $ref: "#/components/schemas/member"
