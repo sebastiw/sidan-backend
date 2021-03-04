@@ -18,6 +18,7 @@ type Configurations struct {
 // ServerConfigurations exported
 type ServerConfigurations struct {
 	Port int
+	StaticPath string
 }
 
 // DatabaseConfigurations exported
@@ -50,6 +51,7 @@ func ReadConfig(configuration *Configurations) {
 	// Set undefined variables
 	viper.SetDefault("database.host", "localhost")
 	viper.SetDefault("database.port", "3306")
+	viper.SetDefault("server.staticpath", "./static")
 
 	err := viper.Unmarshal(configuration)
 	if err != nil {

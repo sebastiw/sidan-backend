@@ -15,18 +15,25 @@ components:
   parameters:
     idParam:
       name: id
-      description: |
-        Generic internal id as represented in the database.
       in: path
       required: true
       schema:
         type: integer
         minimum: 1
+        description: |
+          Generic internal id as represented in the database.
 paths:
   /db/member:
     put:
       summary: Create member
       description: Creates a new member profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                $ref: "#/components/schemas/member"
       responses:
         "200":
           description: Everything went fine
@@ -75,6 +82,13 @@ paths:
       description: Update a members data and returns the previous profile
       parameters:
         - $ref: "#/components/parameters/idParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                $ref: "#/components/schemas/member"
       responses:
         "200":
           description: Everything went fine
@@ -102,3 +116,15 @@ paths:
                 type: object
                 properties:
                   $ref: "#/components/schemas/member"
+  /file/image:
+    put:
+      summary: Upload an image
+      description: |
+        Upload an image file.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                $ref: "#/components/schemas/image"

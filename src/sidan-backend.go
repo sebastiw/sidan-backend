@@ -29,29 +29,10 @@ func main() {
 	d.Ping(db)
 	d.Configure(db)
 
-
-	rows, err := db.Query(`SHOW TABLES;`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var (
-			name string
-		)
-		if err := rows.Scan(&name); err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("Found table %s\n", name)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-
 	address := fmt.Sprintf(":%v", configuration.Server.Port)
 	log.Printf("Starting backend service at %v", address)
-	mux := r.Mux(db)
+
+	mux := r.Mux(db, configuration.Server.StaticPath)
 
 	log.Fatal(http.ListenAndServe(address, mux))
 }

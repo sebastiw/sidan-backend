@@ -106,13 +106,17 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Placeholder")
 }
 
-func Mux(db *sql.DB) http.Handler {
+func Mux(db *sql.DB, staticPath string) http.Handler {
 	r := mux.NewRouter()
 
 	// r.HandleFunc("/auth", defaultHandler)
-	// r.HandleFunc("/file", defaultHandler)
 	// r.HandleFunc("/mail", defaultHandler)
 	// r.HandleFunc("/notify", defaultHandler)
+
+	fh := FileHandler{}
+	fileServer := http.FileServer(http.Dir(staticPath))
+	r.HandleFunc("/file/images", fh.createImageHandler).Methods("PUT")
+	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer))
 
 	mh := MemberHandler{db: db}
 
@@ -125,6 +129,13 @@ func Mux(db *sql.DB) http.Handler {
 	// r.HandleFunc("/db", defaultHandler)
 
 	return tracing(next_request_id)(LogHTTP(r))
+}
+
+type FileHandler struct {
+}
+
+func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 type MemberHandler struct {
