@@ -1,5 +1,26 @@
 # sidan-backend
 
+## How to run
+
+`make`: start database locally
+`go run src/sidan-backend.go`: start service locally
+
+The service should connect automatically to the local database. To
+change configfile (from the default `config/local.yaml`), you can set
+the `CONFIG_FILE` env parameter pointing to an the new config-file.
+
+## Structure
+
+under `/`:
+- `db/`: database migrations
+- `static/`: static files served by (for instance) `file` endpoint.
+- `config/`: different configs for different cases.
+- `apis/`: files defining old and new apis.
+- code under `src/`:
+  - `src/router/`: defines the endpoints
+  - `src/database/`: defines models and database apis.
+  - `src/config/`: define and parses the config
+
 ## Old APIs
 
 http://chalmerslosers.com:9000/service-inspector/Clac3
@@ -10,11 +31,11 @@ to generate the swagger yaml.
 
 # Non-functional Requirements
 
-- [ ] Language: Golang
+- [X] Language: Golang
 - [ ] Test locally
 - [ ] Tests for APIs
-- [ ] Docker + env variables for choosing local/test/prod configs
-- [ ] Other config in yaml files
+- [x] Docker + env variables for choosing local/test/prod configs
+- [x] Other config in yaml files
 
 - [ ] (optional) New tables and migrate data.
 
