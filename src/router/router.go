@@ -3,19 +3,12 @@ package router
 import(
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
-
-	d "github.com/sebastiw/sidan-backend/src/database/operations"
-	model "github.com/sebastiw/sidan-backend/src/database/models"
 )
 
 type key int
@@ -132,132 +125,3 @@ func Mux(db *sql.DB, staticPath string) http.Handler {
 
 	return tracing(next_request_id)(LogHTTP(r))
 }
-
-type FileHandler struct {
-}
-
-type File struct {
-	Filename string `json:filename`
-}
-
-func file_extension(image_type string) string {
-	switch image_type {
-	case "image/gif":
-		return "gif"
-	case "image/png":
-		return "png"
-	case "image/jpeg":
-		return "jpeg"
-	}
-	return ""
-}
-
-func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse our multipart form, 10 << 20 specifies a maximum
-	// upload of 10 MB files. (bitshift 10 in decimal 20 times)
-	r.ParseMultipartForm(10 << 20)
-
-	file, handler, err := r.FormFile("data")
-	if err != nil {
-		log.Println(get_request_id(r), "Error Retrieving the File", err)
-		return
-	}
-	defer file.Close()
-
-	// DetectContentType take only first 512 bytes into consideration
-	buff := make([]byte, 512)
-	_, err = file.Read(buff)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	contentType := http.DetectContentType(buff)
-	fileExt := file_extension(contentType)
-	if "" == fileExt {
-		log.Println(get_request_id(r), "Not an image file")
-		return
-	}
-
-	tempFilename := fmt.Sprintf("upload-*.%s", fileExt)
-	tempFile, err := ioutil.TempFile("static", tempFilename)
-	if err != nil {
-		log.Println(get_request_id(r), err)
-	}
-	defer tempFile.Close()
-
-	fileBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		log.Println(get_request_id(r), err)
-	}
-	tempFile.Write(fileBytes)
-	bareFilename := strings.TrimPrefix(tempFile.Name(), "static/")
-	size := fmt.Sprintf("%+vb", handler.Size)
-	log.Println(get_request_id(r), "Uploaded", handler.Filename, size, bareFilename)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(File{Filename: bareFilename})
-}
-
-type MemberHandler struct {
-	db *sql.DB
-}
-
-func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Request) {
-	var m model.Member
-	_ = json.NewDecoder(r.Body).Decode(&m)
-
-	log.Println(get_request_id(r), m.Fmt())
-	member := d.Create(mh.db, m)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(member)
-}
-
-func (mh MemberHandler) readMemberHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	member := d.Read(mh.db, id)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(member)
-}
-
-func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Request) {
-	var m model.Member
-	_ = json.NewDecoder(r.Body).Decode(&m)
-
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	log.Println(get_request_id(r), m.Fmt())
-	m.Id = int64(id)
-	member := d.Update(mh.db, m)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(member)
-}
-
-func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Request) {
-	var m model.Member
-	_ = json.NewDecoder(r.Body).Decode(&m)
-
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	log.Println(get_request_id(r), m.Fmt())
-	m.Id = int64(id)
-	member := d.Delete(mh.db, m)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(member)
-}
-
-func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Request) {
-	members := d.ReadAll(mh.db)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(members)
-}
-
