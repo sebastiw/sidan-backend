@@ -5,9 +5,11 @@ import(
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -115,8 +117,8 @@ func Mux(db *sql.DB, staticPath string) http.Handler {
 
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(staticPath))
-	r.HandleFunc("/file/images", fh.createImageHandler).Methods("PUT")
-	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer))
+	r.HandleFunc("/file/image", fh.createImageHandler).Methods("PUT")
+	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET")
 
 	mh := MemberHandler{db: db}
 
@@ -134,8 +136,39 @@ func Mux(db *sql.DB, staticPath string) http.Handler {
 type FileHandler struct {
 }
 
-func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request) {
+type File struct {
+	Filename string `json:filename`
+}
 
+func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse our multipart form, 10 << 20 specifies a maximum
+	// upload of 10 MB files. (bitshift 10 in decimal 20 times)
+	r.ParseMultipartForm(10 << 20)
+
+	file, handler, err := r.FormFile("data")
+	if err != nil {
+		log.Println(get_request_id(r), "Error Retrieving the File", err)
+		return
+	}
+	defer file.Close()
+
+	tempFile, err := ioutil.TempFile("static", "upload-*.png")
+	if err != nil {
+		log.Println(get_request_id(r), err)
+	}
+	defer tempFile.Close()
+
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Println(get_request_id(r), err)
+	}
+	tempFile.Write(fileBytes)
+	bareFilename := strings.TrimPrefix(tempFile.Name(), "static/")
+	size := fmt.Sprintf("%+vb", handler.Size)
+	log.Println(get_request_id(r), "Uploaded", handler.Filename, size, bareFilename)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(File{Filename: bareFilename})
 }
 
 type MemberHandler struct {

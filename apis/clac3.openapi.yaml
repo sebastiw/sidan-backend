@@ -12,6 +12,14 @@ components:
         description: |
           The member id
         minimum: 0
+    image:
+      data:
+        type: data
+        description: |
+          The file to be uploaded
+        examples:
+          curlExample: |
+            curl -X PUT -F 'data=@hypea.png' http://localhost:8080/file/images
   parameters:
     idParam:
       name: id
@@ -123,7 +131,7 @@ paths:
         Upload an image file.
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:

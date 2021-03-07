@@ -3,6 +3,7 @@
 ## How to run
 
 `make`: start database locally
+
 `go run src/sidan-backend.go`: start service locally
 
 The service should connect automatically to the local database. To
