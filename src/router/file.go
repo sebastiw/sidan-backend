@@ -32,7 +32,6 @@ func file_extension(image_type string) (string, error) {
 func CheckError(w http.ResponseWriter, r *http.Request, err error) {
 	if err != nil {
 		log.Println(get_request_id(r), err)
-		w.WriteHeader(http.StatusBadRequest)
 		panic(err.Error())
 	}
 }

@@ -105,7 +105,6 @@ func Mux(db *sql.DB, staticPath string) http.Handler {
 	r := mux.NewRouter()
 
 	// r.HandleFunc("/auth", defaultHandler)
-	// r.HandleFunc("/mail", defaultHandler)
 	// r.HandleFunc("/notify", defaultHandler)
 
 	fh := FileHandler{}
@@ -113,13 +112,16 @@ func Mux(db *sql.DB, staticPath string) http.Handler {
 	r.HandleFunc("/file/image", fh.createImageHandler).Methods("PUT")
 	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET")
 
-	mh := MemberHandler{db: db}
+	mh := MailHandler{}
+	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT")
 
-	r.HandleFunc("/db/member", mh.createMemberHandler).Methods("PUT")
-	r.HandleFunc("/db/member/{id:[0-9]+}", mh.readMemberHandler).Methods("GET")
-	r.HandleFunc("/db/member/{id:[0-9]+}", mh.updateMemberHandler).Methods("POST")
-	r.HandleFunc("/db/member/{id:[0-9]+}", mh.deleteMemberHandler).Methods("DELETE")
-	r.HandleFunc("/db/members", mh.readAllMemberHandler).Methods("GET")
+	db_mh := MemberHandler{db: db}
+
+	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("PUT")
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET")
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("POST")
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE")
+	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET")
 
 	// r.HandleFunc("/db", defaultHandler)
 
