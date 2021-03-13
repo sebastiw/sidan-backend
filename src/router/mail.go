@@ -10,12 +10,10 @@ import (
 
 type MailHandler struct {
 	Host string
-	Port string
+	Port int
 	Username string
 	Password string
-	SMTPServer string
 }
-
 
 type Mail struct {
 	FromEmail string `json:"from_email"`
@@ -44,10 +42,10 @@ func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) 
 
 	log.Println(get_request_id(r), m.Fmt())
 
-	auth := smtp.PlainAuth("", mh.Username, mh.Password, mh.SMTPServer)
-	err := smtp.SendMail(fmt.Sprintf("%s:%s", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)
+	auth := smtp.PlainAuth("", mh.Username, mh.Password, mh.Host)
+	err := smtp.SendMail(fmt.Sprintf("%s:%d", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)
 	if err != nil {
-		log.Println(get_request_id(r), err)
+		log.Println(get_request_id(r), "Send mail error:", err)
 		return
 	}
 

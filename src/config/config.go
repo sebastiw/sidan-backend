@@ -7,22 +7,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Configurations exported
-type Configurations struct {
-	Server       ServerConfigurations
-	Database     DatabaseConfigurations
-	EXAMPLE_PATH string
-	EXAMPLE_VAR  string
+type Configuration struct {
+	Server       ServerConfiguration
+	Database     DatabaseConfiguration
+	Mail         MailConfiguration
 }
 
-// ServerConfigurations exported
-type ServerConfigurations struct {
+type ServerConfiguration struct {
 	Port int
 	StaticPath string
 }
 
-// DatabaseConfigurations exported
-type DatabaseConfigurations struct {
+type DatabaseConfiguration struct {
 	Host     string
 	Port     int
 	Schema   string
@@ -30,7 +26,14 @@ type DatabaseConfigurations struct {
 	Password string
 }
 
-func ReadConfig(configuration *Configurations) {
+type MailConfiguration struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+}
+
+func ReadConfig(configuration *Configuration) {
 	// Set the path to look for the configurations file
 	viper.AddConfigPath("./config")
 
@@ -51,6 +54,8 @@ func ReadConfig(configuration *Configurations) {
 	// Set undefined variables
 	viper.SetDefault("database.host", "localhost")
 	viper.SetDefault("database.port", "3306")
+	viper.SetDefault("mail.host", "localhost")
+	viper.SetDefault("mail.port", "25")
 	viper.SetDefault("server.staticpath", "./static")
 
 	err := viper.Unmarshal(configuration)

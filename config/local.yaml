@@ -7,5 +7,6 @@ database:
   user: "dbuser"
   password: "dbpassword"
 
-EXAMPLE_VAR: "variable from config.yml"
-EXAMPLE_PATH: "path from config.yml"
+mail:
+  host: "localhost"
+  port: 25

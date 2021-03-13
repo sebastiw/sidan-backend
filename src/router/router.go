@@ -9,6 +9,8 @@ import(
 	"time"
 
 	"github.com/gorilla/mux"
+
+	c "github.com/sebastiw/sidan-backend/src/config"
 )
 
 type key int
@@ -101,7 +103,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Placeholder")
 }
 
-func Mux(db *sql.DB, staticPath string) http.Handler {
+func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Handler {
 	r := mux.NewRouter()
 
 	// r.HandleFunc("/auth", defaultHandler)
@@ -112,7 +114,7 @@ func Mux(db *sql.DB, staticPath string) http.Handler {
 	r.HandleFunc("/file/image", fh.createImageHandler).Methods("PUT")
 	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET")
 
-	mh := MailHandler{}
+	mh := MailHandler{Host: mailConfig.Host, Port: mailConfig.Port, Username: mailConfig.User, Password: mailConfig.Password}
 	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT")
 
 	db_mh := MemberHandler{db: db}

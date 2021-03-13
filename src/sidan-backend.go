@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	var configuration c.Configurations
+	var configuration c.Configuration
 
 	c.ReadConfig(&configuration)
 
@@ -32,7 +32,7 @@ func main() {
 	address := fmt.Sprintf(":%v", configuration.Server.Port)
 	log.Printf("Starting backend service at %v", address)
 
-	mux := r.Mux(db, configuration.Server.StaticPath)
+	mux := r.Mux(db, configuration.Server.StaticPath, configuration.Mail)
 
 	log.Fatal(http.ListenAndServe(address, mux))
 }
