@@ -11,7 +11,7 @@ import(
 	"github.com/gorilla/mux"
 
 	c "github.com/sebastiw/sidan-backend/src/config"
-	h "github.com/sebastiw/sidan-backend/src/auth"
+	auth "github.com/sebastiw/sidan-backend/src/auth"
 )
 
 type key int
@@ -127,7 +127,10 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET")
 
 	// Login
-	r.HandleFunc("/login", HelloServer).Methods("GET")
+	r.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
+	r.HandleFunc("/auth", auth.LoginHandler).Methods("POST")
+	r.HandleFunc("/home", auth.HomePageHandler).Methods("GET")
+	r.HandleFunc("/logout", auth.LogoutHandler).Methods("POST")
 
 	// r.HandleFunc("/db", defaultHandler)
 
