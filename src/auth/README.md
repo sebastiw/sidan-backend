@@ -16,6 +16,6 @@ Passwords are sent in clear text right now, as long as it is done using https it
 * ``/logout`` - An endpoint to call to clear the cookie and log out
 
 ## Todo
-Hash password with salt in backend
-Compare password and user against database
-Implement JWT token for auth
+- Hash password with salt in backend
+- Compare password and user against database
+- Implement JWT token for auth
