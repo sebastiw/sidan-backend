@@ -13,8 +13,12 @@ import (
 	model "github.com/sebastiw/sidan-backend/src/database/models"
 )
 
+func NewMemberHandler(db *sql.DB) MemberHandler {
+	return MemberHandler{d.NewMemberOperation(db)}
+}
+
 type MemberHandler struct {
-	db *sql.DB
+	op d.MemberOperation
 }
 
 func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +26,7 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
 	log.Println(get_request_id(r), m.Fmt())
-	member := d.Create(mh.db, m)
+	member := mh.op.Create(m)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -32,7 +36,7 @@ func (mh MemberHandler) readMemberHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	member := d.Read(mh.db, id)
+	member := mh.op.Read(id)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -47,7 +51,7 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	log.Println(get_request_id(r), m.Fmt())
 	m.Id = int64(id)
-	member := d.Update(mh.db, m)
+	member := mh.op.Update(m)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -62,14 +66,14 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	log.Println(get_request_id(r), m.Fmt())
 	m.Id = int64(id)
-	member := d.Delete(mh.db, m)
+	member := mh.op.Delete(m)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
 }
 
 func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Request) {
-	members := d.ReadAll(mh.db)
+	members := mh.op.ReadAll()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)

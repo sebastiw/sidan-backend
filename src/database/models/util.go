@@ -22,6 +22,16 @@ func add_i(s []string, t string, m int64) []string {
 	}
 	return s
 }
+func add_fp(s []string, t string, m *float64) []string {
+	if(nil != m) {
+		s = append(s, fmt.Sprintf("%s: %f", t, m))
+	}
+	return s
+}
+func add_b(s []string, t string, m bool) []string{
+	s = append(s, fmt.Sprintf("%s: %t", t, m))
+	return s
+}
 func add_bp(s []string, t string, m *bool) []string {
 	if(nil != m) {
 		s = append(s, fmt.Sprintf("%s: %t", t, *m))

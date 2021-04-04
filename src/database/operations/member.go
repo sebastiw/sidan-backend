@@ -10,7 +10,15 @@ import (
 	. "github.com/sebastiw/sidan-backend/src/database/models"
 )
 
-func Create(db *sql.DB, m Member) Member {
+func NewMemberOperation(db *sql.DB) MemberOperation {
+	return MemberOperation{db}
+}
+
+type MemberOperation struct {
+	db *sql.DB
+}
+
+func (o MemberOperation) Create(m Member) Member {
 	q := `
 INSERT INTO cl2007_members
 SET
@@ -20,7 +28,7 @@ SET
  password_classic_resetstring=?, password_resetstring=?
 `
 
-	res, err := db.Exec(q,
+	res, err := o.db.Exec(q,
 		m.Name,
 		m.Email,
 		m.Im,
@@ -45,7 +53,7 @@ SET
 	return m
 }
 
-func Read(db *sql.DB, id int) Member {
+func (o MemberOperation) Read(id int) Member {
 	var m = Member{}
 
 	q := `
@@ -59,7 +67,7 @@ ORDER BY number DESC,id DESC
 LIMIT 1
 `
 
-	err := db.QueryRow(q, id).Scan(
+	err := o.db.QueryRow(q, id).Scan(
 		&m.Id,
 		&m.Number,
 		&m.Name,
@@ -86,7 +94,7 @@ LIMIT 1
 	return m
 }
 
-func ReadAll(db *sql.DB) []Member {
+func (o MemberOperation) ReadAll() []Member {
 	l := make([]Member, 0)
 
 	q := `
@@ -98,7 +106,7 @@ FROM cl2007_members
 ORDER BY number DESC, id DESC
 `
 
-	rows, err := db.Query(q)
+	rows, err := o.db.Query(q)
 	ErrorCheck(err)
 	defer rows.Close()
 
@@ -133,7 +141,7 @@ ORDER BY number DESC, id DESC
 	return l
 }
 
-func Update(db *sql.DB, m Member) Member {
+func (o MemberOperation) Update(m Member) Member {
 	q := `
 UPDATE cl2007_members
 SET
@@ -149,7 +157,7 @@ LIMIT 1
 		ErrorCheck(errors.New("Id and/or Number is not set"))
 	}
 
-	res, err := db.Exec(q,
+	res, err := o.db.Exec(q,
 		m.Name,
 		m.Email,
 		m.Im,
@@ -178,13 +186,13 @@ LIMIT 1
 	return m
 }
 
-func Delete(db *sql.DB, m Member) Member {
+func (o MemberOperation) Delete(m Member) Member {
 	if(0 == m.Id || nil == m.Number) {
 		// Raise error
 		ErrorCheck(errors.New("Id and/or Number is not set"))
 	}
 
-	_, err := db.Exec("DELETE FROM cl2007_members WHERE id=? AND number=?", m.Id, m.Number)
+	_, err := o.db.Exec("DELETE FROM cl2007_members WHERE id=? AND number=?", m.Id, m.Number)
 	ErrorCheck(err)
 
 	return m
