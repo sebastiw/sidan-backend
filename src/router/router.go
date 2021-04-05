@@ -133,5 +133,10 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 
 	// r.HandleFunc("/db", defaultHandler)
 
+	// Sidan APIs for deprecation
+	restv1h := RestHandler{version: 1, db: db}
+	v1Rest := r.PathPrefix("/rest/v1").Subrouter()
+	v1Rest.HandleFunc("/ReadEntries", restv1h.getEntries).Methods("GET")
+
 	return tracing(next_request_id)(LogHTTP(r))
 }
