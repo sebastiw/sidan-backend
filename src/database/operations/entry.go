@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	. "github.com/sebastiw/sidan-backend/src/database"
 	. "github.com/sebastiw/sidan-backend/src/database/models"
@@ -52,16 +53,27 @@ SET
 }
 
 func (o EntryOperation) Read(id int) Entry {
-	var e = Entry{}
-
 	q := `
 SELECT
- id, date, time, msg, status, cl, sig, email, place, ip, host,
- olsug, enheter, lat, lon, report
-FROM cl2003_msgs
-WHERE id=?
+ m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
+ m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
+ count(l.id) as likes,
+ p.user_id IS NOT NULL AS secret,
+ p.user_id IS NOT NULL && "0" NOT IN (p.user_id) AS personalsecret,
+ GROUP_CONCAT(DISTINCT IFNULL(k.number, '') ORDER BY k.number SEPARATOR ",") as kumpaner
+FROM cl2003_msgs AS m
+LEFT JOIN 2003_likes AS l ON m.id = l.id
+LEFT JOIN cl2003_permissions AS p ON m.id = p.id
+LEFT JOIN cl2003_msgs_kumpaner AS k ON m.id = k.id
+WHERE m.id=?
+GROUP BY
+ m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
+ m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
+ secret, personalsecret
 `
 
+	var kumpaner = *new(string)
+	var e = Entry{SideKicks: []SideKick{}}
 	err := o.db.QueryRow(q, id).Scan(
 		&e.Id,
 		&e.Date,
@@ -78,7 +90,11 @@ WHERE id=?
 		&e.Enheter,
 		&e.Lat,
 		&e.Lon,
-		&e.Report)
+		&e.Report,
+		&e.Likes,
+		&e.Secret,
+		&e.PersonalSecret,
+		&kumpaner)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -86,6 +102,14 @@ WHERE id=?
 		ErrorCheck(err)
 	default:
 	}
+	if(kumpaner != "") {
+		sidekicks := make([]SideKick, 0)
+		for _,n := range strings.Split(kumpaner, ",") {
+			sidekicks = append(sidekicks, SideKick{Number: "#"+n})
+		}
+		e.SideKicks = sidekicks
+	}
+
 	return e
 }
 
@@ -94,9 +118,20 @@ func (o EntryOperation) ReadAll(take int64, skip int64) []Entry {
 
 	q := `
 SELECT
- id, date, time, msg, status, cl, sig, email, place, ip, host,
- olsug, enheter, lat, lon, report
-FROM cl2003_msgs
+ m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
+ m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
+ count(l.id) as likes,
+ p.user_id IS NOT NULL AS secret,
+ p.user_id IS NOT NULL && "0" NOT IN (p.user_id) AS personalsecret,
+ GROUP_CONCAT(DISTINCT IFNULL(k.number, '') ORDER BY k.number SEPARATOR ",") as kumpaner
+FROM cl2003_msgs AS m
+LEFT JOIN 2003_likes AS l ON m.id = l.id
+LEFT JOIN cl2003_permissions AS p ON m.id = p.id
+LEFT JOIN cl2003_msgs_kumpaner AS k ON m.id = k.id
+GROUP BY
+ m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
+ m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
+ secret, personalsecret
 ORDER BY id DESC
 LIMIT ?, ?
 `
@@ -106,7 +141,8 @@ LIMIT ?, ?
 	defer rows.Close()
 
 	for rows.Next() {
-		var e = Entry{}
+		var kumpaner = *new(string)
+		var e = Entry{SideKicks: []SideKick{}}
 		err := rows.Scan(
 			&e.Id,
 			&e.Date,
@@ -123,12 +159,23 @@ LIMIT ?, ?
 			&e.Enheter,
 			&e.Lat,
 			&e.Lon,
-			&e.Report)
+			&e.Report,
+			&e.Likes,
+			&e.Secret,
+			&e.PersonalSecret,
+			&kumpaner)
 		switch {
 		case err == sql.ErrNoRows:
 		case err != nil:
 			ErrorCheck(err)
 		default:
+		}
+		if(kumpaner != "") {
+			sidekicks := make([]SideKick, 0)
+			for _,n := range strings.Split(kumpaner, ",") {
+				sidekicks = append(sidekicks, SideKick{Number: "#"+n})
+			}
+			e.SideKicks = sidekicks
 		}
 		l = append(l, e)
 	}

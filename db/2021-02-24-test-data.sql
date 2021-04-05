@@ -319,12 +319,19 @@ INSERT INTO `cl2003_msgs` VALUES
   (248735,'2017-04-03','00:04:12','I say--that\'s the same as the March Hare took the hookah into its eyes were getting so thin--and the twinkling of the edge with each hand. \'And now which is which?\' she said this last remark. \'Of course not,\' Alice replied very solemnly. Alice was beginning to feel which way I ought to be sure!.',1,0,'S65','seth38@yahoo.com','East Ivoryland','192.255.131.139','vonruedenschmitt.com',9,4,-40.927845001220700,89.466567993164060,0);
 
 INSERT INTO `cl2003_msgs_kumpaner` VALUES
-  (248488, 8),
   (248488, 30),
-  (248733, 1),
-  (248733, 2),
-  (248733, 3),
+  (248488, 8),
   (248729, 7),
   (248729, 8),
   (248730, 30),
-  (248731, 8);
+  (248731, 8),
+  (248733, 2),
+  (248733, 1),
+  (248733, 3);
+
+INSERT INTO `cl2003_permissions` VALUES
+  (248488, 0),
+  (248731, 7),
+  (248725, 1),
+  (248725, 3),
+  (248725, 4);

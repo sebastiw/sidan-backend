@@ -5,6 +5,10 @@ import(
 	"strings"
 )
 
+type SideKick struct {
+  Number string `json:""`
+}
+
 type Entry struct {
   Id int64 `json:""`
   Date string `json:""`
@@ -22,6 +26,10 @@ type Entry struct {
   Lat *float64 `json:""`
   Lon *float64 `json:""`
   Report bool `json:""`
+  Likes int64 `json:""`
+  Secret bool `json:""`
+  PersonalSecret bool `json:""`
+  SideKicks []SideKick `json:""`
 }
 
 func (e Entry) Fmt() string {
@@ -42,6 +50,9 @@ func (e Entry) Fmt() string {
 	s = add_fp(s, "Lat", e.Lat)
 	s = add_fp(s, "Lon", e.Lon)
 	s = add_b(s, "Report", e.Report)
+	s = add_i(s, "Likes", e.Likes)
+	s = add_b(s, "Secret", e.Secret)
+	s = add_b(s, "PersonalSecret", e.PersonalSecret)
 
 	return fmt.Sprintf("Entry{%s}", strings.Join(s, ", "))
 }
