@@ -317,3 +317,14 @@ INSERT INTO `cl2003_msgs` VALUES
   (248733,'1999-08-07','08:03:42','At this moment Five, who had been running half an hour or so there were no tears. \'If you\'re going to happen next. \'It\'s--it\'s a very melancholy voice. \'Repeat, \"YOU ARE OLD, FATHER WILLIAM,\' to the door, staring stupidly up into hers--she could hear the very middle of the table. \'Have some wine,\'.',2,0,'#2','norwood.ratke@yahoo.com','West Paulamouth','9.12.194.86','willms.com',3,1,28.462348937988280,173.599960327148440,0),
   (248734,'1977-07-19','03:34:46','Oh dear! I wish you were never even spoke to Time!\' \'Perhaps not,\' Alice replied in an agony of terror. \'Oh, there goes his PRECIOUS nose\'; as an explanation; \'I\'ve none of YOUR adventures.\' \'I could tell you how the game was in the kitchen. \'When I\'M a Duchess,\' she said to herself \'That\'s quite.',3,0,'#2','elyse22@hotmail.com','West Ismael','228.162.145.18','klocko.com',1,4,18.102788925170900,119.793930053710940,0),
   (248735,'2017-04-03','00:04:12','I say--that\'s the same as the March Hare took the hookah into its eyes were getting so thin--and the twinkling of the edge with each hand. \'And now which is which?\' she said this last remark. \'Of course not,\' Alice replied very solemnly. Alice was beginning to feel which way I ought to be sure!.',1,0,'S65','seth38@yahoo.com','East Ivoryland','192.255.131.139','vonruedenschmitt.com',9,4,-40.927845001220700,89.466567993164060,0);
+
+INSERT INTO `cl2003_msgs_kumpaner` VALUES
+  (248488, 8),
+  (248488, 30),
+  (248733, 1),
+  (248733, 2),
+  (248733, 3),
+  (248729, 7),
+  (248729, 8),
+  (248730, 30),
+  (248731, 8);

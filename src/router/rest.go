@@ -12,6 +12,7 @@ import (
 type RestHandler struct {
 	version int
 	db *sql.DB
+	user_id string
 }
 
 type sideKick struct {
@@ -41,7 +42,6 @@ func (rh RestHandler) Fmt() string {
 }
 
 func (rh RestHandler) getEntries(w http.ResponseWriter, r *http.Request) {
-	user_id := MakeDefaultInt(r, "user_id", "0")
 	take := MakeDefaultInt(r, "Take", "20")
 	skip := MakeDefaultInt(r, "Skip", "0")
 
@@ -49,7 +49,7 @@ func (rh RestHandler) getEntries(w http.ResponseWriter, r *http.Request) {
 
 	q := `CALL ReadEntries(?, ?, ?)`
 
-	rows, err := rh.db.Query(q, skip, take, user_id)
+	rows, err := rh.db.Query(q, skip, take, rh.user_id)
 	ErrorCheck(err)
 	defer rows.Close()
 
@@ -84,7 +84,7 @@ func (rh RestHandler) getEntries(w http.ResponseWriter, r *http.Request) {
 
 		for rows2.Next() {
 			var s = sideKick{}
-			err2 := rows.Scan(&s.Number)
+			err2 := rows2.Scan(&s.Number)
 			switch {
 			case err2 == sql.ErrNoRows:
 			case err2 != nil:
