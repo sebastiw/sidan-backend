@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"strconv"
 
 	. "github.com/sebastiw/sidan-backend/src/database"
 	. "github.com/sebastiw/sidan-backend/src/database/models"
@@ -49,6 +50,18 @@ SET
 	ErrorCheck(err)
 
 	e.Id = id
+
+	q = `INSERT INTO cl2003_msgs_kumpaner(id, number) VALUES (?, ?)`
+	for _, n := range e.SideKicks {
+		if(n.Number[0] != '#') {
+			panic("SideKick not starting with '#': " + n.Number)
+		}
+		number, err := strconv.Atoi(n.Number[1:])
+		ErrorCheck(err)
+		_, err2 := o.db.Exec(q, id, number)
+		ErrorCheck(err2)
+	}
+
 	return e
 }
 
@@ -172,7 +185,7 @@ LIMIT ?, ?
 		}
 		if(kumpaner != "") {
 			sidekicks := make([]SideKick, 0)
-			for _,n := range strings.Split(kumpaner, ",") {
+			for _, n := range strings.Split(kumpaner, ",") {
 				sidekicks = append(sidekicks, SideKick{Number: "#"+n})
 			}
 			e.SideKicks = sidekicks

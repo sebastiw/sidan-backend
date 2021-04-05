@@ -9,6 +9,10 @@ type SideKick struct {
   Number string `json:""`
 }
 
+func (s SideKick) Fmt() string {
+	return s.Number
+}
+
 type Entry struct {
   Id int64 `json:""`
   Date string `json:""`
@@ -33,6 +37,10 @@ type Entry struct {
 }
 
 func (e Entry) Fmt() string {
+	sk := make([]string, 0)
+	for _, n := range e.SideKicks {
+		sk = append(sk, n.Fmt())
+	}
 	s := make([]string, 0)
 	s = add_i(s, "Id", e.Id)
 	s = add_s(s, "Date", e.Date)
@@ -53,6 +61,7 @@ func (e Entry) Fmt() string {
 	s = add_i(s, "Likes", e.Likes)
 	s = add_b(s, "Secret", e.Secret)
 	s = add_b(s, "PersonalSecret", e.PersonalSecret)
+	s = add_s(s, "SideKicks", "[" + strings.Join(sk, ",") + "]")
 
 	return fmt.Sprintf("Entry{%s}", strings.Join(s, ", "))
 }

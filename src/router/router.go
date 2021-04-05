@@ -118,7 +118,7 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT")
 
 	db_eh := NewEntryHandler(db)
-	r.HandleFunc("/db/", db_eh.createEntryHandler).Methods("PUT")
+	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("PUT")
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET")
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("POST")
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE")
