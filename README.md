@@ -56,3 +56,87 @@ to generate the swagger yaml.
 - GET for querying
 - (optional) HEAD on API should give back a header with a description string.
 - (optional) GET on base URIs should give back a documented list on available APIs.
+
+# API
+
+Check `src/router/router.go`
+
+## /db/
+
+These functions operate on the database.
+
+Check under `src/database/models/` to see what format the JSON request
+should have.
+
+### Member operations
+
+#### GET /db/members
+
+    Fetch all members.
+
+#### PUT /db/member
+
+    Create a new member.
+
+#### GET /db/member/ID
+
+    Fetch member with id `ID`
+
+#### POST /db/member/ID
+
+    Update member with id `ID`
+
+#### DELETE /db/member/ID
+
+    Delete member with id `ID`
+
+### Entry operations
+
+#### GET /db/entries
+
+    Fetch all entries.
+
+#### PUT /db/entry
+
+    Create a new entry.
+
+#### GET /db/entry/ID
+
+    Fetch entry with id `ID`
+
+#### POST /db/entry/ID
+
+    Update entry with id `ID`
+
+#### DELETE /db/entry/ID
+
+    Delete entry with id `ID`
+
+## /mail/
+
+### PUT /mail
+
+    Send new mail.
+
+    JSON payload structure:
+
+    {"from_email": "", "to_emails": [], "message": "", "title": ""}
+
+## /file/
+
+### GET /file/RESOURCE
+
+    Fetch a file resource from the `/static/` directory.
+
+### PUT /file/image
+
+    Upload a new image file via form data.
+
+    Supported image types:
+    - gif
+    - png
+    - jpeg
+
+    Max size 10 MB
+
+    curl -F ‘data=@path/to/local/file' -X put
