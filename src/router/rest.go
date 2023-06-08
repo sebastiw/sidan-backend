@@ -47,6 +47,8 @@ func (rh RestHandler) getEntries(w http.ResponseWriter, r *http.Request) {
 
 	entries := make([]Entry, 0)
 
+	
+
 	q := `CALL ReadEntries(?, ?, ?)`
 
 	rows, err := rh.db.Query(q, skip, take, rh.user_id)

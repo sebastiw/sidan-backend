@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 
 	. "github.com/sebastiw/sidan-backend/src/database"
 	. "github.com/sebastiw/sidan-backend/src/database/models"
@@ -15,6 +15,8 @@ import (
 func NewEntryOperation(db *sql.DB) EntryOperation {
 	return EntryOperation{db}
 }
+
+// swagger:model
 
 type EntryOperation struct {
 	db *sql.DB
@@ -53,7 +55,7 @@ SET
 
 	q = `INSERT INTO cl2003_msgs_kumpaner(id, number) VALUES (?, ?)`
 	for _, n := range e.SideKicks {
-		if(n.Number[0] != '#') {
+		if n.Number[0] != '#' {
 			panic("SideKick not starting with '#': " + n.Number)
 		}
 		number, err := strconv.Atoi(n.Number[1:])
@@ -64,6 +66,8 @@ SET
 
 	return e
 }
+
+// swagger:operation
 
 func (o EntryOperation) Read(id int) Entry {
 	q := `
@@ -115,10 +119,10 @@ GROUP BY
 		ErrorCheck(err)
 	default:
 	}
-	if(kumpaner != "") {
+	if kumpaner != "" {
 		sidekicks := make([]SideKick, 0)
-		for _,n := range strings.Split(kumpaner, ",") {
-			sidekicks = append(sidekicks, SideKick{Number: "#"+n})
+		for _, n := range strings.Split(kumpaner, ",") {
+			sidekicks = append(sidekicks, SideKick{Number: "#" + n})
 		}
 		e.SideKicks = sidekicks
 	}
@@ -183,10 +187,10 @@ LIMIT ?, ?
 			ErrorCheck(err)
 		default:
 		}
-		if(kumpaner != "") {
+		if kumpaner != "" {
 			sidekicks := make([]SideKick, 0)
 			for _, n := range strings.Split(kumpaner, ",") {
-				sidekicks = append(sidekicks, SideKick{Number: "#"+n})
+				sidekicks = append(sidekicks, SideKick{Number: "#" + n})
 			}
 			e.SideKicks = sidekicks
 		}
@@ -206,7 +210,7 @@ WHERE id=?
 LIMIT 1
 `
 
-	if(0 == e.Id) {
+	if 0 == e.Id {
 		// Raise error
 		ErrorCheck(errors.New("Id is not set"))
 	}
@@ -231,7 +235,7 @@ LIMIT 1
 	i, err := res.RowsAffected()
 	ErrorCheck(err)
 
-	if(i == 0) {
+	if i == 0 {
 		log.Println(fmt.Sprintf("0 rows affected (id: %d)", e.Id))
 	}
 
@@ -239,7 +243,7 @@ LIMIT 1
 }
 
 func (o EntryOperation) Delete(e Entry) Entry {
-	if(0 == e.Id) {
+	if 0 == e.Id {
 		// Raise error
 		ErrorCheck(errors.New("Id is not set"))
 	}

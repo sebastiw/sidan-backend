@@ -4,6 +4,7 @@ import(
 	"fmt"
 	"strings"
 )
+// swagger:model
 
 type Prospect struct {
 	Id int64 `json:"id"`

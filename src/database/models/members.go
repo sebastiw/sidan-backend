@@ -4,6 +4,7 @@ import(
 	"fmt"
 	"strings"
 )
+// swagger:model
 
 type Member struct {
 	Id int64 `json:"id"`

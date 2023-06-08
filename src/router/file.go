@@ -51,7 +51,7 @@ func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request)
 	_, err = file.Read(buff)
 	CheckError(w, r, err)
 	// Reset seek
-	file.Seek(0,0)
+	file.Seek(0, 0)
 
 	contentType := http.DetectContentType(buff)
 	fileExt, err := file_extension(contentType)

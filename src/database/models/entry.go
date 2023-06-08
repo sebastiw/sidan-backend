@@ -1,39 +1,40 @@
 package database
 
-import(
+import (
 	"fmt"
 	"strings"
 )
 
 type SideKick struct {
-  Number string `json:""`
+	Number string `json:""`
 }
 
 func (s SideKick) Fmt() string {
 	return s.Number
 }
 
+//swagger:model Entry
 type Entry struct {
-  Id int64 `json:""`
-  Date string `json:""`
-  Time string `json:""`
-  Msg string `json:""`
-  Status int64 `json:""`
-  Cl int64 `json:""`
-  Sig string `json:""`
-  Email string `json:""`
-  Place string `json:""`
-  Ip *string `json:""`
-  Host *string `json:""`
-  Olsug int64 `json:""`
-  Enheter int64 `json:""`
-  Lat *float64 `json:""`
-  Lon *float64 `json:""`
-  Report bool `json:""`
-  Likes int64 `json:""`
-  Secret bool `json:""`
-  PersonalSecret bool `json:""`
-  SideKicks []SideKick `json:""`
+	Id             int64      `json:""`
+	Date           string     `json:""`
+	Time           string     `json:""`
+	Msg            string     `json:""`
+	Status         int64      `json:""`
+	Cl             int64      `json:""`
+	Sig            string     `json:""`
+	Email          string     `json:""`
+	Place          string     `json:""`
+	Ip             *string    `json:""`
+	Host           *string    `json:""`
+	Olsug          int64      `json:""`
+	Enheter        int64      `json:""`
+	Lat            *float64   `json:""`
+	Lon            *float64   `json:""`
+	Report         bool       `json:""`
+	Likes          int64      `json:""`
+	Secret         bool       `json:""`
+	PersonalSecret bool       `json:""`
+	SideKicks      []SideKick `json:""`
 }
 
 func (e Entry) Fmt() string {
@@ -61,7 +62,7 @@ func (e Entry) Fmt() string {
 	s = add_i(s, "Likes", e.Likes)
 	s = add_b(s, "Secret", e.Secret)
 	s = add_b(s, "PersonalSecret", e.PersonalSecret)
-	s = add_s(s, "SideKicks", "[" + strings.Join(sk, ",") + "]")
+	s = add_s(s, "SideKicks", "["+strings.Join(sk, ",")+"]")
 
 	return fmt.Sprintf("Entry{%s}", strings.Join(s, ", "))
 }
