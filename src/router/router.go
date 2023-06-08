@@ -117,8 +117,8 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT")
 
 	db_eh := NewEntryHandler(db)
-	//swagger:route PUT /db/entry entry createEntry
-	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("PUT")
+	//swagger:route POST /db/entry entry createEntry
+	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("POST")
 	//swagger:route GET /db/entry/{id} entry readEntry
 	//	Parameters:
 	//    + name: id
@@ -127,20 +127,20 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 	//	Responses:
 	//  	200: Entry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET")
-	//swagger:route POST /db/entry/{id} entry updateEntry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("POST")
+	//swagger:route PUT /db/entry/{id} entry updateEntry
+	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("PUT")
 	//swagger:route DELETE /db/entry/{id} entry deleteEntry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE")
 
 	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET")
 
 	db_mh := NewMemberHandler(db)
-	//swagger:route PUT /db/member member createMember
-	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("PUT")
+	//swagger:route POST /db/member member createMember
+	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("POST")
 	//swagger:route GET /db/member/{id} member readMember
 	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET")
-	//swagger:route POST /db/member/{id} member updateMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("POST")
+	//swagger:route PUT /db/member/{id} member updateMember
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("PUT")
 	//swagger:route DELETE /db/member/{id} member deleteMember
 	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE")
 	//swagger:route GET /db/members member readAllMember
