@@ -120,6 +120,12 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 	//swagger:route PUT /db/entry entry createEntry
 	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("PUT")
 	//swagger:route GET /db/entry/{id} entry readEntry
+	//	Parameters:
+	//    + name: id
+	//      in: path
+	//  	format: int32
+	//	Responses:
+	//  	default: Entry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET")
 	//swagger:route POST /db/entry/{id} entry updateEntry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("POST")

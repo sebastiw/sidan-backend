@@ -12,29 +12,28 @@ type SideKick struct {
 func (s SideKick) Fmt() string {
 	return s.Number
 }
-
-//swagger:model Entry
+//swagger:response Entry
 type Entry struct {
-	Id             int64      `json:""`
-	Date           string     `json:""`
-	Time           string     `json:""`
-	Msg            string     `json:""`
-	Status         int64      `json:""`
-	Cl             int64      `json:""`
-	Sig            string     `json:""`
-	Email          string     `json:""`
-	Place          string     `json:""`
-	Ip             *string    `json:""`
-	Host           *string    `json:""`
-	Olsug          int64      `json:""`
-	Enheter        int64      `json:""`
-	Lat            *float64   `json:""`
-	Lon            *float64   `json:""`
-	Report         bool       `json:""`
-	Likes          int64      `json:""`
-	Secret         bool       `json:""`
-	PersonalSecret bool       `json:""`
-	SideKicks      []SideKick `json:""`
+	Id             int64      `json:"id"`
+	Date           string     `json:"date"`
+	Time           string     `json:"time"`
+	Msg            string     `json:"msg"`
+	Status         int64      `json:"status"`
+	Cl             int64      `json:"cl"`
+	Sig            string     `json:"sig"`
+	Email          string     `json:"email"`
+	Place          string     `json:"place"`
+	Ip             *string    `json:"ip"`
+	Host           *string    `json:"host"`
+	Olsug          int64      `json:"olsug"`
+	Enheter        int64      `json:"enheter"`
+	Lat            *float64   `json:"lat"`
+	Lon            *float64   `json:"lon"`
+	Report         bool       `json:"report"`
+	Likes          int64      `json:"likes"`
+	Secret         bool       `json:"secret"`
+	PersonalSecret bool       `json:"personal_secret"`
+	SideKicks      []SideKick `json:"sidekicks"`
 }
 
 func (e Entry) Fmt() string {
