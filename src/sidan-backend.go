@@ -32,7 +32,7 @@ func main() {
 	address := fmt.Sprintf(":%v", configuration.Server.Port)
 	log.Printf("Starting backend service at %v", address)
 
-	mux := r.Mux(db, configuration.Server.StaticPath, configuration.Mail)
+	mux := r.Mux(db, configuration.Server.StaticPath, configuration.Mail, configuration.OAuth2)
 
 	log.Fatal(http.ListenAndServe(address, mux))
 }

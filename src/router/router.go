@@ -102,11 +102,15 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Placeholder")
 }
 
-func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Handler {
+func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Configs map[string]c.OAuth2Configuration) http.Handler {
 	r := mux.NewRouter()
 
 	// r.HandleFunc("/auth", defaultHandler)
 	// r.HandleFunc("/notify", defaultHandler)
+	for provider, oauth2Config := range oauth2Configs {
+		oh := OAuth2Handler{Provider: provider, ClientID: oauth2Config.ClientID, ClientSecret: oauth2Config.ClientSecret, RedirectURL: oauth2Config.RedirectURL, Scopes: oauth2Config.Scopes}
+		r.HandleFunc("/auth/" + provider, oh.oauth2RedirectHandler).Methods("GET")
+	}
 
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(staticPath))

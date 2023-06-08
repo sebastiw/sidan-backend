@@ -10,3 +10,15 @@ database:
 mail:
   host: "localhost"
   port: 25
+
+oauth2:
+  google:
+    clientId: "1234"
+    clientSecret: "secret"
+    redirectURL: "google/path"
+    scopes: ["openid", "email"]
+  github:
+    clientId: "54321"
+    clientSecret: "really_secret"
+    redirectURL: "github/path"
+    scopes: ["user:email"]

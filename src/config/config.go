@@ -11,6 +11,7 @@ type Configuration struct {
 	Server       ServerConfiguration
 	Database     DatabaseConfiguration
 	Mail         MailConfiguration
+	OAuth2       map[string]OAuth2Configuration
 }
 
 type ServerConfiguration struct {
@@ -31,6 +32,13 @@ type MailConfiguration struct {
 	Port     int
 	User     string
 	Password string
+}
+
+type OAuth2Configuration struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
+	Scopes       []string
 }
 
 func ReadConfig(configuration *Configuration) {
