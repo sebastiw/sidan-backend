@@ -1,6 +1,6 @@
 package router
 
-import(
+import (
 	"context"
 	"database/sql"
 	"fmt"
@@ -33,7 +33,6 @@ func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
 	}
 }
 
-
 type statusWriter struct {
 	http.ResponseWriter
 	status int
@@ -55,16 +54,16 @@ func (w *statusWriter) Write(b []byte) (int, error) {
 }
 
 type LogEntry struct {
-	RequestId string
-	Host string
+	RequestId  string
+	Host       string
 	RemoteAddr string
-	Method string
+	Method     string
 	RequestURI string
-	Proto string
-	Status int
+	Proto      string
+	Status     int
 	ContentLen int
-	UserAgent string
-	Duration time.Duration
+	UserAgent  string
+	Duration   time.Duration
 }
 
 func LogHTTP(handler http.Handler) http.HandlerFunc {
@@ -118,17 +117,27 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration) http.Han
 	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT")
 
 	db_eh := NewEntryHandler(db)
+	//swagger:route PUT /db/entry entry createEntry
 	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("PUT")
+	//swagger:route GET /db/entry/{id} entry readEntry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET")
+	//swagger:route POST /db/entry/{id} entry updateEntry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("POST")
+	//swagger:route DELETE /db/entry/{id} entry deleteEntry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE")
+	//swagger:route GET /db/entries entry readAllEntry
 	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET")
 
 	db_mh := NewMemberHandler(db)
+	//swagger:route PUT /db/member member createMember
 	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("PUT")
+	//swagger:route GET /db/member/{id} member readMember
 	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET")
+	//swagger:route POST /db/member/{id} member updateMember
 	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("POST")
+	//swagger:route DELETE /db/member/{id} member deleteMember
 	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE")
+	//swagger:route GET /db/members member readAllMember
 	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET")
 
 	// r.HandleFunc("/db", defaultHandler)
