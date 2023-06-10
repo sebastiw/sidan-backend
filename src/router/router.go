@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/cors"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	c "github.com/sebastiw/sidan-backend/src/config"
 )
@@ -105,7 +105,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 func corsHeaders(router http.Handler) http.Handler {
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
+		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 	})
 	return c.Handler(router)
@@ -118,7 +118,7 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	// r.HandleFunc("/notify", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
 		oh := OAuth2Handler{Provider: provider, ClientID: oauth2Config.ClientID, ClientSecret: oauth2Config.ClientSecret, RedirectURL: oauth2Config.RedirectURL, Scopes: oauth2Config.Scopes}
-		r.HandleFunc("/auth/" + provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
 	}
 
 	fh := FileHandler{}
@@ -145,7 +145,7 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	//swagger:route DELETE /db/entry/{id} entry deleteEntry
 	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE", "OPTIONS")
 
-	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/entry", db_eh.readAllEntryHandler).Methods("GET", "OPTIONS")
 
 	db_mh := NewMemberHandler(db)
 	//swagger:route POST /db/member member createMember
