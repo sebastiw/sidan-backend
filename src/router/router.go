@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
 	"github.com/gorilla/mux"
 
 	c "github.com/sebastiw/sidan-backend/src/config"
@@ -102,6 +103,14 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Placeholder")
 }
 
+func corsHeaders(router http.Handler) http.Handler {
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowCredentials: true,
+	})
+	return c.Handler(router)
+}
+
 func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Configs map[string]c.OAuth2Configuration) http.Handler {
 	r := mux.NewRouter()
 
@@ -157,5 +166,5 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	v1Rest := r.PathPrefix("/rest/v1").Subrouter()
 	v1Rest.HandleFunc("/ReadEntries", restv1h.getEntries).Methods("GET", "OPTIONS")
 
-	return tracing(next_request_id)(LogHTTP(r))
+	return corsHeaders(tracing(next_request_id)(LogHTTP(r)))
 }
