@@ -71,7 +71,6 @@ SET
 
 func (o EntryOperation) Read(id int) Entry {
 	q := `
-SET SQL_MODE = 'TRADITIONAL';
 SELECT
  m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
  m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
@@ -85,9 +84,7 @@ LEFT JOIN cl2003_permissions AS p ON m.id = p.id
 LEFT JOIN cl2003_msgs_kumpaner AS k ON m.id = k.id
 WHERE m.id=?
 GROUP BY
- m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
- m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
- secret, personalsecret
+ m.id
 `
 
 	var kumpaner = *new(string)
@@ -147,9 +144,7 @@ LEFT JOIN 2003_likes AS l ON m.id = l.id
 LEFT JOIN cl2003_permissions AS p ON m.id = p.id
 LEFT JOIN cl2003_msgs_kumpaner AS k ON m.id = k.id
 GROUP BY
- m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
- m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
- secret, personalsecret
+ m.id
 ORDER BY id DESC
 LIMIT ?, ?
 `
