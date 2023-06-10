@@ -23,6 +23,12 @@ func Connect(user string, pw string, host string, port int, schema string) *sql.
 	return db
 }
 
+func ConfigureSession(db *sql.DB) {
+	q := `SET SESSION sql_mode = 'TRADITIONAL'`
+	_, err := db.Exec(q)
+	ErrorCheck(err)
+}
+
 func Configure(db *sql.DB) {
 	db.SetConnMaxLifetime(time.Minute * 3)
 	db.SetMaxOpenConns(10)

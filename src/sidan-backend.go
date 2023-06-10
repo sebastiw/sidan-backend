@@ -28,6 +28,7 @@ func main() {
 	// Open doesn't open a connection. Validate DSN data:
 	d.Ping(db)
 	d.Configure(db)
+	d.ConfigureSession(db)
 
 	address := fmt.Sprintf(":%v", configuration.Server.Port)
 	log.Printf("Starting backend service at %v", address)
