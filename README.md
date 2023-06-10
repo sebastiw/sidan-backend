@@ -44,8 +44,8 @@ to generate the swagger yaml.
 
 - [ ] Content-Type: application/json
 
-- [ ] /auth/ - for authorization and forgot password etc.
-- [ ] /file/ - for image uploads
+- [x] /auth/ - for authorization and forgot password etc.
+- [x] /file/ - for image uploads
 - [ ] /mail/ - for mailing the reset password
 - [ ] /notify/ - for sending notifications
 - [ ] /db/ - all database queries and calls

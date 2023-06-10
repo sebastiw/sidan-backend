@@ -120,11 +120,11 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(staticPath))
-	r.HandleFunc("/file/image", fh.createImageHandler).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/file/image", fh.createImageHandler).Methods("POST", "OPTIONS")
 	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET", "OPTIONS")
 
 	mh := MailHandler{Host: mailConfig.Host, Port: mailConfig.Port, Username: mailConfig.User, Password: mailConfig.Password}
-	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/mail", mh.createMailHandler).Methods("POST", "OPTIONS")
 
 	dbEh := NewEntryHandler(db)
 	//swagger:route POST /db/entries entry createEntry

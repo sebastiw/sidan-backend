@@ -14,7 +14,7 @@ type FileHandler struct {
 }
 
 type File struct {
-	Filename string `json:filename`
+	Filename string `json:"filename"`
 }
 
 func fileExtension(imageType string) (string, error) {

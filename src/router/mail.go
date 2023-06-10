@@ -32,7 +32,11 @@ func (m Mail) Fmt() string {
 
 func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) {
 	var m Mail
-	_ = json.NewDecoder(r.Body).Decode(&m)
+	err := json.NewDecoder(r.Body).Decode(&m)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON request body", http.StatusBadRequest)
+		return
+	}
 
 	msg := []byte(fmt.Sprintf(
 		"To: %s\r\n"+
@@ -43,7 +47,7 @@ func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) 
 	log.Println(getRequestId(r), m.Fmt())
 
 	auth := smtp.PlainAuth("", mh.Username, mh.Password, mh.Host)
-	err := smtp.SendMail(fmt.Sprintf("%s:%d", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)
+	err = smtp.SendMail(fmt.Sprintf("%s:%d", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)
 	if err != nil {
 		log.Println(getRequestId(r), "Send mail error:", err)
 		return
