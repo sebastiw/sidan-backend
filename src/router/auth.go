@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -18,9 +19,9 @@ type OAuth2Handler struct {
 }
 
 func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println(getRequestId(r), oh)
-
 	var conf *oauth2.Config
+
+	log.Println(getRequestId(r), oh)
 
 	switch oh.Provider {
 	case "google":
@@ -28,7 +29,7 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 			ClientID:     oh.ClientID,
 			ClientSecret: oh.ClientSecret,
 			RedirectURL:  oh.RedirectURL,
-			Scopes:       oh.Scopes,
+			Scopes:       []string{"openid", "email"},
 			Endpoint:     google.Endpoint,
 		}
 	case "github":
@@ -36,7 +37,7 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 			ClientID:     oh.ClientID,
 			ClientSecret: oh.ClientSecret,
 			RedirectURL:  oh.RedirectURL,
-			Scopes:       oh.Scopes,
+			Scopes:       []string{"user:email"},
 			Endpoint:     github.Endpoint,
 		}
 	default:
@@ -46,5 +47,21 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 	// Generate the URL to redirect the user to for authentication
 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	// Redirect the user to the generated URL
+	w.Header().Set("Content-Type", "application/json")
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+type OAuth2AccessToken struct {
+	AccessToken string `json:"access_token"`
+	Scope       string `json:"scope"`
+	TokenType   string `json:"token_type"`
+}
+
+func (oh OAuth2Handler) oauth2CallbackHandler(w http.ResponseWriter, r *http.Request) {
+	// var conf *oauth2.Config
+
+	var e OAuth2AccessToken
+	_ = json.NewDecoder(r.Body).Decode(&e)
+
+	log.Println(getRequestId(r), e)
 }
