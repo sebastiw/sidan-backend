@@ -208,7 +208,7 @@ LIMIT 1
 
 	if 0 == e.Id {
 		// Raise error
-		ErrorCheck(errors.New("Id is not set"))
+		ErrorCheck(errors.New("id is not set"))
 	}
 
 	res, err := o.db.Exec(q,
@@ -241,7 +241,7 @@ LIMIT 1
 func (o EntryOperation) Delete(e Entry) Entry {
 	if 0 == e.Id {
 		// Raise error
-		ErrorCheck(errors.New("Id is not set"))
+		ErrorCheck(errors.New("id is not set"))
 	}
 
 	_, err := o.db.Exec("DELETE FROM cl2003_msgs WHERE id=?", e.Id)

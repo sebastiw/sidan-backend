@@ -9,8 +9,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	d "github.com/sebastiw/sidan-backend/src/database/operations"
 	model "github.com/sebastiw/sidan-backend/src/database/models"
+	d "github.com/sebastiw/sidan-backend/src/database/operations"
 )
 
 func NewMemberHandler(db *sql.DB) MemberHandler {
@@ -25,7 +25,7 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	var m model.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
-	log.Println(get_request_id(r), m.Fmt())
+	log.Println(getRequestId(r), m.Fmt())
 	member := mh.op.Create(m)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -49,7 +49,7 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(get_request_id(r), m.Fmt())
+	log.Println(getRequestId(r), m.Fmt())
 	m.Id = int64(id)
 	member := mh.op.Update(m)
 
@@ -64,7 +64,7 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(get_request_id(r), m.Fmt())
+	log.Println(getRequestId(r), m.Fmt())
 	m.Id = int64(id)
 	member := mh.op.Delete(m)
 
@@ -78,4 +78,3 @@ func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)
 }
-

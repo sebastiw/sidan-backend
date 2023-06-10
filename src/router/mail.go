@@ -9,17 +9,17 @@ import (
 )
 
 type MailHandler struct {
-	Host string
-	Port int
+	Host     string
+	Port     int
 	Username string
 	Password string
 }
 
 type Mail struct {
-	FromEmail string `json:"from_email"`
-	ToEmails []string `json:"to_emails"`
-	Message string `json:"message"`
-	Title string `json:"title"`
+	FromEmail string   `json:"from_email"`
+	ToEmails  []string `json:"to_emails"`
+	Message   string   `json:"message"`
+	Title     string   `json:"title"`
 }
 
 type ReturnMail struct {
@@ -35,17 +35,17 @@ func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) 
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
 	msg := []byte(fmt.Sprintf(
-		"To: %s\r\n" +
-		"Subject: %s\r\n" +
-		"\r\n" +
-		"%s\r\n", m.ToEmails, m.Title, m.Message))
+		"To: %s\r\n"+
+			"Subject: %s\r\n"+
+			"\r\n"+
+			"%s\r\n", m.ToEmails, m.Title, m.Message))
 
-	log.Println(get_request_id(r), m.Fmt())
+	log.Println(getRequestId(r), m.Fmt())
 
 	auth := smtp.PlainAuth("", mh.Username, mh.Password, mh.Host)
 	err := smtp.SendMail(fmt.Sprintf("%s:%d", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)
 	if err != nil {
-		log.Println(get_request_id(r), "Send mail error:", err)
+		log.Println(getRequestId(r), "Send mail error:", err)
 		return
 	}
 

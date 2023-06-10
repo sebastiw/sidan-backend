@@ -9,12 +9,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func connect_string(user string, pw string, host string, port int, schema string) string {
+func connectString(user string, pw string, host string, port int, schema string) string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%v)/%s", user, pw, host, port, schema)
 }
 
 func Connect(user string, pw string, host string, port int, schema string) *sql.DB {
-	connectString := connect_string(user, pw, host, port, schema)
+	connectString := connectString(user, pw, host, port, schema)
 	log.Printf("Connecting to %s", host)
 
 	db, err := sql.Open("mysql", connectString)

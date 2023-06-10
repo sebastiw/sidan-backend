@@ -152,9 +152,9 @@ WHERE id=? AND number=?
 LIMIT 1
 `
 
-	if(0 == m.Id || nil == m.Number) {
+	if 0 == m.Id || nil == m.Number {
 		// Raise error
-		ErrorCheck(errors.New("Id and/or Number is not set"))
+		ErrorCheck(errors.New("id and/or Number is not set"))
 	}
 
 	res, err := o.db.Exec(q,
@@ -179,7 +179,7 @@ LIMIT 1
 	i, err := res.RowsAffected()
 	ErrorCheck(err)
 
-	if(i == 0) {
+	if i == 0 {
 		log.Println(fmt.Sprintf("0 rows affected (id: %d, number: %s)", m.Id, *m.Number))
 	}
 
@@ -187,9 +187,9 @@ LIMIT 1
 }
 
 func (o MemberOperation) Delete(m Member) Member {
-	if(0 == m.Id || nil == m.Number) {
+	if 0 == m.Id || nil == m.Number {
 		// Raise error
-		ErrorCheck(errors.New("Id and/or Number is not set"))
+		ErrorCheck(errors.New("id and/or Number is not set"))
 	}
 
 	_, err := o.db.Exec("DELETE FROM cl2007_members WHERE id=? AND number=?", m.Id, m.Number)

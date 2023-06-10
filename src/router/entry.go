@@ -25,7 +25,7 @@ func (eh EntryHandler) createEntryHandler(w http.ResponseWriter, r *http.Request
 	var e model.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
-	log.Println(get_request_id(r), e)
+	log.Println(getRequestId(r), e)
 	entry := eh.op.Create(e)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -49,7 +49,7 @@ func (eh EntryHandler) updateEntryHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(get_request_id(r), e)
+	log.Println(getRequestId(r), e)
 	e.Id = int64(id)
 	entry := eh.op.Update(e)
 
@@ -64,7 +64,7 @@ func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(get_request_id(r), e)
+	log.Println(getRequestId(r), e)
 	e.Id = int64(id)
 	entry := eh.op.Delete(e)
 
@@ -72,10 +72,12 @@ func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(entry)
 }
 
+// Responses:
+//
+//	default: []Entry
+//	200: [Entry]
+//
 //swagger:route GET /db/entries entry readAllEntry
-//	Responses:
-//		default: []Entry
-//		200: [Entry]
 func (eh EntryHandler) readAllEntryHandler(w http.ResponseWriter, r *http.Request) {
 	take := MakeDefaultInt(r, "take", "20")
 	skip := MakeDefaultInt(r, "skip", "0")

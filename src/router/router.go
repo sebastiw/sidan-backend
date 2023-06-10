@@ -74,7 +74,7 @@ func LogHTTP(handler http.Handler) http.HandlerFunc {
 		handler.ServeHTTP(&sw, r)
 		duration := time.Now().Sub(start)
 		log.Println(LogEntry{
-			RequestId:  get_request_id(r),
+			RequestId:  getRequestId(r),
 			Host:       r.Host,
 			RemoteAddr: r.RemoteAddr,
 			Method:     r.Method,
@@ -88,10 +88,10 @@ func LogHTTP(handler http.Handler) http.HandlerFunc {
 	}
 }
 
-func next_request_id() string {
+func nextRequestId() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
-func get_request_id(r *http.Request) string {
+func getRequestId(r *http.Request) string {
 	requestID, ok := r.Context().Value(requestIDKey).(string)
 	if !ok {
 		requestID = "unknown"
@@ -99,16 +99,12 @@ func get_request_id(r *http.Request) string {
 	return requestID
 }
 
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Placeholder")
-}
-
 func corsHeaders(router http.Handler) http.Handler {
-	c := cors.New(cors.Options{
+	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 	})
-	return c.Handler(router)
+	return corsHandler.Handler(router)
 }
 
 func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Configs map[string]c.OAuth2Configuration) http.Handler {
@@ -129,9 +125,9 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	mh := MailHandler{Host: mailConfig.Host, Port: mailConfig.Port, Username: mailConfig.User, Password: mailConfig.Password}
 	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT", "OPTIONS")
 
-	db_eh := NewEntryHandler(db)
+	dbEh := NewEntryHandler(db)
 	//swagger:route POST /db/entries entry createEntry
-	r.HandleFunc("/db/entries", db_eh.createEntryHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/db/entries", dbEh.createEntryHandler).Methods("POST", "OPTIONS")
 	//swagger:route GET /db/entries/{id} entry readEntry
 	//	Parameters:
 	//    + name: id
@@ -139,25 +135,25 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	//  	format: int32
 	//	Responses:
 	//  	200: Entry
-	r.HandleFunc("/db/entries/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/entries/{id:[0-9]+}", dbEh.readEntryHandler).Methods("GET", "OPTIONS")
 	//swagger:route PUT /db/entries/{id} entry updateEntry
-	r.HandleFunc("/db/entries/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/db/entries/{id:[0-9]+}", dbEh.updateEntryHandler).Methods("PUT", "OPTIONS")
 	//swagger:route DELETE /db/entries/{id} entry deleteEntry
-	r.HandleFunc("/db/entries/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/db/entries/{id:[0-9]+}", dbEh.deleteEntryHandler).Methods("DELETE", "OPTIONS")
 
-	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/entries", dbEh.readAllEntryHandler).Methods("GET", "OPTIONS")
 
-	db_mh := NewMemberHandler(db)
+	dbMh := NewMemberHandler(db)
 	//swagger:route POST /db/members member createMember
-	r.HandleFunc("/db/members", db_mh.createMemberHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/db/members", dbMh.createMemberHandler).Methods("POST", "OPTIONS")
 	//swagger:route GET /db/members/{id} member readMember
-	r.HandleFunc("/db/members/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/members/{id:[0-9]+}", dbMh.readMemberHandler).Methods("GET", "OPTIONS")
 	//swagger:route PUT /db/members/{id} member updateMember
-	r.HandleFunc("/db/members/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/db/members/{id:[0-9]+}", dbMh.updateMemberHandler).Methods("PUT", "OPTIONS")
 	//swagger:route DELETE /db/members/{id} member deleteMember
-	r.HandleFunc("/db/members/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/db/members/{id:[0-9]+}", dbMh.deleteMemberHandler).Methods("DELETE", "OPTIONS")
 	//swagger:route GET /db/members member readAllMember
-	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/members", dbMh.readAllMemberHandler).Methods("GET", "OPTIONS")
 
 	// r.HandleFunc("/db", defaultHandler)
 
@@ -166,5 +162,5 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	v1Rest := r.PathPrefix("/rest/v1").Subrouter()
 	v1Rest.HandleFunc("/ReadEntries", restv1h.getEntries).Methods("GET", "OPTIONS")
 
-	return corsHeaders(tracing(next_request_id)(LogHTTP(r)))
+	return corsHeaders(tracing(nextRequestId)(LogHTTP(r)))
 }

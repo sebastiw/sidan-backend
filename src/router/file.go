@@ -17,8 +17,8 @@ type File struct {
 	Filename string `json:filename`
 }
 
-func file_extension(image_type string) (string, error) {
-	switch image_type {
+func fileExtension(imageType string) (string, error) {
+	switch imageType {
 	case "image/gif":
 		return "gif", nil
 	case "image/png":
@@ -31,7 +31,7 @@ func file_extension(image_type string) (string, error) {
 
 func CheckError(w http.ResponseWriter, r *http.Request, err error) {
 	if err != nil {
-		log.Println(get_request_id(r), err)
+		log.Println(getRequestId(r), err)
 		panic(err.Error())
 	}
 }
@@ -54,7 +54,7 @@ func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request)
 	file.Seek(0, 0)
 
 	contentType := http.DetectContentType(buff)
-	fileExt, err := file_extension(contentType)
+	fileExt, err := fileExtension(contentType)
 	CheckError(w, r, err)
 
 	tempFilename := fmt.Sprintf("upload-*.%s", fileExt)
@@ -68,7 +68,7 @@ func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request)
 	tempFile.Write(fileBytes)
 	bareFilename := strings.TrimPrefix(tempFile.Name(), "static/")
 	size := fmt.Sprintf("%+vb", handler.Size)
-	log.Println(get_request_id(r), "Uploaded", handler.Filename, size, bareFilename)
+	log.Println(getRequestId(r), "Uploaded", handler.Filename, size, bareFilename)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(File{Filename: bareFilename})
