@@ -109,20 +109,20 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	// r.HandleFunc("/notify", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
 		oh := OAuth2Handler{Provider: provider, ClientID: oauth2Config.ClientID, ClientSecret: oauth2Config.ClientSecret, RedirectURL: oauth2Config.RedirectURL, Scopes: oauth2Config.Scopes}
-		r.HandleFunc("/auth/" + provider, oh.oauth2RedirectHandler).Methods("GET")
+		r.HandleFunc("/auth/" + provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
 	}
 
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(staticPath))
-	r.HandleFunc("/file/image", fh.createImageHandler).Methods("PUT")
-	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET")
+	r.HandleFunc("/file/image", fh.createImageHandler).Methods("PUT", "OPTIONS")
+	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET", "OPTIONS")
 
 	mh := MailHandler{Host: mailConfig.Host, Port: mailConfig.Port, Username: mailConfig.User, Password: mailConfig.Password}
-	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT")
+	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT", "OPTIONS")
 
 	db_eh := NewEntryHandler(db)
 	//swagger:route POST /db/entry entry createEntry
-	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("POST")
+	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("POST", "OPTIONS")
 	//swagger:route GET /db/entry/{id} entry readEntry
 	//	Parameters:
 	//    + name: id
@@ -130,32 +130,32 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	//  	format: int32
 	//	Responses:
 	//  	200: Entry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET")
+	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET", "OPTIONS")
 	//swagger:route PUT /db/entry/{id} entry updateEntry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("PUT")
+	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("PUT", "OPTIONS")
 	//swagger:route DELETE /db/entry/{id} entry deleteEntry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE")
+	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE", "OPTIONS")
 
-	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET")
+	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET", "OPTIONS")
 
 	db_mh := NewMemberHandler(db)
 	//swagger:route POST /db/member member createMember
-	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("POST")
+	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("POST", "OPTIONS")
 	//swagger:route GET /db/member/{id} member readMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET")
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET", "OPTIONS")
 	//swagger:route PUT /db/member/{id} member updateMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("PUT")
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("PUT", "OPTIONS")
 	//swagger:route DELETE /db/member/{id} member deleteMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE")
+	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE", "OPTIONS")
 	//swagger:route GET /db/members member readAllMember
-	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET")
+	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET", "OPTIONS")
 
 	// r.HandleFunc("/db", defaultHandler)
 
 	// Sidan APIs for deprecation
 	restv1h := RestHandler{version: 1, db: db, user_id: "8"} // authed user goes here
 	v1Rest := r.PathPrefix("/rest/v1").Subrouter()
-	v1Rest.HandleFunc("/ReadEntries", restv1h.getEntries).Methods("GET")
+	v1Rest.HandleFunc("/ReadEntries", restv1h.getEntries).Methods("GET", "OPTIONS")
 
 	return tracing(next_request_id)(LogHTTP(r))
 }
