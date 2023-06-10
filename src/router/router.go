@@ -158,10 +158,5 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 
 	// r.HandleFunc("/db", defaultHandler)
 
-	// Sidan APIs for deprecation
-	restv1h := RestHandler{version: 1, db: db, user_id: "8"} // authed user goes here
-	v1Rest := r.PathPrefix("/rest/v1").Subrouter()
-	v1Rest.HandleFunc("/ReadEntries", restv1h.getEntries).Methods("GET", "OPTIONS")
-
 	return corsHeaders(tracing(nextRequestId)(LogHTTP(r)))
 }
