@@ -71,6 +71,7 @@ SET
 
 func (o EntryOperation) Read(id int) Entry {
 	q := `
+SET SQL_MODE = 'TRADITIONAL';
 SELECT
  m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
  m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
