@@ -73,7 +73,7 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 
 	token, err := conf.Exchange(oauth2.NoContext, e.Code)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Printf("ERROR: %s, %s", err.Error(), vars)
 		return
 	}
 
