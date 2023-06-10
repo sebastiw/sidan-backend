@@ -2,7 +2,6 @@ package router
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
@@ -67,13 +66,17 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 
 func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	conf := oh.oauth2Config()
-	vars := mux.Vars(r)
 
-	e := OAuth2AuthToken{Code: vars["code"], State: vars["state"]}
+	queryParams := r.URL.Query()
+
+	code := queryParams.Get("code")
+	state := queryParams.Get("state")
+
+	e := OAuth2AuthToken{Code: code, State: state}
 
 	token, err := conf.Exchange(oauth2.NoContext, e.Code)
 	if err != nil {
-		log.Printf("ERROR: %s, %s", err.Error(), vars)
+		log.Printf("ERROR: %s, %s", err.Error(), code)
 		return
 	}
 
