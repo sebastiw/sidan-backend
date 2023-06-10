@@ -18,6 +18,17 @@ type OAuth2Handler struct {
 	Scopes       []string
 }
 
+type OAuth2AuthToken struct {
+	Code        string `json:"code"`
+	State       string `json:"state"`
+}
+
+type OAuth2AccessToken struct {
+	AccessToken string `json:"access_token"`
+	Scope       string `json:"scope"`
+	TokenType   string `json:"token_type"`
+}
+
 func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	var conf *oauth2.Config
 
@@ -51,16 +62,10 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-type OAuth2AccessToken struct {
-	AccessToken string `json:"access_token"`
-	Scope       string `json:"scope"`
-	TokenType   string `json:"token_type"`
-}
-
-func (oh OAuth2Handler) oauth2CallbackHandler(w http.ResponseWriter, r *http.Request) {
+func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// var conf *oauth2.Config
 
-	var e OAuth2AccessToken
+	var e OAuth2AuthToken
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
 	log.Println(getRequestId(r), e)
