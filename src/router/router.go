@@ -130,32 +130,32 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	r.HandleFunc("/mail", mh.createMailHandler).Methods("PUT", "OPTIONS")
 
 	db_eh := NewEntryHandler(db)
-	//swagger:route POST /db/entry entry createEntry
-	r.HandleFunc("/db/entry", db_eh.createEntryHandler).Methods("POST", "OPTIONS")
-	//swagger:route GET /db/entry/{id} entry readEntry
+	//swagger:route POST /db/entries entry createEntry
+	r.HandleFunc("/db/entries", db_eh.createEntryHandler).Methods("POST", "OPTIONS")
+	//swagger:route GET /db/entries/{id} entry readEntry
 	//	Parameters:
 	//    + name: id
 	//      in: path
 	//  	format: int32
 	//	Responses:
 	//  	200: Entry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET", "OPTIONS")
-	//swagger:route PUT /db/entry/{id} entry updateEntry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("PUT", "OPTIONS")
-	//swagger:route DELETE /db/entry/{id} entry deleteEntry
-	r.HandleFunc("/db/entry/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/db/entries/{id:[0-9]+}", db_eh.readEntryHandler).Methods("GET", "OPTIONS")
+	//swagger:route PUT /db/entries/{id} entry updateEntry
+	r.HandleFunc("/db/entries/{id:[0-9]+}", db_eh.updateEntryHandler).Methods("PUT", "OPTIONS")
+	//swagger:route DELETE /db/entries/{id} entry deleteEntry
+	r.HandleFunc("/db/entries/{id:[0-9]+}", db_eh.deleteEntryHandler).Methods("DELETE", "OPTIONS")
 
-	r.HandleFunc("/db/entry", db_eh.readAllEntryHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/entries", db_eh.readAllEntryHandler).Methods("GET", "OPTIONS")
 
 	db_mh := NewMemberHandler(db)
-	//swagger:route POST /db/member member createMember
-	r.HandleFunc("/db/member", db_mh.createMemberHandler).Methods("POST", "OPTIONS")
-	//swagger:route GET /db/member/{id} member readMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET", "OPTIONS")
-	//swagger:route PUT /db/member/{id} member updateMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("PUT", "OPTIONS")
-	//swagger:route DELETE /db/member/{id} member deleteMember
-	r.HandleFunc("/db/member/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE", "OPTIONS")
+	//swagger:route POST /db/members member createMember
+	r.HandleFunc("/db/members", db_mh.createMemberHandler).Methods("POST", "OPTIONS")
+	//swagger:route GET /db/members/{id} member readMember
+	r.HandleFunc("/db/members/{id:[0-9]+}", db_mh.readMemberHandler).Methods("GET", "OPTIONS")
+	//swagger:route PUT /db/members/{id} member updateMember
+	r.HandleFunc("/db/members/{id:[0-9]+}", db_mh.updateMemberHandler).Methods("PUT", "OPTIONS")
+	//swagger:route DELETE /db/members/{id} member deleteMember
+	r.HandleFunc("/db/members/{id:[0-9]+}", db_mh.deleteMemberHandler).Methods("DELETE", "OPTIONS")
 	//swagger:route GET /db/members member readAllMember
 	r.HandleFunc("/db/members", db_mh.readAllMemberHandler).Methods("GET", "OPTIONS")
 
