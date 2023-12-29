@@ -1,4 +1,4 @@
-FROM mysql:8.0.33
+FROM mysql:8.0.35
 
 ENV MYSQL_ROOT_PASSWORD="dbpassword"
 ENV MYSQL_PASSWORD="dbpassword"

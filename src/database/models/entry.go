@@ -9,6 +9,7 @@ type Entry struct {
 	Id             int64      `json:"id"`
 	Date           string     `json:"date"`
 	Time           string     `json:"time"`
+	DateTime       string     `json:"datetime"`
 	Msg            string     `json:"msg"`
 	Status         int64      `json:"status"`
 	Cl             int64      `json:"cl"`

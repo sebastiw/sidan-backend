@@ -40,8 +40,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Entry'
 components:
-  schemas: 
-    Entry: 
+  schemas:
+    Entry:
       type: object
       required:
         - msg
@@ -54,6 +54,9 @@ components:
             format: date
           time:
             type: string
+          datetime:
+            type: string
+            format: date-time
           msg:
             type: string
           status:
@@ -64,10 +67,12 @@ components:
             type: string
           email:
             type: string
+            format: email
           place:
             type: string
           ip:
             type: string
+            format: ipv4
           host:
             type: string
           olsug:
@@ -82,7 +87,7 @@ components:
             format: double
           report:
             type: boolean
-          likes: 
+          likes:
             type: integer
           secret:
             type: boolean
