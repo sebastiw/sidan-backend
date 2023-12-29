@@ -26,7 +26,7 @@ func (o EntryOperation) Create(e Entry) Entry {
 	q := `
 INSERT INTO cl2003_msgs
 SET
-  date=CURRENT_DATE, TIME=CURRENT_TIME,
+  date=CURRENT_DATE, time=CURRENT_TIME,
   msg=?, status=?, cl=?, sig=?, email=?, place=?, ip=?, host=?,
   olsug=?, enheter=?, lat=?, lon=?, report=?
 `
@@ -72,7 +72,7 @@ SET
 func (o EntryOperation) Read(id int) Entry {
 	q := `
 SELECT
- m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
+ m.id, m.date, m.time, m.datetime, m.msg, m.status, m.cl, m.sig, m.email, m.place,
  m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
  count(l.id) as likes,
  p.user_id IS NOT NULL AS secret,
@@ -93,6 +93,7 @@ GROUP BY
 		&e.Id,
 		&e.Date,
 		&e.Time,
+		&e.DateTime,
 		&e.Msg,
 		&e.Status,
 		&e.Cl,
@@ -133,7 +134,7 @@ func (o EntryOperation) ReadAll(take int64, skip int64) []Entry {
 
 	q := `
 SELECT
- m.id, m.date, m.time, m.msg, m.status, m.cl, m.sig, m.email, m.place,
+ m.id, m.date, m.time, m.datetime, m.msg, m.status, m.cl, m.sig, m.email, m.place,
  m.ip, m.host, m.olsug, m.enheter, m.lat, m.lon, m.report,
  count(l.id) as likes,
  p.user_id IS NOT NULL AS secret,
@@ -160,6 +161,7 @@ LIMIT ?, ?
 			&e.Id,
 			&e.Date,
 			&e.Time,
+			&e.DateTime,
 			&e.Msg,
 			&e.Status,
 			&e.Cl,
