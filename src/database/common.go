@@ -24,7 +24,7 @@ func Connect(user string, pw string, host string, port int, schema string) *sql.
 }
 
 func ConfigureSession(db *sql.DB) {
-	q := `SET SESSION sql_mode = 'TRADITIONAL'`
+	q := `SET SESSION sql_mode = 'STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,TRADITIONAL,NO_ENGINE_SUBSTITUTION'`
 	_, err := db.Exec(q)
 	ErrorCheck(err)
 }
