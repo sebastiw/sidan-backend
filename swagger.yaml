@@ -2,20 +2,34 @@ openapi: 3.0.1
 info:
   title: Sidan API.
   description: |-
-    Something
+    Backend för sidan.
   license:
     name: MIT
     url: http://opensource.org/licenses/MIT
   version: 0.0.1
 servers:
-- url: http://chalmerslosers.com:30880
+  - url: http://chalmerslosers.com:30880
+  - url: http://localhost:8080
 paths:
   /db/entries:
     get:
       tags:
-      - entry
+        - entry
+      parameters:
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int64
+            default: 0
+        - name: take
+          in: query
+          schema:
+            type: integer
+            format: int64
+            default: 20
       responses:
-       200:
+        200:
           description: an array of Entry
           content:
             application/json:
@@ -25,7 +39,7 @@ paths:
                   $ref: '#/components/schemas/Entry'
     post:
       tags:
-      - entry
+        - entry
       description: Create on new entry
       requestBody:
         content:
@@ -47,56 +61,56 @@ components:
         - msg
         - sig
       properties:
-          id:
-            type: integer
-          date:
-            type: string
-            format: date
-          time:
-            type: string
-          datetime:
-            type: string
-            format: date-time
-          msg:
-            type: string
-          status:
-            type: integer
-          cl:
-            type: integer
-          sig:
-            type: string
-          email:
-            type: string
-            format: email
-          place:
-            type: string
-          ip:
-            type: string
-            format: ipv4
-          host:
-            type: string
-          olsug:
-            type: integer
-          enheter:
-            type: integer
-          lat:
-            type: number
-            format: double
-          lon:
-            type: number
-            format: double
-          report:
-            type: boolean
-          likes:
-            type: integer
-          secret:
-            type: boolean
-          personal_secret:
-            type: boolean
-          side_kicks:
-            type: array
-            items:
-              $ref: '#/components/schemas/SideKick'
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        datetime:
+          type: string
+          format: date-time
+        msg:
+          type: string
+        status:
+          type: integer
+        cl:
+          type: integer
+        sig:
+          type: string
+        email:
+          type: string
+          format: email
+        place:
+          type: string
+        ip:
+          type: string
+          format: ipv4
+        host:
+          type: string
+        olsug:
+          type: integer
+        enheter:
+          type: integer
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+        report:
+          type: boolean
+        likes:
+          type: integer
+        secret:
+          type: boolean
+        personal_secret:
+          type: boolean
+        side_kicks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SideKick'
     SideKick:
       type: object
       properties:
