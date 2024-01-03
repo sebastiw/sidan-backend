@@ -22,6 +22,7 @@ ifndef IS_DB_RUNNING
 	--net backend-network \
 	-p 3306:3306/tcp \
 	-v $(PROJECT_ROOT)/db:/docker-entrypoint-initdb.d \
+	-v $(PROJECT_ROOT)/my.cnf:/etc/mysql/conf.d/my.cnf \
 	--rm -d --name sidan_sql \
 	"sidan-db:$(COMMIT)"
 else
