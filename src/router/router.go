@@ -113,7 +113,12 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	// r.HandleFunc("/auth", defaultHandler)
 	// r.HandleFunc("/notify", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
-		oh := OAuth2Handler{Provider: provider, ClientID: oauth2Config.ClientID, ClientSecret: oauth2Config.ClientSecret, RedirectURL: oauth2Config.RedirectURL, Scopes: oauth2Config.Scopes}
+		oh := OAuth2Handler{
+			Provider: provider,
+			ClientID: oauth2Config.ClientID,
+			ClientSecret: oauth2Config.ClientSecret,
+			RedirectURL: oauth2Config.RedirectURL,
+			Scopes: oauth2Config.Scopes}
 		r.HandleFunc("/auth/"+provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
 		r.HandleFunc("/auth/"+provider+"/authorized", oh.oauth2AuthCallbackHandler).Methods("GET", "OPTIONS")
 	}

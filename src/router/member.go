@@ -73,7 +73,8 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Request) {
-	members := mh.op.ReadAll()
+	onlyValid := MakeDefaultBool(r, "onlyValid", "false")
+	members := mh.op.ReadAll(onlyValid)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)

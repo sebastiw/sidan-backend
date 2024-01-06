@@ -53,6 +53,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Entry'
+  /db/members:
+    get:
+      tags:
+        - member
+      parameters:
+        - name: valid
+          description: Only get valid numbers
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        200:
+          description: an array of Member
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+    post:
+      tags:
+        - member
+      description: Create on new member
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Member'
+      responses:
+        200:
+          description: Members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
 components:
   schemas:
     Entry:
@@ -117,3 +153,61 @@ components:
         number:
           type: string
           format: int64
+    Member:
+      type: object
+      required:
+        - number
+      properties:
+        address:
+            type: string
+        address_url:
+            type: string
+        email:
+            type: string
+        history:
+            type: string
+        id:
+            format: int64
+            type: integer
+        im:
+            type: string
+        is_valid:
+            type: boolean
+        name:
+            type: string
+        number:
+            type: string
+        password:
+            type: string
+        password_classic:
+            type: string
+        password_classic_resetstring:
+            type: string
+        password_resetstring:
+            type: string
+        phone:
+            type: string
+        picture:
+            type: string
+        title:
+            type: string
+    Prospect:
+      type: object
+      properties:
+        email:
+            type: string
+        history:
+            type: string
+        id:
+            format: int64
+            type: integer
+        name:
+            type: string
+        number:
+            format: int64
+            type: integer
+        phone:
+            type: string
+        status:
+            type: string
+

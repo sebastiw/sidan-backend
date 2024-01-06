@@ -5,8 +5,7 @@ import (
 	"strings"
 )
 
-// swagger:model
-
+//swagger:response Member
 type Member struct {
 	Id                           int64   `json:"id"`
 	Number                       *string `json:"number"`

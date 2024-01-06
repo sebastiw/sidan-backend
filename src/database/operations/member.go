@@ -94,8 +94,13 @@ LIMIT 1
 	return m
 }
 
-func (o MemberOperation) ReadAll() []Member {
+func (o MemberOperation) ReadAll(onlyValid bool) []Member {
 	l := make([]Member, 0)
+
+	qval := ""
+	if onlyValid {
+		qval = "WHERE isvalid=1"
+	}
 
 	q := `
 SELECT
@@ -103,6 +108,7 @@ SELECT
  password, isvalid, password_classic,
  password_classic_resetstring, password_resetstring
 FROM cl2007_members
+`+ qval + `
 ORDER BY number DESC, id DESC
 `
 
