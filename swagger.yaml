@@ -11,6 +11,152 @@ servers:
   - url: http://chalmerslosers.com:30880
   - url: http://localhost:8080
 paths:
+  /auth/{provider}:
+    get:
+      summary: Login with provider.
+      description: |-
+        Login with provider.
+      operationId: authProvider
+      parameters:
+        - name: provider
+          in: path
+          description: Provider to login with.
+          required: true
+          schema:
+            $ref: '#/components/schemas/Provider'
+        - name: state
+          in: query
+          description: Login state.
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          description: Login code.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+  /auth/{provider}/authorized:
+    get:
+      summary: Check if provider is authorized.
+      description: |-
+        Check if provider is authorized.
+      operationId: authProviderAuthorized
+      parameters:
+        - name: provider
+          in: path
+          description: Provider to check.
+          required: true
+          schema:
+            $ref: '#/components/schemas/Provider'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authorized:
+                    type: boolean
+                    description: If provider is authorized.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+  /file/image:
+    post:
+      tags:
+        - image
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: File descriptor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDescriptor'
+  /file/{filename}:
+    get:
+      tags:
+        - image
+      parameters:
+        - name: filename
+          in: path
+          description: Provider to check.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Serve a static image
+  /mail:
+    post:
+      tags:
+        - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailDescriptor'
+      responses:
+        200:
+          description: The mail has been sent
   /db/entries:
     get:
       tags:
@@ -91,6 +237,31 @@ paths:
                 $ref: '#/components/schemas/Member'
 components:
   schemas:
+    Provider:
+      type: string
+      enum:
+        - google
+        - github
+    FileDescriptor:
+      type: object
+      properties:
+        filename:
+          type: string
+    MailDescriptor:
+      type: object
+      properties:
+        from_email:
+          type: string
+          format: email
+        to_emails:
+          type: array
+          items:
+            type: string
+            format: email
+        message:
+          type: string
+        title:
+          type: string
     Entry:
       type: object
       required:

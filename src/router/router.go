@@ -111,7 +111,6 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	r := mux.NewRouter()
 
 	// r.HandleFunc("/auth", defaultHandler)
-	// r.HandleFunc("/notify", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
 		oh := OAuth2Handler{
 			Provider: provider,
@@ -122,6 +121,8 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 		r.HandleFunc("/auth/"+provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
 		r.HandleFunc("/auth/"+provider+"/authorized", oh.oauth2AuthCallbackHandler).Methods("GET", "OPTIONS")
 	}
+
+	// r.HandleFunc("/notify", defaultHandler)
 
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(staticPath))
