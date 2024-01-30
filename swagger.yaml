@@ -80,6 +80,18 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Provider'
+        - name: state
+          in: query
+          description: Login state.
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          description: Login code.
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -115,6 +127,11 @@ paths:
     post:
       tags:
         - image
+      security:
+        - oAuth2Google:
+          - write:image
+        - oAuth2Github:
+          - write:image
       requestBody:
         content:
           multipart/form-data:
@@ -149,6 +166,11 @@ paths:
     post:
       tags:
         - mail
+      security:
+        - oAuth2Google:
+          - write:email
+        - oAuth2Github:
+          - write:email
       requestBody:
         content:
           application/json:
@@ -203,6 +225,12 @@ paths:
     get:
       tags:
         - member
+      security:
+        - oAuth2Google:
+          - read:member
+        - oAuth2Github:
+          - read:member
+        - {}
       parameters:
         - name: valid
           description: Only get valid numbers
@@ -222,6 +250,11 @@ paths:
     post:
       tags:
         - member
+      security:
+        - oAuth2Google:
+          - write:member
+        - oAuth2Github:
+          - write:member
       description: Create on new member
       requestBody:
         content:
@@ -236,6 +269,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
 components:
+  securitySchemes:
+    oAuth2Google:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: auth/google
+          scopes:
+            write:email: Gain ability to write emails.
+            write:image: Upload images
+            write:member: Update information on members
+            read:member: Read detailed information about members
+        authorizationCode:
+          authorizationUrl: auth/google
+          tokenUrl: auth/google/authorized
+          scopes:
+            write:email: Gain ability to write emails.
+            write:image: Upload images
+            write:member: Update information on members
+            read:member: Read detailed information about members
+    oAuth2Github:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: auth/github
+          scopes:
+            write:email: Gain ability to write emails.
+            write:image: Upload images
+            write:member: Update information on members
+            read:member: Read detailed information about members
+        authorizationCode:
+          authorizationUrl: auth/github
+          tokenUrl: auth/github/authorized
+          scopes:
+            write:email: Gain ability to write emails.
+            write:image: Upload images
+            write:member: Update information on members
+            read:member: Read detailed information about members
   schemas:
     Provider:
       type: string
