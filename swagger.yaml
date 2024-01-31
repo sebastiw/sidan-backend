@@ -13,9 +13,11 @@ servers:
 paths:
   /auth/{provider}:
     get:
-      summary: Login with provider.
+      summary: Get an authorization code from a provider
       description: |-
-        Login with provider.
+        Login with provider and get an authorization code.
+        Will automatically redirect to /auth/{provider}/authorized, which will
+        in turn exchange the code for an access token.
       operationId: authProvider
       parameters:
         - name: provider
@@ -24,29 +26,11 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Provider'
-        - name: state
-          in: query
-          description: Login state.
-          required: true
-          schema:
-            type: string
-        - name: code
-          in: query
-          description: Login code.
-          required: true
-          schema:
-            type: string
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    description: JWT token.
+        '302':
+          description: |-
+            Redirect to /auth/{provider}/authorized.
+            The authorization step went well.
         '400':
           description: Bad Request
           content:
@@ -69,9 +53,9 @@ paths:
                     description: Error message.
   /auth/{provider}/authorized:
     get:
-      summary: Check if provider is authorized.
+      summary: Exchange Authorization token
       description: |-
-        Check if provider is authorized.
+        Exchange Authorization token with an Access token.
       operationId: authProviderAuthorized
       parameters:
         - name: provider
@@ -103,6 +87,12 @@ paths:
                   authorized:
                     type: boolean
                     description: If provider is authorized.
+                  token:
+                    type: string
+                    description: Access token.
+                  expires:
+                    type: integer
+                    description: When the token expires.
         '400':
           description: Bad Request
           content:
@@ -113,6 +103,47 @@ paths:
                   error:
                     type: string
                     description: Error message.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+  /auth/{provider}/getemail:
+    get:
+      summary: Return user email from provider
+      description: |-
+        Return user email from provider.
+      operationId: authProviderAuthorized
+      parameters:
+        - name: provider
+          in: path
+          description: Provider to check.
+          required: true
+          schema:
+            $ref: '#/components/schemas/Provider'
+        - name: authorization
+          in: header
+          description: Authorization token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    description: Email address
         '401':
           description: Unauthorized
           content:

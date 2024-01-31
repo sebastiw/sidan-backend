@@ -61,6 +61,11 @@ to generate the swagger yaml.
 
 Check `src/router/router.go`
 
+## /auth/{provider}
+
+For oAuth2 flows, please see
+https://developers.google.com/oauthplayground/
+
 ## /db/
 
 These functions operate on the database.

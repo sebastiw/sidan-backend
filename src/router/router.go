@@ -120,6 +120,7 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 			Scopes: oauth2Config.Scopes}
 		r.HandleFunc("/auth/"+provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
 		r.HandleFunc("/auth/"+provider+"/authorized", oh.oauth2AuthCallbackHandler).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider+"/getemail", oh.retrieveEmail).Methods("GET", "OPTIONS")
 	}
 
 	// r.HandleFunc("/notify", defaultHandler)

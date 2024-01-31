@@ -72,8 +72,8 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	code := queryParams.Get("code")
 	state := queryParams.Get("state")
 
+	// Exchange the Authorization code for an Access Token
 	e := OAuth2AuthToken{Code: code, State: state}
-
 	token, err := conf.Exchange(oauth2.NoContext, e.Code)
 	if err != nil {
 		log.Printf("ERROR: %s, %s", err.Error(), code)
@@ -81,4 +81,37 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	}
 
 	log.Println(getRequestId(r), token)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(token)
+}
+
+func (oh Oauth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
+	conf := oh.oauth2Config()
+
+	bearer := r.Header.Get("Authorization")
+	if !bearer {
+		log.Printf("ERROR: Empty Authorization Header")
+		return
+	}
+
+	url := ""
+	if conf.provider == "google" {
+		url = "https://www.googleapis.com//userinfo/v2/me"
+	} else if conf.provider == "github" {
+		url = "https://api.github.com/user/emails"
+	} else {
+		log.Printf("ERROR: Provider not supported %s", conf.provider)
+		return
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Printf("ERROR: %s", err.Error())
+		return
+	}
+	req.Header.Set("Authorization", bearer)
+	resp, err := http.Get(url)
+
+	json.NewEncoder(w).Encode(resp)
 }
