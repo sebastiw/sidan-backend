@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -85,22 +86,20 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(token)
 }
 
-func (oh Oauth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
-	conf := oh.oauth2Config()
-
+func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 	bearer := r.Header.Get("Authorization")
-	if !bearer {
+	if bearer != "" {
 		log.Printf("ERROR: Empty Authorization Header")
 		return
 	}
 
 	url := ""
-	if conf.provider == "google" {
+	if oh.Provider == "google" {
 		url = "https://www.googleapis.com//userinfo/v2/me"
-	} else if conf.provider == "github" {
+	} else if oh.Provider == "github" {
 		url = "https://api.github.com/user/emails"
 	} else {
-		log.Printf("ERROR: Provider not supported %s", conf.provider)
+		log.Printf("ERROR: Provider not supported %s", oh.Provider)
 		return
 	}
 
@@ -111,7 +110,7 @@ func (oh Oauth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Header.Set("Authorization", bearer)
-	resp, err := http.Get(url)
+	resp, err := client.Do(req)
 
 	json.NewEncoder(w).Encode(resp)
 }
