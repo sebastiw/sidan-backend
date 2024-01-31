@@ -77,11 +77,11 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	e := OAuth2AuthToken{Code: code, State: state}
 	token, err := conf.Exchange(oauth2.NoContext, e.Code)
 	if err != nil {
-		log.Printf("ERROR: %s, %s", err.Error(), code)
+		errMsg := fmt.Sprintf("ERROR: %s, %s", err.Error(), code)
+		log.Println(getRequestId(r), errMsg)
 		return
 	}
 
-	log.Println(getRequestId(r), token)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(token)
 }
@@ -89,7 +89,8 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 	bearer := r.Header.Get("Authorization")
 	if bearer != "" {
-		log.Printf("ERROR: Empty Authorization Header")
+		errMsg := "ERROR: Empty Authorization Header"
+		log.Println(getRequestId(r), errMsg)
 		return
 	}
 
@@ -99,18 +100,26 @@ func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 	} else if oh.Provider == "github" {
 		url = "https://api.github.com/user/emails"
 	} else {
-		log.Printf("ERROR: Provider not supported %s", oh.Provider)
+		errMsg := fmt.Sprintf("ERROR: Provider not supported %s", oh.Provider)
+		log.Println(getRequestId(r), errMsg)
 		return
 	}
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Printf("ERROR: %s", err.Error())
+		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
+		log.Println(getRequestId(r), errMsg)
 		return
 	}
 	req.Header.Set("Authorization", bearer)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
+		log.Println(getRequestId(r), errMsg)
+		return
+	}
 
 	json.NewEncoder(w).Encode(resp)
 }
