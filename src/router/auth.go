@@ -40,7 +40,7 @@ type GoogleUserInfo struct {
 type GithubUserInfo struct {
 	Email string `json:"email"`
 	PrimaryEmail bool `json:"primary"`
-	VerifiedEmail bool `json:"verified_email"`
+	Verified bool `json:"verified"`
 	Visibility string `json:"visibility"`
 }
 
@@ -146,13 +146,15 @@ func GetEmails(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer 
 		var userInfo GoogleUserInfo
 		err := json.NewDecoder(resp.Body).Decode(&userInfo)
 		CheckError(w, r, err)
-		emails = append(emails, userInfo.Email)
+		if userInfo.VerifiedEmail {
+			emails = append(emails, userInfo.Email)
+		}
 	} else if oh.Provider == "github" {
 		var userInfo []GithubUserInfo
 		err := json.NewDecoder(resp.Body).Decode(&userInfo)
 		CheckError(w, r, err)
 		for _, email := range userInfo {
-			if email.VerifiedEmail {
+			if email.Verified {
 				emails = append(emails, email.Email)
 			}
 		}
