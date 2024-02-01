@@ -3,7 +3,9 @@ package config
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/gorilla/securecookie"
 	"github.com/spf13/viper"
 )
 
@@ -70,4 +72,7 @@ func ReadConfig(configuration *Configuration) {
 	if err != nil {
 		fmt.Printf("Unable to decode into struct, %v", err)
 	}
+
+	os.Setenv("SESSION_KEY", string(securecookie.GenerateRandomKey(32)))
+	log.Println("SESSION_KEY", os.Getenv("SESSION_KEY"))
 }

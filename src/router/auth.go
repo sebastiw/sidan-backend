@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
 	"log"
 	"net/http"
+	"os"
 )
+
+var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 type OAuth2Handler struct {
 	Provider     string
@@ -72,8 +76,18 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 
 	conf := oh.oauth2Config()
 
+	session, err := store.Get(r, "session-name")
+	CheckError(w, r, err)
+
+	state := "state"
+	session.Values["state"] = state
+
 	// Generate the URL to redirect the user to for authentication
-	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+
+	err = session.Save(r, w)
+	CheckError(w, r, err)
+
 	// Redirect the user to the generated URL
 	w.Header().Set("Content-Type", "application/json")
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
@@ -86,6 +100,14 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 
 	code := queryParams.Get("code")
 	state := queryParams.Get("state")
+
+	session, err := store.Get(r, "session-name")
+	CheckError(w, r, err)
+
+	if state != session.Values["state"] {
+		http.Error(w, "Not correct state", http.StatusInternalServerError)
+		return
+	}
 
 	// Exchange the Authorization code for an Access Token
 	e := OAuth2AuthToken{Code: code, State: state}
