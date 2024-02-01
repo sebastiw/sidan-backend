@@ -7,7 +7,6 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
-	"io"
 	"log"
 	"net/http"
 )
@@ -29,6 +28,20 @@ type OAuth2AccessToken struct {
 	AccessToken string `json:"access_token"`
 	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
+}
+
+type GoogleUserInfo struct {
+	Id string `json:"id"`
+	Email string `json:"email"`
+	VerifiedEmail bool `json:"verified_email"`
+	Picture string `json:"picture"`
+}
+
+type GithubUserInfo struct {
+	Email string `json:"email"`
+	PrimaryEmail bool `json:"primary"`
+	VerifiedEmail bool `json:"verified_email"`
+	Visibility string `json:"visibility"`
 }
 
 func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
@@ -53,7 +66,6 @@ func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
 		panic(fmt.Errorf("provider not supported %s", oh.Provider))
 	}
 }
-
 
 func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(getRequestId(r), oh)
@@ -92,6 +104,31 @@ func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emails := GetEmails(w, r, oh, bearer)
+	if len(emails) == 0 {
+		err := errors.New("No emails found")
+		log.Println(getRequestId(r), err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(emails)
+}
+
+func GetUserInfoURL(oh OAuth2Handler) (string, error) {
+	var err error
+	url := ""
+	if oh.Provider == "google" {
+		url = "https://www.googleapis.com/userinfo/v2/me"
+	} else if oh.Provider == "github" {
+		url = "https://api.github.com/user/emails"
+	} else {
+		err = fmt.Errorf("Provider not supported %s", oh.Provider)
+	}
+	return url, err
+}
+
+func GetEmails(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer string) []string {
 	url, err := GetUserInfoURL(oh)
 	CheckError(w, r, err)
 
@@ -100,26 +137,28 @@ func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 	CheckError(w, r, err)
 
 	req.Header.Set("Authorization", bearer)
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	CheckError(w, r, err)
 
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	CheckError(w, r, err)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(body)
-}
-
-func GetUserInfoURL(oh OAuth2Handler) (string, error) {
-	var err error
-	url := ""
+	var emails []string
 	if oh.Provider == "google" {
-		url = "https://www.googleapis.com//userinfo/v2/me"
+		var userInfo GoogleUserInfo
+		err := json.NewDecoder(resp.Body).Decode(&userInfo)
+		CheckError(w, r, err)
+		emails = append(emails, userInfo.Email)
 	} else if oh.Provider == "github" {
-		url = "https://api.github.com/user/emails"
+		var userInfo []GithubUserInfo
+		err := json.NewDecoder(resp.Body).Decode(&userInfo)
+		CheckError(w, r, err)
+		for _, email := range userInfo {
+			if email.VerifiedEmail {
+				emails = append(emails, email.Email)
+			}
+		}
 	} else {
 		err = fmt.Errorf("Provider not supported %s", oh.Provider)
+		CheckError(w, r, err)
 	}
-	return url, err
+	return emails
 }
