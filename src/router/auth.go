@@ -4,16 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/sessions"
+	"github.com/gorilla/securecookie"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
 	"log"
 	"net/http"
-	"os"
 )
-
-var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 type OAuth2Handler struct {
 	Provider     string
@@ -76,10 +73,10 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 
 	conf := oh.oauth2Config()
 
-	session, err := store.Get(r, "session-name")
+	session, err := store.Get(r, "auth-session")
 	CheckError(w, r, err)
 
-	state := "state"
+	state := securecookie.GenerateRandomKey(64)
 	session.Values["state"] = state
 
 	// Generate the URL to redirect the user to for authentication
@@ -101,7 +98,7 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	code := queryParams.Get("code")
 	state := queryParams.Get("state")
 
-	session, err := store.Get(r, "session-name")
+	session, err := store.Get(r, "auth-session")
 	CheckError(w, r, err)
 
 	if state != session.Values["state"] {
