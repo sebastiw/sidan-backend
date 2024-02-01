@@ -66,7 +66,7 @@ paths:
             $ref: '#/components/schemas/Provider'
         - name: state
           in: query
-          description: Login state.
+          description: Login state. Need to be verified against the state parameter in /auth/{provider}.
           required: true
           schema:
             type: string
@@ -118,7 +118,7 @@ paths:
       summary: Return user email from provider
       description: |-
         Return user email from provider.
-      operationId: authProviderAuthorized
+      operationId: getAuthenticatedEmails
       parameters:
         - name: provider
           in: path
@@ -126,12 +126,10 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Provider'
-        - name: authorization
-          in: header
-          description: Authorization token
-          required: true
-          schema:
-            type: string
+        - oAuth2Google:
+          - read:member
+        - oAuth2Github:
+          - read:member
       responses:
         '200':
           description: OK
@@ -304,16 +302,9 @@ components:
     oAuth2Google:
       type: oauth2
       flows:
-        implicit:
-          authorizationUrl: auth/google
-          scopes:
-            write:email: Gain ability to write emails.
-            write:image: Upload images
-            write:member: Update information on members
-            read:member: Read detailed information about members
         authorizationCode:
-          authorizationUrl: auth/google
-          tokenUrl: auth/google/authorized
+          authorizationUrl: /auth/google
+          tokenUrl: /auth/google/authorized
           scopes:
             write:email: Gain ability to write emails.
             write:image: Upload images
@@ -322,16 +313,9 @@ components:
     oAuth2Github:
       type: oauth2
       flows:
-        implicit:
-          authorizationUrl: auth/github
-          scopes:
-            write:email: Gain ability to write emails.
-            write:image: Upload images
-            write:member: Update information on members
-            read:member: Read detailed information about members
         authorizationCode:
-          authorizationUrl: auth/github
-          tokenUrl: auth/github/authorized
+          authorizationUrl: /auth/github
+          tokenUrl: /auth/github/authorized
           scopes:
             write:email: Gain ability to write emails.
             write:image: Upload images
