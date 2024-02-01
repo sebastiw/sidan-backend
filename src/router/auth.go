@@ -2,10 +2,12 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
+	"io"
 	"log"
 	"net/http"
 )
@@ -76,11 +78,7 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	// Exchange the Authorization code for an Access Token
 	e := OAuth2AuthToken{Code: code, State: state}
 	token, err := conf.Exchange(oauth2.NoContext, e.Code)
-	if err != nil {
-		errMsg := fmt.Sprintf("ERROR: %s, %s", err.Error(), code)
-		log.Println(getRequestId(r), errMsg)
-		return
-	}
+	CheckError(w, r, err)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(token)
@@ -88,38 +86,40 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 
 func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 	bearer := r.Header.Get("Authorization")
-	if bearer != "" {
-		errMsg := "ERROR: Empty Authorization Header"
-		log.Println(getRequestId(r), errMsg)
+	if bearer == "" {
+		err := errors.New("Empty Authorization Header")
+		log.Println(getRequestId(r), err)
 		return
 	}
 
+	url, err := GetUserInfoURL(oh)
+	CheckError(w, r, err)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	CheckError(w, r, err)
+
+	req.Header.Set("Authorization", bearer)
+	resp, err := client.Do(req)
+	CheckError(w, r, err)
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	CheckError(w, r, err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
+}
+
+func GetUserInfoURL(oh OAuth2Handler) (string, error) {
+	var err error
 	url := ""
 	if oh.Provider == "google" {
 		url = "https://www.googleapis.com//userinfo/v2/me"
 	} else if oh.Provider == "github" {
 		url = "https://api.github.com/user/emails"
 	} else {
-		errMsg := fmt.Sprintf("ERROR: Provider not supported %s", oh.Provider)
-		log.Println(getRequestId(r), errMsg)
-		return
+		err = fmt.Errorf("Provider not supported %s", oh.Provider)
 	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
-		log.Println(getRequestId(r), errMsg)
-		return
-	}
-	req.Header.Set("Authorization", bearer)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
-		log.Println(getRequestId(r), errMsg)
-		return
-	}
-
-	json.NewEncoder(w).Encode(resp)
+	return url, err
 }

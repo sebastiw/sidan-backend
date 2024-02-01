@@ -29,13 +29,6 @@ func fileExtension(imageType string) (string, error) {
 	return "", errors.New("unknown image type")
 }
 
-func CheckError(w http.ResponseWriter, r *http.Request, err error) {
-	if err != nil {
-		log.Println(getRequestId(r), err)
-		panic(err.Error())
-	}
-}
-
 func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse our multipart form, 10 << 20 specifies a maximum
 	// upload of 10 MB files. (bitshift 10 in decimal 20 times)

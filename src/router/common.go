@@ -33,3 +33,10 @@ func MakeDefaultBool(r *http.Request, variableName string, defaultValue string) 
 	}
 	return realVal
 }
+
+func CheckError(w http.ResponseWriter, r *http.Request, err error) {
+	if err != nil {
+		log.Println(getRequestId(r), err)
+		panic(err.Error())
+	}
+}
