@@ -90,6 +90,9 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	// Exchange the Authorization code for an Access Token
 	e := OAuth2AuthToken{Code: code, State: state}
 	token, err := conf.Exchange(oauth2.NoContext, e.Code)
+	if err != nil {
+		w.WriteHeader(401)
+	}
 	CheckError(w, r, err)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -139,6 +142,9 @@ func GetEmails(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer 
 	req.Header.Set("Authorization", bearer)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
+	if resp.StatusCode != 200 {
+		w.WriteHeader(resp.StatusCode)
+	}
 	CheckError(w, r, err)
 
 	var emails []string
