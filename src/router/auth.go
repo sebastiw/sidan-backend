@@ -130,7 +130,7 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	session.Values[oh.Provider + "_access_token"] = token.AccessToken
 	session.Values[oh.Provider + "_token_type"] = token.TokenType
 	session.Values[oh.Provider + "_refresh_token"] = token.RefreshToken
-	session.Values[oh.Provider + "_expiry"] = token.Expiry
+	session.Values[oh.Provider + "_expiry"] = token.Expiry.Unix()
 
 	err = session.Save(r, w)
 	if err != nil {
