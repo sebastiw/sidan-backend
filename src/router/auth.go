@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type OAuth2Handler struct {
@@ -70,7 +71,10 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 	conf := oh.oauth2Config()
 
 	session, err := store.Get(r, "auth-session")
-	CheckError(w, r, err)
+	if err != nil {
+		// ignore errors due to reboots of server
+		log.Println(getRequestId(r), err)
+	}
 
 	state := hex.EncodeToString(securecookie.GenerateRandomKey(64))
 	session.AddFlash(state, "state")
@@ -79,7 +83,12 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
 	err = session.Save(r, w)
-	CheckError(w, r, err)
+	if err != nil {
+		log.Println(getRequestId(r), err)
+		err := errors.New("Error saving session")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Redirect the user to the generated URL
 	w.Header().Set("Content-Type", "application/json")
@@ -95,49 +104,74 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	state := queryParams.Get("state")
 
 	session, err := store.Get(r, "auth-session")
-	CheckError(w, r, err)
+	if err != nil {
+		log.Println(getRequestId(r), err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	sessionState := session.Flashes("state")
 	if sessionState == nil || state != sessionState[0] {
-		http.Error(w, "Not correct state", http.StatusInternalServerError)
+		err := errors.New("Invalid state")
+		log.Println(getRequestId(r), err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// Exchange the Authorization code for an Access Token
 	token, err := conf.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		w.WriteHeader(401)
+		log.Println(getRequestId(r), err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	CheckError(w, r, err)
 
-	session.Values["provider"] = oh.Provider
-	session.Values["access_token"] = token.AccessToken
-	session.Values["token_type"] = token.TokenType
-	session.Values["refresh_token"] = token.RefreshToken
-	session.Values["expiry"] = token.Expiry
+	session.Values[oh.Provider] = true
+	session.Values[oh.Provider + "_access_token"] = token.AccessToken
+	session.Values[oh.Provider + "_token_type"] = token.TokenType
+	session.Values[oh.Provider + "_refresh_token"] = token.RefreshToken
+	session.Values[oh.Provider + "_expiry"] = token.Expiry
+
 	err = session.Save(r, w)
-	CheckError(w, r, err)
+	if err != nil {
+		log.Println(getRequestId(r), err)
+		err := errors.New("Error saving session")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(token)
 }
 
 func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
-	//bearer := r.Header.Get("Authorization")
 	session, err := store.Get(r, "auth-session")
-	CheckError(w, r, err)
-	bearer := fmt.Sprintf("%s %s", session.Values["token_type"], session.Values["access_token"])
-
-	if bearer == "" {
-		err := errors.New("Empty Authorization Header")
+	if err != nil {
+		err := errors.New("Error getting session")
 		log.Println(getRequestId(r), err)
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
 
-	emails := GetEmails(w, r, oh, bearer)
-	if len(emails) == 0 {
-		err := errors.New("No emails found")
+	if session.Values[oh.Provider] == nil {
+		err := fmt.Errorf("Not authorized with %s", oh.Provider)
 		log.Println(getRequestId(r), err)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	bearer := fmt.Sprintf("%s %s", session.Values[oh.Provider + "_token_type"], session.Values[oh.Provider + "_access_token"])
+
+	if strings.TrimSpace(bearer) == "" {
+		err := errors.New("Empty Authorization Header")
+		log.Println(getRequestId(r), err)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	emails, err := GetEmails(w, r, oh, bearer)
+	if err != nil {
+		log.Println(getRequestId(r), err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -148,52 +182,63 @@ func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 func GetUserInfoURL(oh OAuth2Handler) (string, error) {
 	var err error
 	url := ""
-	if oh.Provider == "google" {
+	switch oh.Provider {
+	case "google":
 		url = "https://www.googleapis.com/userinfo/v2/me"
-	} else if oh.Provider == "github" {
+	case "github":
 		url = "https://api.github.com/user/emails"
-	} else {
+	default:
 		err = fmt.Errorf("Provider not supported %s", oh.Provider)
 	}
 	return url, err
 }
 
-func GetEmails(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer string) []string {
+func GetEmails(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer string) ([]string, error) {
 	url, err := GetUserInfoURL(oh)
-	CheckError(w, r, err)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
-	CheckError(w, r, err)
+	if err != nil {
+		return nil, err
+	}
 
 	req.Header.Set("Authorization", bearer)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if resp.StatusCode != 200 {
-		w.WriteHeader(resp.StatusCode)
+		err := fmt.Errorf("Error getting emails: %s", resp.Status)
+		return nil, err
 	}
-	CheckError(w, r, err)
 
 	var emails []string
-	if oh.Provider == "google" {
+	switch oh.Provider {
+	case "google":
 		var userInfo GoogleUserInfo
 		err := json.NewDecoder(resp.Body).Decode(&userInfo)
-		CheckError(w, r, err)
+		if err != nil {
+			return nil, err
+		}
 		if userInfo.VerifiedEmail {
 			emails = append(emails, userInfo.Email)
 		}
-	} else if oh.Provider == "github" {
+	case "github":
 		var userInfo []GithubUserInfo
 		err := json.NewDecoder(resp.Body).Decode(&userInfo)
-		CheckError(w, r, err)
+		if err != nil {
+			return nil, err
+		}
 		for _, email := range userInfo {
 			if email.Verified {
 				emails = append(emails, email.Email)
 			}
 		}
-	} else {
+	default:
 		err = fmt.Errorf("Provider not supported %s", oh.Provider)
-		CheckError(w, r, err)
+		return nil, err
 	}
-	return emails
+
+	if len(emails) == 0 {
+		return nil, errors.New("No verified emails found")
+	}
+	return emails, nil
 }
