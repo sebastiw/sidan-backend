@@ -1,8 +1,9 @@
 package router
 
 import (
-	"encoding/json"
+	"encoding/gob"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/securecookie"
@@ -12,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type OAuth2Handler struct {
@@ -42,6 +44,10 @@ type GithubUserInfo struct {
 	Visibility string `json:"visibility"`
 }
 
+func init() {
+	gob.Register(&oauth2.Token{})
+}
+
 func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
 	switch oh.Provider {
 	case "google":
@@ -66,14 +72,21 @@ func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
 }
 
 func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println(getRequestId(r), oh)
-
 	conf := oh.oauth2Config()
 
 	session, err := store.Get(r, "auth-session")
 	if err != nil {
 		// ignore errors due to reboots of server
 		log.Println(getRequestId(r), err)
+	}
+
+	val := session.Values[oh.Provider]
+	// var token = &oauth2.Token{} // unsure why this isn't needed here
+	if token, ok := val.(*oauth2.Token); ok {
+		if token.Expiry.Before(time.Date(1998, 1, 1, 0, 0, 0, 0, time.UTC)) || token.Expiry.After(time.Now()) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(token)
+		}
 	}
 
 	state := hex.EncodeToString(securecookie.GenerateRandomKey(64))
@@ -98,17 +111,26 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	conf := oh.oauth2Config()
 
-	queryParams := r.URL.Query()
-
-	code := queryParams.Get("code")
-	state := queryParams.Get("state")
-
 	session, err := store.Get(r, "auth-session")
 	if err != nil {
 		log.Println(getRequestId(r), err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	val := session.Values[oh.Provider]
+	var token = &oauth2.Token{}
+	if token, ok := val.(*oauth2.Token); ok {
+		if token.Expiry.Before(time.Date(1998, 1, 1, 0, 0, 0, 0, time.UTC)) || token.Expiry.After(time.Now()) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(token)
+		}
+	}
+
+	queryParams := r.URL.Query()
+
+	code := queryParams.Get("code")
+	state := queryParams.Get("state")
 
 	sessionState := session.Flashes("state")
 	if sessionState == nil || state != sessionState[0] {
@@ -119,18 +141,18 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	}
 
 	// Exchange the Authorization code for an Access Token
-	token, err := conf.Exchange(oauth2.NoContext, code)
+	token, err = conf.Exchange(oauth2.NoContext, code)
 	if err != nil {
 		log.Println(getRequestId(r), err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	session.Values[oh.Provider] = true
-	session.Values[oh.Provider + "_access_token"] = token.AccessToken
-	session.Values[oh.Provider + "_token_type"] = token.TokenType
-	session.Values[oh.Provider + "_refresh_token"] = token.RefreshToken
-	session.Values[oh.Provider + "_expiry"] = token.Expiry.Unix()
+	session.Values[oh.Provider] = token
+	// session.Values[oh.Provider + "_access_token"] = token.AccessToken
+	// session.Values[oh.Provider + "_token_type"] = token.TokenType
+	// session.Values[oh.Provider + "_refresh_token"] = token.RefreshToken
+	// session.Values[oh.Provider + "_expiry"] = token.Expiry.Unix()
 
 	err = session.Save(r, w)
 	if err != nil {
@@ -159,7 +181,8 @@ func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	bearer := fmt.Sprintf("%s %s", session.Values[oh.Provider + "_token_type"], session.Values[oh.Provider + "_access_token"])
+	token := session.Values[oh.Provider].(*oauth2.Token)
+	bearer := fmt.Sprintf("%s %s", token.TokenType, token.AccessToken)
 
 	if strings.TrimSpace(bearer) == "" {
 		err := errors.New("Empty Authorization Header")
