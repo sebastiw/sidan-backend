@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/gorilla/securecookie"
@@ -71,7 +72,7 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 	session, err := store.Get(r, "auth-session")
 	CheckError(w, r, err)
 
-	state := string(securecookie.GenerateRandomKey(64))
+	state := hex.EncodeToString(securecookie.GenerateRandomKey(64))
 	session.AddFlash(state, "state")
 
 	// Generate the URL to redirect the user to for authentication

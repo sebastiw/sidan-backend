@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -73,6 +74,6 @@ func ReadConfig(configuration *Configuration) {
 		fmt.Printf("Unable to decode into struct, %v", err)
 	}
 
-	os.Setenv("SESSION_KEY", string(securecookie.GenerateRandomKey(32)))
+	os.Setenv("SESSION_KEY", hex.EncodeToString(securecookie.GenerateRandomKey(32)))
 	log.Println("SESSION_KEY", os.Getenv("SESSION_KEY"))
 }
