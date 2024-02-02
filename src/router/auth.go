@@ -20,15 +20,10 @@ type OAuth2Handler struct {
 	Scopes       []string
 }
 
-type OAuth2AuthToken struct {
-	Code        string `json:"code"`
-	State       string `json:"state"`
-}
-
-type OAuth2AccessToken struct {
+type AccessToken struct {
 	AccessToken string `json:"access_token"`
-	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
+	Expiry      string `json:"expiry"`
 }
 
 type GoogleUserInfo struct {
@@ -76,8 +71,8 @@ func (oh OAuth2Handler) oauth2RedirectHandler(w http.ResponseWriter, r *http.Req
 	session, err := store.Get(r, "auth-session")
 	CheckError(w, r, err)
 
-	state := securecookie.GenerateRandomKey(64)
-	session.Values["state"] = state
+	state := string(securecookie.GenerateRandomKey(64))
+	session.AddFlash(state, "state")
 
 	// Generate the URL to redirect the user to for authentication
 	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
@@ -101,17 +96,25 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 	session, err := store.Get(r, "auth-session")
 	CheckError(w, r, err)
 
-	if state != session.Values["state"] {
+	sessionState := session.Flashes("state")
+	if sessionState == nil || state != sessionState[0] {
 		http.Error(w, "Not correct state", http.StatusInternalServerError)
 		return
 	}
 
 	// Exchange the Authorization code for an Access Token
-	e := OAuth2AuthToken{Code: code, State: state}
-	token, err := conf.Exchange(oauth2.NoContext, e.Code)
+	token, err := conf.Exchange(oauth2.NoContext, code)
 	if err != nil {
 		w.WriteHeader(401)
 	}
+	CheckError(w, r, err)
+
+	session.Values["provider"] = oh.Provider
+	session.Values["access_token"] = token.AccessToken
+	session.Values["token_type"] = token.TokenType
+	session.Values["refresh_token"] = token.RefreshToken
+	session.Values["expiry"] = token.Expiry
+	err = session.Save(r, w)
 	CheckError(w, r, err)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -119,7 +122,11 @@ func (oh OAuth2Handler) oauth2AuthCallbackHandler(w http.ResponseWriter, r *http
 }
 
 func (oh OAuth2Handler) retrieveEmail(w http.ResponseWriter, r *http.Request) {
-	bearer := r.Header.Get("Authorization")
+	//bearer := r.Header.Get("Authorization")
+	session, err := store.Get(r, "auth-session")
+	CheckError(w, r, err)
+	bearer := fmt.Sprintf("%s %s", session.Values["token_type"], session.Values["access_token"])
+
 	if bearer == "" {
 		err := errors.New("Empty Authorization Header")
 		log.Println(getRequestId(r), err)
