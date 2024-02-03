@@ -95,8 +95,8 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 			RedirectURL: oauth2Config.RedirectURL,
 			Scopes: oauth2Config.Scopes}
 		r.HandleFunc("/auth/"+provider, oh.Oauth2RedirectHandler(auth)).Methods("GET", "OPTIONS")
-		r.HandleFunc("/auth/"+provider+"/authorized", oh.Oauth2AuthCallbackHandler(auth)).Methods("GET", "OPTIONS")
-		r.HandleFunc("/auth/"+provider+"/getemail", oh.RetrieveEmail(auth)).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider+"/authorized", oh.Oauth2CallbackHandler(auth)).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider+"/verifyemail", oh.VerifyEmail(auth)).Methods("GET", "OPTIONS")
 	}
 
 	// r.HandleFunc("/notify", defaultHandler)
@@ -110,33 +110,18 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	r.HandleFunc("/mail", auth.CheckScope(mh.createMailHandler, a.WriteEmailScope)).Methods("POST", "OPTIONS")
 
 	dbEh := NewEntryHandler(db)
-	//swagger:route POST /db/entries entry createEntry
 	r.HandleFunc("/db/entries", dbEh.createEntryHandler).Methods("POST", "OPTIONS")
-	//swagger:route GET /db/entries/{id} entry readEntry
-	//	Parameters:
-	//    + name: id
-	//      in: path
-	//  	format: int32
-	//	Responses:
-	//  	200: Entry
 	r.HandleFunc("/db/entries/{id:[0-9]+}", dbEh.readEntryHandler).Methods("GET", "OPTIONS")
-	//swagger:route PUT /db/entries/{id} entry updateEntry
 	r.HandleFunc("/db/entries/{id:[0-9]+}", auth.CheckScope(dbEh.updateEntryHandler, a.ModifyEntryScope)).Methods("PUT", "OPTIONS")
-	//swagger:route DELETE /db/entries/{id} entry deleteEntry
 	r.HandleFunc("/db/entries/{id:[0-9]+}", auth.CheckScope(dbEh.deleteEntryHandler, a.ModifyEntryScope)).Methods("DELETE", "OPTIONS")
 
 	r.HandleFunc("/db/entries", dbEh.readAllEntryHandler).Methods("GET", "OPTIONS")
 
 	dbMh := NewMemberHandler(db)
-	//swagger:route POST /db/members member createMember
 	r.HandleFunc("/db/members", auth.CheckScope(dbMh.createMemberHandler, a.WriteMemberScope)).Methods("POST", "OPTIONS")
-	//swagger:route GET /db/members/{id} member readMember
 	r.HandleFunc("/db/members/{id:[0-9]+}", dbMh.readMemberHandler).Methods("GET", "OPTIONS")
-	//swagger:route PUT /db/members/{id} member updateMember
 	r.HandleFunc("/db/members/{id:[0-9]+}", auth.CheckScope(dbMh.updateMemberHandler, a.WriteMemberScope)).Methods("PUT", "OPTIONS")
-	//swagger:route DELETE /db/members/{id} member deleteMember
 	r.HandleFunc("/db/members/{id:[0-9]+}", auth.CheckScope(dbMh.deleteMemberHandler, a.WriteMemberScope)).Methods("DELETE", "OPTIONS")
-	//swagger:route GET /db/members member readAllMember
 	r.HandleFunc("/db/members", dbMh.readAllMemberHandler).Methods("GET", "OPTIONS")
 
 	// r.HandleFunc("/db", defaultHandler)

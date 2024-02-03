@@ -101,12 +101,11 @@ func (oh OAuth2Handler) Oauth2RedirectHandler(auth AuthHandler) http.HandlerFunc
 		}
 
 		// Redirect the user to the generated URL
-		w.Header().Set("Content-Type", "application/json")
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 	}
 }
 
-func (oh OAuth2Handler) Oauth2AuthCallbackHandler(auth AuthHandler) http.HandlerFunc {
+func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conf := oh.oauth2Config()
 
@@ -148,8 +147,6 @@ func (oh OAuth2Handler) Oauth2AuthCallbackHandler(auth AuthHandler) http.Handler
 		}
 
 		session.Values[oh.Provider] = token
-		sidanScopes := []string{"write:email", "write:image", "write:member", "read:member"}
-		session.Values["scopes"] = sidanScopes
 		err = session.Save(r, w)
 		if err != nil {
 			log.Println(ru.GetRequestId(r), err)
@@ -163,7 +160,7 @@ func (oh OAuth2Handler) Oauth2AuthCallbackHandler(auth AuthHandler) http.Handler
 	}
 }
 
-func (oh OAuth2Handler) RetrieveEmail(auth AuthHandler) http.HandlerFunc {
+func (oh OAuth2Handler) VerifyEmail(auth AuthHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := auth.Store.Get(r, "auth-session")
 		if err != nil {
@@ -189,14 +186,25 @@ func (oh OAuth2Handler) RetrieveEmail(auth AuthHandler) http.HandlerFunc {
 			return
 		}
 
-		emails, err := GetEmails(w, r, oh, bearer)
+		emails, err := GetEmailsFromProvider(w, r, oh, bearer)
 		if err != nil {
 			log.Println(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		// db.GetUserFromEmails(emails)
 
+		sidanScopes := []string{WriteEmailScope, WriteImageScope, WriteMemberScope, ReadMemberScope}
+		session.Values["scopes"] = sidanScopes
+
+		err = session.Save(r, w)
+		if err != nil {
+			log.Println(ru.GetRequestId(r), err)
+			err := errors.New("Error saving session")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(emails)
@@ -217,7 +225,7 @@ func GetUserInfoURL(oh OAuth2Handler) (string, error) {
 	return url, err
 }
 
-func GetEmails(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer string) ([]string, error) {
+func GetEmailsFromProvider(w http.ResponseWriter, r *http.Request, oh OAuth2Handler, bearer string) ([]string, error) {
 	url, err := GetUserInfoURL(oh)
 
 	client := &http.Client{}
