@@ -98,6 +98,7 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 		r.HandleFunc("/auth/"+provider+"/authorized", oh.Oauth2CallbackHandler(auth)).Methods("GET", "OPTIONS")
 		r.HandleFunc("/auth/"+provider+"/verifyemail", oh.VerifyEmail(auth, db)).Methods("GET", "OPTIONS")
 	}
+	r.HandleFunc("/auth/getusersession", a.GetUserSession(auth)).Methods("GET", "OPTIONS")
 
 	// r.HandleFunc("/notify", defaultHandler)
 

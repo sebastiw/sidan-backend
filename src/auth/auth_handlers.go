@@ -43,6 +43,13 @@ type GithubUserInfo struct {
 	Visibility string `json:"visibility"`
 }
 
+type SessionInfo struct {
+	Scopes []string `json:"scopes"`
+	UserName string `json:"username"`
+	Email string `json:"email"`
+}
+
+
 func init() {
 	gob.Register(&oauth2.Token{})
 	gob.Register(&m.User{})
@@ -223,7 +230,9 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		// http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
 	}
 }
 
@@ -300,4 +309,32 @@ func GetEmailsFromProvider(w http.ResponseWriter, r *http.Request, oh OAuth2Hand
 		return nil, errors.New("No verified emails found")
 	}
 	return emails, nil
+}
+
+func GetUserSession(auth AuthHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, err := auth.Store.Get(r, "auth-session")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_, err = auth.getToken(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		sidanScopes := session.Values["scopes"].([]string)
+		user := session.Values["user"].(m.User)
+
+		sessInfo := SessionInfo{
+			Scopes: sidanScopes,
+			UserName: string(user.Type) + user.Number,
+			Email: user.Email,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(sessInfo)
+	}
 }
