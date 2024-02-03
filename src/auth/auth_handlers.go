@@ -86,8 +86,8 @@ func (oh OAuth2Handler) Oauth2RedirectHandler(auth AuthHandler) http.HandlerFunc
 		if token, ok := val.(*oauth2.Token); ok {
 			// if earlier then expiry is probably indefinite
 			if token.Expiry.Before(time.Date(1998, 1, 1, 0, 0, 0, 0, time.UTC)) || token.Expiry.After(time.Now()) {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(token)
+				http.Redirect(w, r, "/auth/" + oh.Provider + "/authorized", http.StatusTemporaryRedirect)
+				return
 			}
 		}
 
@@ -125,8 +125,8 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 		var token = &oauth2.Token{}
 		if token, ok := val.(*oauth2.Token); ok {
 			if token.Expiry.Before(time.Date(1998, 1, 1, 0, 0, 0, 0, time.UTC)) || token.Expiry.After(time.Now()) {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(token)
+				http.Redirect(w, r, "/auth/" + oh.Provider + "/verifyemail", http.StatusTemporaryRedirect)
+				return
 			}
 		}
 
@@ -164,9 +164,6 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 		// lazy and we should incorporate VerifyEmail here, or
 		// if it's a good idea to keep both APIs separate
 		http.Redirect(w, r, "/auth/" + oh.Provider + "/verifyemail", http.StatusTemporaryRedirect)
-
-		// w.Header().Set("Content-Type", "application/json")
-		// json.NewEncoder(w).Encode(token)
 	}
 }
 

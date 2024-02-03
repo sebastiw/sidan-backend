@@ -27,30 +27,12 @@ paths:
           schema:
             $ref: '#/components/schemas/Provider'
       responses:
-        '302':
+        '307':
           description: |-
             Redirect to /auth/{provider}/authorized.
             The authorization step went well.
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message.
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message.
+        '500':
+          description: Internal server error, couldn't save the session
   /auth/{provider}/authorized:
     get:
       summary: Exchange Authorization token
@@ -77,47 +59,15 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authorized:
-                    type: boolean
-                    description: If provider is authorized.
-                  token:
-                    type: string
-                    description: Access token.
-                  expires:
-                    type: integer
-                    description: When the token expires.
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message.
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message.
-  /auth/{provider}/getemail:
+        '307':
+          description: OK, redirect to /.
+        '500':
+          description: Internal Server Error, couldn't get session, save session, incorrect state, or bad or aborted exchange request.
+  /auth/{provider}/verifyemail:
     get:
-      summary: Return user email from provider
+      summary: Verify the user email
       description: |-
-        Return user email from provider.
+        Verify the user email from provider with the user email in the database.
       operationId: getAuthenticatedEmails
       parameters:
         - name: provider
@@ -126,32 +76,13 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Provider'
-        - oAuth2Google:
-          - read:member
-        - oAuth2Github:
-          - read:member
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  email:
-                    type: string
-                    format: email
-                    description: Email address
+        '307':
+          description: OK, redirects back to root.
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message.
+        '500':
+          description: Internal Server Error, couldn't save session, or get emails from provider.
   /file/image:
     post:
       tags:
