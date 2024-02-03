@@ -325,8 +325,17 @@ func GetUserSession(auth AuthHandler) http.HandlerFunc {
 			return
 		}
 
-		sidanScopes := session.Values["scopes"].([]string)
-		user := session.Values["user"].(m.User)
+		val := session.Values["scopes"]
+		if sidanScopes, ok := val.([]string); !ok {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		val := session.Values["user"]
+		if user, ok := val.(m.User); !ok {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		sessInfo := SessionInfo{
 			Scopes: sidanScopes,
