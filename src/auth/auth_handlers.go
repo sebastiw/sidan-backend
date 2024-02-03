@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"database/sql"
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
@@ -14,6 +15,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	m "github.com/sebastiw/sidan-backend/src/database/models"
+	d "github.com/sebastiw/sidan-backend/src/database/operations"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
 
@@ -41,6 +45,7 @@ type GithubUserInfo struct {
 
 func init() {
 	gob.Register(&oauth2.Token{})
+	gob.Register(&m.User{})
 }
 
 func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
@@ -155,12 +160,18 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(token)
+		// Not sure if redirecting the user to verify email is
+		// lazy and we should incorporate VerifyEmail here, or
+		// if it's a good idea to keep both APIs separate
+		http.Redirect(w, r, "/auth/" + oh.Provider + "/verifyemail", http.StatusTemporaryRedirect)
+
+		// w.Header().Set("Content-Type", "application/json")
+		// json.NewEncoder(w).Encode(token)
 	}
 }
 
-func (oh OAuth2Handler) VerifyEmail(auth AuthHandler) http.HandlerFunc {
+func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFunc {
+	usr := d.NewUserOperation(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := auth.Store.Get(r, "auth-session")
 		if err != nil {
@@ -193,10 +204,18 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler) http.HandlerFunc {
 			return
 		}
 
-		// db.GetUserFromEmails(emails)
+		user, err := usr.GetUserFromEmails(emails)
+		if err != nil {
+			// Probably clean up session here
+			log.Println(ru.GetRequestId(r), err)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
 
+		log.Println(ru.GetRequestId(r), "User found", user)
 		sidanScopes := []string{WriteEmailScope, WriteImageScope, WriteMemberScope, ReadMemberScope}
 		session.Values["scopes"] = sidanScopes
+		session.Values["user"] = user
 
 		err = session.Save(r, w)
 		if err != nil {

@@ -3,11 +3,10 @@ package router
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
 
 	model "github.com/sebastiw/sidan-backend/src/database/models"
 	d "github.com/sebastiw/sidan-backend/src/database/operations"
