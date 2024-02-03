@@ -18,16 +18,20 @@ type UserOperation struct {
 func (o UserOperation) GetUserFromEmails(emails []string) (User, error) {
 	var u = User{}
 
+	qms := strings.Repeat("?,", len(emails))
+	qms = qms[:len(qms)-1] // remove the trailing ","
+
 	q := `
 SELECT
  "#" AS type, number, email
 FROM cl2007_members
-WHERE email in ?
+WHERE email in (` + qms + `) AND isvalid = true
+
 ORDER BY number DESC
 LIMIT 1
 `
 
-	emailString := "(" + strings.Join(emails, ",") + ")"
+	emailString := strings.Join(emails, ",")
 
 	err := o.db.QueryRow(q, emailString).Scan(
 		&u.Type,

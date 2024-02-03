@@ -208,7 +208,7 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 		if err != nil {
 			// Probably clean up session here
 			log.Println(ru.GetRequestId(r), err)
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, errors.New("Email not registered with user"), http.StatusUnauthorized)
 			return
 		}
 
