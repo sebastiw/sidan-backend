@@ -13,6 +13,7 @@ const WriteEmailScope = "write:email"
 const WriteImageScope = "write:image"
 const WriteMemberScope = "write:member"
 const ReadMemberScope = "read:member"
+const ModifyEntryScope = "modify:entry"
 
 var providers = []string{"google", "github"}
 
