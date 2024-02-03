@@ -31,9 +31,12 @@ ORDER BY number DESC
 LIMIT 1
 `
 
-	emailString := strings.Join(emails, ",")
+	y := make([]interface{}, len(emails))
+	for i, v := range emails {
+		y[i] = v
+	}
 
-	err := o.db.QueryRow(q, emailString).Scan(
+	err := o.db.QueryRow(q, y...).Scan(
 		&u.Type,
 		&u.Number,
 		&u.Email,
