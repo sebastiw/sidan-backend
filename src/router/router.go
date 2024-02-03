@@ -1,7 +1,6 @@
 package router
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -11,28 +10,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	ru "github.com/sebastiw/sidan-backend/src/router_util"
 	c "github.com/sebastiw/sidan-backend/src/config"
+	a "github.com/sebastiw/sidan-backend/src/auth"
 )
 
-type key int
-
-const (
-	requestIDKey key = 0
-)
-
-func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID := r.Header.Get("X-Request-Id")
-			if requestID == "" {
-				requestID = nextRequestID()
-			}
-			ctx := context.WithValue(r.Context(), requestIDKey, requestID)
-			w.Header().Set("X-Request-Id", requestID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
 
 type statusWriter struct {
 	http.ResponseWriter
@@ -74,7 +56,7 @@ func LogHTTP(handler http.Handler) http.HandlerFunc {
 		handler.ServeHTTP(&sw, r)
 		duration := time.Now().Sub(start)
 		log.Println(LogEntry{
-			RequestId:  getRequestId(r),
+			RequestId:  ru.GetRequestId(r),
 			Host:       r.Host,
 			RemoteAddr: r.RemoteAddr,
 			Method:     r.Method,
@@ -91,13 +73,6 @@ func LogHTTP(handler http.Handler) http.HandlerFunc {
 func nextRequestId() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
-func getRequestId(r *http.Request) string {
-	requestID, ok := r.Context().Value(requestIDKey).(string)
-	if !ok {
-		requestID = "unknown"
-	}
-	return requestID
-}
 
 func corsHeaders(router http.Handler) http.Handler {
 	corsHandler := cors.New(cors.Options{
@@ -110,28 +85,29 @@ func corsHeaders(router http.Handler) http.Handler {
 func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Configs map[string]c.OAuth2Configuration) http.Handler {
 	r := mux.NewRouter()
 
+	auth := a.New()
 	// r.HandleFunc("/auth", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
-		oh := OAuth2Handler{
+		oh := a.OAuth2Handler{
 			Provider: provider,
 			ClientID: oauth2Config.ClientID,
 			ClientSecret: oauth2Config.ClientSecret,
 			RedirectURL: oauth2Config.RedirectURL,
 			Scopes: oauth2Config.Scopes}
-		r.HandleFunc("/auth/"+provider, oh.oauth2RedirectHandler).Methods("GET", "OPTIONS")
-		r.HandleFunc("/auth/"+provider+"/authorized", oh.oauth2AuthCallbackHandler).Methods("GET", "OPTIONS")
-		r.HandleFunc("/auth/"+provider+"/getemail", oh.retrieveEmail).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider, oh.Oauth2RedirectHandler(auth)).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider+"/authorized", oh.Oauth2AuthCallbackHandler(auth)).Methods("GET", "OPTIONS")
+		r.HandleFunc("/auth/"+provider+"/getemail", oh.RetrieveEmail(auth)).Methods("GET", "OPTIONS")
 	}
 
 	// r.HandleFunc("/notify", defaultHandler)
 
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(staticPath))
-	r.HandleFunc("/file/image", fh.createImageHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/file/image", auth.CheckScope(fh.createImageHandler, a.WriteImageScope)).Methods("POST", "OPTIONS")
 	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET", "OPTIONS")
 
 	mh := MailHandler{Host: mailConfig.Host, Port: mailConfig.Port, Username: mailConfig.User, Password: mailConfig.Password}
-	r.HandleFunc("/mail", mh.createMailHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/mail", auth.CheckScope(mh.createMailHandler, a.WriteEmailScope)).Methods("POST", "OPTIONS")
 
 	dbEh := NewEntryHandler(db)
 	//swagger:route POST /db/entries entry createEntry
@@ -165,5 +141,5 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 
 	// r.HandleFunc("/db", defaultHandler)
 
-	return corsHeaders(tracing(nextRequestId)(LogHTTP(r)))
+	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))
 }

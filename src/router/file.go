@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
 
 type FileHandler struct {
@@ -61,7 +63,7 @@ func (fh FileHandler) createImageHandler(w http.ResponseWriter, r *http.Request)
 	tempFile.Write(fileBytes)
 	bareFilename := strings.TrimPrefix(tempFile.Name(), "static/")
 	size := fmt.Sprintf("%+vb", handler.Size)
-	log.Println(getRequestId(r), "Uploaded", handler.Filename, size, bareFilename)
+	log.Println(ru.GetRequestId(r), "Uploaded", handler.Filename, size, bareFilename)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(File{Filename: bareFilename})
