@@ -213,8 +213,8 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 			return
 		}
 
-		log.Println(ru.GetRequestId(r), "User found", user)
-		sidanScopes := []string{WriteEmailScope, WriteImageScope, WriteMemberScope, ReadMemberScope}
+		sidanScopes := getScopes(user.Type)
+		log.Println(ru.GetRequestId(r), "User found: ", string(user.Type) + user.Number, "<" + user.Email + ">", sidanScopes)
 		session.Values["scopes"] = sidanScopes
 		session.Values["user"] = user
 
@@ -228,6 +228,17 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(emails)
+	}
+}
+
+func getScopes(userType m.UserType) []string {
+	switch userType {
+	case m.MemberType:
+		return []string{WriteEmailScope, WriteImageScope, WriteMemberScope, ReadMemberScope}
+	case m.ProspectType:
+		return []string{WriteEmailScope, WriteImageScope, ReadMemberScope}
+	default:
+		return []string{}
 	}
 }
 
