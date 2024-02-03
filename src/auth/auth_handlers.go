@@ -226,8 +226,7 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(emails)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	}
 }
 
