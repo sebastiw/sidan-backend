@@ -27,11 +27,11 @@ paths:
           schema:
             $ref: '#/components/schemas/Provider'
       responses:
-        '307':
+        307:
           description: |-
             Redirect to /auth/{provider}/authorized.
             The authorization step went well.
-        '500':
+        500:
           description: Internal server error, couldn't save the session
   /auth/{provider}/authorized:
     get:
@@ -59,9 +59,9 @@ paths:
           schema:
             type: string
       responses:
-        '307':
+        307:
           description: OK, redirect to /.
-        '500':
+        500:
           description: Internal Server Error, couldn't get session, save session, incorrect state, or bad or aborted exchange request.
   /auth/{provider}/verifyemail:
     get:
@@ -76,21 +76,39 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Provider'
+      security:
+        - oAuth2Google: []
+        - oAuth2Github: []
       responses:
-        '307':
+        307:
           description: OK, redirects back to root.
-        '401':
+        401:
           description: Unauthorized
-        '500':
+        500:
           description: Internal Server Error, couldn't save session, or get emails from provider.
+  /auth/getusersession:
+    get:
+      summary: Get the user session
+      description: |-
+        Check if user is session is authorized, and return the user session.
+      operationId: getUserSession
+      responses:
+        200:
+          description: OK, redirects back to root.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSession'
+        401:
+          description: Unauthorized
+        500:
+          description: Internal Server Error, couldn't get session, or variables from session.
   /file/image:
     post:
       tags:
         - image
       security:
-        - oAuth2Google:
-          - write:image
-        - oAuth2Github:
+        - sidanOAuth:
           - write:image
       requestBody:
         content:
@@ -127,9 +145,7 @@ paths:
       tags:
         - mail
       security:
-        - oAuth2Google:
-          - write:email
-        - oAuth2Github:
+        - sidanOAuth:
           - write:email
       requestBody:
         content:
@@ -186,9 +202,7 @@ paths:
       tags:
         - member
       security:
-        - oAuth2Google:
-          - read:member
-        - oAuth2Github:
+        - sidanOAuth:
           - read:member
         - {}
       parameters:
@@ -211,9 +225,7 @@ paths:
       tags:
         - member
       security:
-        - oAuth2Google:
-          - write:member
-        - oAuth2Github:
+        - sidanOAuth:
           - write:member
       description: Create on new member
       requestBody:
@@ -230,6 +242,17 @@ paths:
                 $ref: '#/components/schemas/Member'
 components:
   securitySchemes:
+    sidanOAuth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: /auth/{provider}
+          scopes:
+            write:email: Gain ability to write emails.
+            write:image: Upload images
+            write:member: Update information on members
+            read:member: Read detailed information about members
+            modify:entry: Delete or update entries
     oAuth2Google:
       type: oauth2
       flows:
@@ -237,10 +260,7 @@ components:
           authorizationUrl: /auth/google
           tokenUrl: /auth/google/authorized
           scopes:
-            write:email: Gain ability to write emails.
-            write:image: Upload images
-            write:member: Update information on members
-            read:member: Read detailed information about members
+            {}
     oAuth2Github:
       type: oauth2
       flows:
@@ -248,16 +268,26 @@ components:
           authorizationUrl: /auth/github
           tokenUrl: /auth/github/authorized
           scopes:
-            write:email: Gain ability to write emails.
-            write:image: Upload images
-            write:member: Update information on members
-            read:member: Read detailed information about members
+            {}
   schemas:
     Provider:
       type: string
       enum:
         - google
         - github
+    UserSession:
+      type: object
+      properties:
+        scopes:
+          type: array
+          items:
+            type: string
+            enum:
+              - write:email
+              - write:image
+              - write:member
+              - modify:entry
+              - read:member
     FileDescriptor:
       type: object
       properties:
@@ -397,4 +427,3 @@ components:
             type: string
         status:
             type: string
-
