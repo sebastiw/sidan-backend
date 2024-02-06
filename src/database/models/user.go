@@ -20,6 +20,7 @@ type User struct {
 	Type                         UserType `json:"type"`
 	Number                       string `json:"number"`
 	Email                        string `json:"email"`
+	FulHaxPass                   string `json:"fulHaxPass"`
 }
 
 func (u *User) UnmarshalJSON(data []byte) error {

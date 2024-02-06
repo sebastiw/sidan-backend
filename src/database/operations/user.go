@@ -23,7 +23,7 @@ func (o UserOperation) GetUserFromEmails(emails []string) (User, error) {
 
 	q := `
 SELECT
- "#" AS type, number, email
+ "#" AS type, number, email, password_classic
 FROM cl2007_members
 WHERE email in (` + qms + `) AND isvalid = true
 
@@ -40,6 +40,7 @@ LIMIT 1
 		&u.Type,
 		&u.Number,
 		&u.Email,
+		&u.FulHaxPass,
 	)
 
 	if err != nil {
