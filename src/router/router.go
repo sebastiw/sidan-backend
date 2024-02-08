@@ -76,7 +76,12 @@ func nextRequestId() string {
 
 func corsHeaders(router http.Handler) http.Handler {
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{
+			"https://api.chalmerslosers.com",
+			"https://chalmerslosers.com",
+			"http://localhost:8080",
+			"http://localhost",
+		},
 		AllowCredentials: true,
 	})
 	return corsHandler.Handler(router)
