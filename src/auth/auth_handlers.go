@@ -47,6 +47,7 @@ type SessionInfo struct {
 	Scopes []string `json:"scopes"`
 	UserName string `json:"username"`
 	Email string `json:"email"`
+	FulHaxPass string `json:"fulHaxPass"`
 }
 
 
@@ -344,6 +345,7 @@ func GetUserSession(auth AuthHandler) http.HandlerFunc {
 			Scopes: sidanScopes,
 			UserName: string(user.Type) + user.Number,
 			Email: user.Email,
+			FulHaxPass: user.FulHaxPass,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
