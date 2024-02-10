@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <script>
+         export default () => {
+             useEffect(() => {
+                 if (window.opener) {
+                     window.opener.postMessage("success");
+                     window.close();
+                 }
+             });
+             return 'Stäng fönstret';
+         };
+        </script>
+    </head>
+    <body>
+        Du kan nu stänga detta fönster.
+    </body>
+</html>
