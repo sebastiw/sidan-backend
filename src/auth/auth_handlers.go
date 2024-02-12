@@ -232,8 +232,8 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 		}
 
 		// http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		w.Header().Set("Content-Type", "text/html")
-		http.ServeFile(w, r, "./auth/close.html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		http.ServeFile(w, r, "./src/auth/close.html")
 	}
 }
 
