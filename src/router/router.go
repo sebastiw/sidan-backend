@@ -78,9 +78,13 @@ func corsHeaders(router http.Handler) http.Handler {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{
 			"https://api.chalmerslosers.com",
+			"https://api.chalmerslosers.com:*",
 			"https://chalmerslosers.com",
-			"http://localhost:8080",
+			"https://chalmerslosers.com:*",
+			"https://sidan.cl",
+			"https://sidan.cl:*",
 			"http://localhost",
+			"http://localhost:*",
 		},
 		AllowCredentials: true,
 	})

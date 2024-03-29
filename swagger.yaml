@@ -8,6 +8,7 @@ info:
     url: http://opensource.org/licenses/MIT
   version: 0.0.1
 servers:
+  - url: https://api.chalmerslosers.com
   - url: http://chalmerslosers.com:30880
   - url: http://localhost:8080
 paths:
