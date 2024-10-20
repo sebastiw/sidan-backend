@@ -1,12 +1,13 @@
 package auth
 
 import (
-	"net/http"
 	"errors"
+	"net/http"
 	"time"
-	"golang.org/x/oauth2"
-	"github.com/gorilla/sessions"
+
 	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
+	"golang.org/x/oauth2"
 )
 
 const WriteEmailScope = "write:email"
@@ -43,7 +44,7 @@ func New() AuthHandler {
 
 func (a AuthHandler) CheckScope(router http.HandlerFunc, scope string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !a.ScopeOk(w, r, ReadMemberScope) {
+		if !a.ScopeOk(w, r, scope) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -91,4 +92,3 @@ func (auth AuthHandler) ScopeOk(w http.ResponseWriter, r *http.Request, scope st
 	}
 	return false
 }
-

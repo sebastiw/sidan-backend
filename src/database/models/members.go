@@ -42,3 +42,9 @@ func (m Member) Fmt() string {
 	s = addBp(s, "Isvalid", m.Isvalid)
 	return fmt.Sprintf("Member{%s, Isvalid: %t}", strings.Join(s, ", "), isvalid)
 }
+
+type MemberLite struct {
+	Id     int64   `json:"id"`
+	Number *string `json:"number"`
+	Title  *string `json:"title"`
+}

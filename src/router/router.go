@@ -10,11 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
-	ru "github.com/sebastiw/sidan-backend/src/router_util"
-	c "github.com/sebastiw/sidan-backend/src/config"
 	a "github.com/sebastiw/sidan-backend/src/auth"
+	c "github.com/sebastiw/sidan-backend/src/config"
+	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
-
 
 type statusWriter struct {
 	http.ResponseWriter
@@ -76,7 +75,7 @@ func nextRequestId() string {
 
 func corsHeaders(router http.Handler) http.Handler {
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{
+		AllowedOrigins: []string{
 			"https://api.chalmerslosers.com",
 			"https://api.chalmerslosers.com:*",
 			"https://chalmerslosers.com",
@@ -98,11 +97,11 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	// r.HandleFunc("/auth", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
 		oh := a.OAuth2Handler{
-			Provider: provider,
-			ClientID: oauth2Config.ClientID,
+			Provider:     provider,
+			ClientID:     oauth2Config.ClientID,
 			ClientSecret: oauth2Config.ClientSecret,
-			RedirectURL: oauth2Config.RedirectURL,
-			Scopes: oauth2Config.Scopes}
+			RedirectURL:  oauth2Config.RedirectURL,
+			Scopes:       oauth2Config.Scopes}
 		r.HandleFunc("/auth/"+provider, oh.Oauth2RedirectHandler(auth)).Methods("GET", "OPTIONS")
 		r.HandleFunc("/auth/"+provider+"/authorized", oh.Oauth2CallbackHandler(auth)).Methods("GET", "OPTIONS")
 		r.HandleFunc("/auth/"+provider+"/verifyemail", oh.VerifyEmail(auth, db)).Methods("GET", "OPTIONS")
@@ -129,12 +128,23 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 
 	dbMh := NewMemberHandler(db)
 	r.HandleFunc("/db/members", auth.CheckScope(dbMh.createMemberHandler, a.WriteMemberScope)).Methods("POST", "OPTIONS")
-	r.HandleFunc("/db/members/{id:[0-9]+}", dbMh.readMemberHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/members/{id:[0-9]+}", routeAuthAndUnauthed(auth, dbMh.readMemberHandler, dbMh.readMemberUnauthedHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/db/members/{id:[0-9]+}", auth.CheckScope(dbMh.updateMemberHandler, a.WriteMemberScope)).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/db/members/{id:[0-9]+}", auth.CheckScope(dbMh.deleteMemberHandler, a.WriteMemberScope)).Methods("DELETE", "OPTIONS")
-	r.HandleFunc("/db/members", dbMh.readAllMemberHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/members", routeAuthAndUnauthed(auth, dbMh.readAllMemberHandler, dbMh.readAllMemberUnauthedHandler)).Methods("GET", "OPTIONS")
 
 	// r.HandleFunc("/db", defaultHandler)
 
 	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))
+}
+
+func routeAuthAndUnauthed(auth a.AuthHandler, authedRoute, unauthedRoute http.HandlerFunc) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !auth.ScopeOk(w, r, a.ReadMemberScope) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			unauthedRoute(w, r)
+		} else {
+			authedRoute(w, r)
+		}
+	}
 }
