@@ -89,6 +89,13 @@ func (oh OAuth2Handler) Oauth2RedirectHandler(auth AuthHandler) http.HandlerFunc
 			log.Println(ru.GetRequestId(r), err)
 		}
 
+		// Remember callback url
+		queryParams := r.URL.Query()
+		redirectUrl := queryParams.Get("redirect_uri")
+		if redirectUrl != "" {
+			session.AddFlash(redirectUrl, "redirectUrl")
+		}
+
 		val := session.Values[oh.Provider]
 		// var token = &oauth2.Token{} // unsure why this isn't needed here
 		if token, ok := val.(*oauth2.Token); ok {
@@ -231,9 +238,14 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 			return
 		}
 
-		// http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		http.ServeFile(w, r, "./src/auth/close.html")
+		redirectUrl := session.Flashes("redirectUrl")
+		if redirectUrl == nil || redirectUrl[0] == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			http.ServeFile(w, r, "./src/auth/close.html")
+		} else {
+			url := fmt.Sprintf("%s?bearer=%s", redirectUrl[0], bearer)
+			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+		}
 	}
 }
 

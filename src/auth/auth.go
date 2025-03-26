@@ -62,7 +62,8 @@ func (auth AuthHandler) getToken(w http.ResponseWriter, r *http.Request) (*oauth
 		val := session.Values[provider]
 		// var token = &oauth2.Token{}
 		if token, ok := val.(*oauth2.Token); ok {
-			if token.Expiry.Before(time.Date(1998, 1, 1, 0, 0, 0, 0, time.UTC)) || token.Expiry.After(time.Now()) {
+			sidanEpoch := time.Date(1998, 1, 1, 0, 0, 0, 0, time.UTC)
+			if token.Expiry.Before(sidanEpoch) || token.Expiry.After(time.Now()) {
 				return token, nil
 			}
 		}
