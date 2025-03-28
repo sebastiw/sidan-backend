@@ -65,6 +65,8 @@ Check `swagger.json` for full API.
 
 For oAuth2 flows, please see
 https://developers.google.com/oauthplayground/
+https://auth0.com/blog/backend-for-frontend-pattern-with-auth0-and-dotnet/
+https://stackoverflow.com/a/77469099
 
 ## /db/
 

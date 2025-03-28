@@ -12,11 +12,18 @@ mail:
   port: 25
 
 oauth2:
+  sidan:
+    clientId: "666"
+    clientSecret: "s1d4n"
+    redirectURL: "sidan/path"
+    scopes: ["user:email"]
   google:
     clientId: "1234"
     clientSecret: "secret"
     redirectURL: "google/path"
+    scopes: ["openid", "email"]
   github:
     clientId: "54321"
     clientSecret: "really_secret"
     redirectURL: "github/path"
+    scopes: ["user:email"]

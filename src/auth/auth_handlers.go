@@ -56,27 +56,30 @@ func init() {
 	gob.Register(&m.User{})
 }
 
-func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
+func (oh OAuth2Handler) get_endpoint() *oauth2.Endpoint {
 	switch oh.Provider {
+	case "sidan":
+		return &oauth2.Endpoint{
+			AuthURL:       "/login/oauth/authorize",
+			TokenURL:      "/login/oauth/access_token",
+		}
 	case "google":
-		return &oauth2.Config{
-			ClientID:     oh.ClientID,
-			ClientSecret: oh.ClientSecret,
-			RedirectURL:  oh.RedirectURL,
-			Scopes:       []string{"openid", "email"},
-			Endpoint:     google.Endpoint,
-		}
+		return &google.Endpoint
 	case "github":
-		return &oauth2.Config{
-			ClientID:     oh.ClientID,
-			ClientSecret: oh.ClientSecret,
-			RedirectURL:  oh.RedirectURL,
-			Scopes:       []string{"user:email"},
-			Endpoint:     github.Endpoint,
-		}
+		return &github.Endpoint
 	default:
 		panic(fmt.Errorf("provider not supported %s", oh.Provider))
 	}
+}
+func (oh OAuth2Handler) oauth2Config() *oauth2.Config {
+	endpoint := oh.get_endpoint()
+	return &oauth2.Config{
+			ClientID:     oh.ClientID,
+			ClientSecret: oh.ClientSecret,
+			RedirectURL:  oh.RedirectURL,
+			Scopes:       oh.Scopes,
+			Endpoint:     *endpoint,
+		}
 }
 
 func (oh OAuth2Handler) Oauth2RedirectHandler(auth AuthHandler) http.HandlerFunc {

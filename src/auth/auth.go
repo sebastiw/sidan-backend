@@ -16,7 +16,7 @@ const WriteMemberScope = "write:member"
 const ReadMemberScope = "read:member"
 const ModifyEntryScope = "modify:entry"
 
-var providers = []string{"google", "github"}
+var providers = []string{"sidan", "google", "github"}
 
 // store will hold all session data
 var store *sessions.CookieStore
