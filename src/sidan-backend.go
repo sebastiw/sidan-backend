@@ -13,6 +13,9 @@ import (
 )
 
 func main() {
+	// to change the flags on the default logger; Llongfile or Lshortfile
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	var configuration c.Configuration
 
 	c.ReadConfig(&configuration)
