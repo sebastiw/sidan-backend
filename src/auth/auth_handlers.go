@@ -61,7 +61,7 @@ func (oh OAuth2Handler) get_endpoint() *oauth2.Endpoint {
 	case "sidan":
 		return &oauth2.Endpoint{
 			AuthURL:       "/login/oauth/authorize",
-			TokenURL:      "/login/oauth/access_token",
+			TokenURL:      "http://localhost:8080/login/oauth/access_token",
 		}
 	case "google":
 		return &google.Endpoint
@@ -149,10 +149,8 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 		}
 
 		queryParams := r.URL.Query()
-
 		code := queryParams.Get("code")
 		state := queryParams.Get("state")
-
 		sessionState := session.Flashes("state")
 		if sessionState == nil || state != sessionState[0] {
 			err := errors.New("Invalid state")

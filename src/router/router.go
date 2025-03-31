@@ -93,12 +93,12 @@ func corsHeaders(router http.Handler) http.Handler {
 func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Configs map[string]c.OAuth2Configuration) http.Handler {
 	r := mux.NewRouter()
 
+	auth := a.New()
 	sidanProvider := a.NewSidanAuthProvider()
 	r.HandleFunc("/login/oauth/authorize", sidanProvider.BasicLoginWindow()).Methods("GET", "OPTIONS")
 	r.HandleFunc("/login", sidanProvider.LoginCheck(db)).Methods("POST", "OPTIONS")
-	// r.HandleFunc("/login/oauth/access_token", auth.BasicSidanLogin()).Methods("GET", "OPTIONS")
+	r.HandleFunc("/login/oauth/access_token", sidanProvider.ExchangeAccess()).Methods("POST", "OPTIONS")
 
-	auth := a.New()
 	// r.HandleFunc("/auth", defaultHandler)
 	for provider, oauth2Config := range oauth2Configs {
 		oh := a.OAuth2Handler{

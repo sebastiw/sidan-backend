@@ -15,15 +15,15 @@ oauth2:
   sidan:
     clientId: "666"
     clientSecret: "s1d4n"
-    redirectURL: "sidan/path"
+    redirectURL: "auth/sidan/authorized"
     scopes: ["user:email"]
   google:
     clientId: "1234"
     clientSecret: "secret"
-    redirectURL: "google/path"
+    redirectURL: "google/dummy"
     scopes: ["openid", "email"]
   github:
     clientId: "54321"
     clientSecret: "really_secret"
-    redirectURL: "github/path"
+    redirectURL: "github/dummy"
     scopes: ["user:email"]
