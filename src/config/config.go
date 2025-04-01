@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/gorilla/securecookie"
@@ -55,7 +55,7 @@ func ReadConfig(configuration *Configuration) {
 	viper.SetConfigType("yaml")
 	viper.SetDefault("CONFIG_FILE", "local")
 	file := viper.GetString("CONFIG_FILE")
-	log.Print("Reading config file: ", file)
+	slog.Info("Config reading", slog.String("file", file))
 	viper.SetConfigName(file)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -75,5 +75,5 @@ func ReadConfig(configuration *Configuration) {
 	}
 
 	os.Setenv("SESSION_KEY", hex.EncodeToString(securecookie.GenerateRandomKey(32)))
-	log.Println("SESSION_KEY", os.Getenv("SESSION_KEY"))
+	slog.Debug("Config", slog.String("SESSION_KEY", os.Getenv("SESSION_KEY")))
 }

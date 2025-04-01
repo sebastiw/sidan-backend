@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -89,7 +89,7 @@ func (oh OAuth2Handler) Oauth2RedirectHandler(auth AuthHandler) http.HandlerFunc
 		session, err := auth.Store.Get(r, "auth-session")
 		if err != nil {
 			// ignore errors due to reboots of server
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 		}
 
 		// Remember callback url
@@ -117,7 +117,7 @@ func (oh OAuth2Handler) Oauth2RedirectHandler(auth AuthHandler) http.HandlerFunc
 
 		err = session.Save(r, w)
 		if err != nil {
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			err := errors.New("Error saving session")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -134,7 +134,7 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 
 		session, err := auth.Store.Get(r, "auth-session")
 		if err != nil {
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -154,7 +154,7 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 		sessionState := session.Flashes("state")
 		if sessionState == nil || state != sessionState[0] {
 			err := errors.New("Invalid state")
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -162,7 +162,7 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 		// Exchange the Authorization code for an Access Token
 		token, err = conf.Exchange(oauth2.NoContext, code)
 		if err != nil {
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -170,7 +170,7 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 		session.Values[oh.Provider] = token
 		err = session.Save(r, w)
 		if err != nil {
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			err := errors.New("Error saving session")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -189,14 +189,14 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 		session, err := auth.Store.Get(r, "auth-session")
 		if err != nil {
 			err := errors.New("Error getting session")
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, "Not authorized", http.StatusUnauthorized)
 			return
 		}
 
 		if session.Values[oh.Provider] == nil {
 			err := fmt.Errorf("Not authorized with %s", oh.Provider)
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -205,14 +205,14 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 
 		if strings.TrimSpace(bearer) == "" {
 			err := errors.New("Empty Authorization Header")
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		emails, err := GetEmailsFromProvider(w, r, oh, bearer)
 		if err != nil {
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -220,20 +220,20 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 		user, err := usr.GetUserFromEmails(emails)
 		if err != nil {
 			// Probably clean up session here
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			err := errors.New("Email not registered with user")
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		sidanScopes := getScopes(user.Type)
-		log.Println(ru.GetRequestId(r), "User found: ", string(user.Type) + user.Number, "<" + user.Email + ">", sidanScopes)
+		slog.Info(ru.GetRequestId(r), "User found: ", string(user.Type) + user.Number, "<" + user.Email + ">", sidanScopes)
 		session.Values["scopes"] = sidanScopes
 		session.Values["user"] = user
 
 		err = session.Save(r, w)
 		if err != nil {
-			log.Println(ru.GetRequestId(r), err)
+			slog.Warn(ru.GetRequestId(r), err)
 			err := errors.New("Error saving session")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

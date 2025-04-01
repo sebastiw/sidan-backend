@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -234,7 +234,7 @@ LIMIT 1
 	ErrorCheck(err)
 
 	if i == 0 {
-		log.Println(fmt.Sprintf("0 rows affected (id: %d)", e.Id))
+		slog.Warn(fmt.Sprintf("0 rows affected (id: %d)", e.Id))
 	}
 
 	return e

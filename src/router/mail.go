@@ -3,7 +3,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/smtp"
 
@@ -46,12 +46,12 @@ func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) 
 			"\r\n"+
 			"%s\r\n", m.ToEmails, m.Title, m.Message))
 
-	log.Println(ru.GetRequestId(r), m.Fmt())
+	slog.Debug(ru.GetRequestId(r), m.Fmt())
 
 	auth := smtp.PlainAuth("", mh.Username, mh.Password, mh.Host)
 	err = smtp.SendMail(fmt.Sprintf("%s:%d", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)
 	if err != nil {
-		log.Println(ru.GetRequestId(r), "Send mail error:", err)
+		slog.Error(ru.GetRequestId(r), "Send mail error:", err)
 		return
 	}
 

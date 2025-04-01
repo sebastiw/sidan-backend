@@ -3,7 +3,7 @@ package router
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -35,37 +35,24 @@ func (w *statusWriter) Write(b []byte) (int, error) {
 	return n, err
 }
 
-type LogEntry struct {
-	RequestId  string
-	Host       string
-	RemoteAddr string
-	Method     string
-	RequestURI string
-	Proto      string
-	Status     int
-	ContentLen int
-	UserAgent  string
-	Duration   time.Duration
-}
-
 func LogHTTP(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		sw := statusWriter{ResponseWriter: w}
 		handler.ServeHTTP(&sw, r)
 		duration := time.Now().Sub(start)
-		log.Println(LogEntry{
-			RequestId:  ru.GetRequestId(r),
-			Host:       r.Host,
-			RemoteAddr: r.RemoteAddr,
-			Method:     r.Method,
-			RequestURI: r.RequestURI,
-			Proto:      r.Proto,
-			Status:     sw.status,
-			ContentLen: sw.length,
-			UserAgent:  r.Header.Get("User-Agent"),
-			Duration:   duration,
-		})
+		slog.Debug("http-request",
+			slog.String("RequestId",  ru.GetRequestId(r)),
+			slog.String("Host",       r.Host),
+			slog.Duration("Duration", duration),
+			slog.String("RemoteAddr", r.RemoteAddr),
+			slog.String("Method",     r.Method),
+			slog.String("RequestURI", r.RequestURI),
+			slog.String("Proto",      r.Proto),
+			slog.Int("Status",        sw.status),
+			slog.Int("ContentLen",    sw.length),
+			slog.String("UserAgent",  r.Header.Get("User-Agent")),
+		)
 	}
 }
 

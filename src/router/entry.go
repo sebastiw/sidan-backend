@@ -3,7 +3,7 @@ package router
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -26,7 +26,7 @@ func (eh EntryHandler) createEntryHandler(w http.ResponseWriter, r *http.Request
 	var e model.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
-	log.Println(ru.GetRequestId(r), e)
+	slog.Debug(ru.GetRequestId(r), e)
 	entry := eh.op.Create(e)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -50,7 +50,7 @@ func (eh EntryHandler) updateEntryHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(ru.GetRequestId(r), e)
+	slog.Debug(ru.GetRequestId(r), e)
 	e.Id = int64(id)
 	entry := eh.op.Update(e)
 
@@ -65,7 +65,7 @@ func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(ru.GetRequestId(r), e)
+	slog.Debug(ru.GetRequestId(r), e)
 	e.Id = int64(id)
 	entry := eh.op.Delete(e)
 

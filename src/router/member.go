@@ -3,7 +3,7 @@ package router
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -26,7 +26,7 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	var m model.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
-	log.Println(ru.GetRequestId(r), m.Fmt())
+	slog.Info(ru.GetRequestId(r), m.Fmt())
 	member := mh.op.Create(m)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -51,7 +51,7 @@ func (mh MemberHandler) readMemberUnauthedHandler(w http.ResponseWriter, r *http
 
 	b, err := json.Marshal(member)
 	if err != nil {
-		log.Println(err)
+		slog.Warn(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -59,7 +59,7 @@ func (mh MemberHandler) readMemberUnauthedHandler(w http.ResponseWriter, r *http
 
 	err = json.Unmarshal(b, &liteMemberData)
 	if err != nil {
-		log.Println(err)
+		slog.Warn(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -74,7 +74,7 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(ru.GetRequestId(r), m.Fmt())
+	slog.Debug(ru.GetRequestId(r), m.Fmt())
 	m.Id = int64(id)
 	member := mh.op.Update(m)
 
@@ -89,7 +89,7 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	log.Println(ru.GetRequestId(r), m.Fmt())
+	slog.Debug(ru.GetRequestId(r), m.Fmt())
 	m.Id = int64(id)
 	member := mh.op.Delete(m)
 
@@ -111,7 +111,7 @@ func (mh MemberHandler) readAllMemberUnauthedHandler(w http.ResponseWriter, r *h
 
 	b, err := json.Marshal(members)
 	if err != nil {
-		log.Println(err)
+		slog.Warn(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -119,7 +119,7 @@ func (mh MemberHandler) readAllMemberUnauthedHandler(w http.ResponseWriter, r *h
 
 	err = json.Unmarshal(b, &liteMemberData)
 	if err != nil {
-		log.Println(err)
+		slog.Warn(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 

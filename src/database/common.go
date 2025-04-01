@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"database/sql"
@@ -15,7 +15,7 @@ func connectString(user string, pw string, host string, port int, schema string)
 
 func Connect(user string, pw string, host string, port int, schema string) *sql.DB {
 	connectString := connectString(user, pw, host, port, schema)
-	log.Printf("Connecting to %s", host)
+	slog.Info("Database connecting", slog.String("host", host))
 
 	db, err := sql.Open("mysql", connectString)
 	ErrorCheck(err)
@@ -36,7 +36,7 @@ func Configure(db *sql.DB) {
 }
 
 func Ping(db *sql.DB) {
-	log.Printf("Test ping DB")
+	slog.Debug("Database test ping")
 	err := db.Ping()
 	ErrorCheck(err)
 }
