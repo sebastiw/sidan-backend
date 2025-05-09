@@ -7,7 +7,7 @@ import (
 	"log/slog"
 
 	. "github.com/sebastiw/sidan-backend/src/database"
-	. "github.com/sebastiw/sidan-backend/src/database/models"
+	"github.com/sebastiw/sidan-backend/src/models"
 )
 
 func NewMemberOperation(db *sql.DB) MemberOperation {
@@ -18,7 +18,7 @@ type MemberOperation struct {
 	db *sql.DB
 }
 
-func (o MemberOperation) Create(m Member) Member {
+func (o MemberOperation) Create(m models.Member) models.Member {
 	q := `
 INSERT INTO cl2007_members
 SET
@@ -53,8 +53,8 @@ SET
 	return m
 }
 
-func (o MemberOperation) Read(id int) Member {
-	var m = Member{}
+func (o MemberOperation) Read(id int) models.Member {
+	var m = models.Member{}
 
 	q := `
 SELECT
@@ -94,8 +94,8 @@ LIMIT 1
 	return m
 }
 
-func (o MemberOperation) ReadAll(onlyValid bool) []Member {
-	l := make([]Member, 0)
+func (o MemberOperation) ReadAll(onlyValid bool) []models.Member {
+	l := make([]models.Member, 0)
 
 	qval := ""
 	if onlyValid {
@@ -117,7 +117,7 @@ ORDER BY number DESC, id DESC
 	defer rows.Close()
 
 	for rows.Next() {
-		var m = Member{}
+		var m = models.Member{}
 		err := rows.Scan(
 			&m.Id,
 			&m.Number,
@@ -147,7 +147,7 @@ ORDER BY number DESC, id DESC
 	return l
 }
 
-func (o MemberOperation) Update(m Member) Member {
+func (o MemberOperation) Update(m models.Member) models.Member {
 	q := `
 UPDATE cl2007_members
 SET
@@ -192,7 +192,7 @@ LIMIT 1
 	return m
 }
 
-func (o MemberOperation) Delete(m Member) Member {
+func (o MemberOperation) Delete(m models.Member) models.Member {
 	if 0 == m.Id || nil == m.Number {
 		// Raise error
 		ErrorCheck(errors.New("id and/or Number is not set"))

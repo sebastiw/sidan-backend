@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	. "github.com/sebastiw/sidan-backend/src/database"
-	. "github.com/sebastiw/sidan-backend/src/database/models"
+	"github.com/sebastiw/sidan-backend/src/models"
 )
 
 func NewEntryOperation(db *sql.DB) EntryOperation {
@@ -22,7 +22,7 @@ type EntryOperation struct {
 	db *sql.DB
 }
 
-func (o EntryOperation) Create(e Entry) Entry {
+func (o EntryOperation) Create(e models.Entry) models.Entry {
 	q := `
 INSERT INTO cl2003_msgs
 SET
@@ -69,7 +69,7 @@ SET
 
 // swagger:operation
 
-func (o EntryOperation) Read(id int) Entry {
+func (o EntryOperation) Read(id int) models.Entry {
 	q := `
 SELECT
  m.id, m.date, m.time, m.datetime, m.msg, m.status, m.cl, m.sig, m.email, m.place,
@@ -88,7 +88,7 @@ GROUP BY
 `
 
 	var kumpaner = *new(string)
-	var e = Entry{SideKicks: []SideKick{}}
+	var e = models.Entry{SideKicks: []models.SideKick{}}
 	err := o.db.QueryRow(q, id).Scan(
 		&e.Id,
 		&e.Date,
@@ -119,9 +119,9 @@ GROUP BY
 	default:
 	}
 	if kumpaner != "" {
-		sidekicks := make([]SideKick, 0)
+		sidekicks := make([]models.SideKick, 0)
 		for _, n := range strings.Split(kumpaner, ",") {
-			sidekicks = append(sidekicks, SideKick{Number: "#" + n})
+			sidekicks = append(sidekicks, models.SideKick{Number: "#" + n})
 		}
 		e.SideKicks = sidekicks
 	}
@@ -129,8 +129,8 @@ GROUP BY
 	return e
 }
 
-func (o EntryOperation) ReadAll(take int64, skip int64) []Entry {
-	l := make([]Entry, 0)
+func (o EntryOperation) ReadAll(take int64, skip int64) []models.Entry {
+	l := make([]models.Entry, 0)
 
 	q := `
 SELECT
@@ -156,7 +156,7 @@ LIMIT ?, ?
 
 	for rows.Next() {
 		var kumpaner = *new(string)
-		var e = Entry{SideKicks: []SideKick{}}
+		var e = models.Entry{SideKicks: []models.SideKick{}}
 		err := rows.Scan(
 			&e.Id,
 			&e.Date,
@@ -186,9 +186,9 @@ LIMIT ?, ?
 		default:
 		}
 		if kumpaner != "" {
-			sidekicks := make([]SideKick, 0)
+			sidekicks := make([]models.SideKick, 0)
 			for _, n := range strings.Split(kumpaner, ",") {
-				sidekicks = append(sidekicks, SideKick{Number: "#" + n})
+				sidekicks = append(sidekicks, models.SideKick{Number: "#" + n})
 			}
 			e.SideKicks = sidekicks
 		}
@@ -198,7 +198,7 @@ LIMIT ?, ?
 	return l
 }
 
-func (o EntryOperation) Update(e Entry) Entry {
+func (o EntryOperation) Update(e models.Entry) models.Entry {
 	q := `
 UPDATE cl2003_msgs
 SET
@@ -240,7 +240,7 @@ LIMIT 1
 	return e
 }
 
-func (o EntryOperation) Delete(e Entry) Entry {
+func (o EntryOperation) Delete(e models.Entry) models.Entry {
 	if 0 == e.Id {
 		// Raise error
 		ErrorCheck(errors.New("id is not set"))

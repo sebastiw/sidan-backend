@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	model "github.com/sebastiw/sidan-backend/src/database/models"
+	"github.com/sebastiw/sidan-backend/src/models"
 	d "github.com/sebastiw/sidan-backend/src/database/operations"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
@@ -23,7 +23,7 @@ type MemberHandler struct {
 }
 
 func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Request) {
-	var m model.Member
+	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
 	slog.Info(ru.GetRequestId(r), m.Fmt())
@@ -55,7 +55,7 @@ func (mh MemberHandler) readMemberUnauthedHandler(w http.ResponseWriter, r *http
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	liteMemberData := model.MemberLite{}
+	liteMemberData := models.MemberLite{}
 
 	err = json.Unmarshal(b, &liteMemberData)
 	if err != nil {
@@ -68,7 +68,7 @@ func (mh MemberHandler) readMemberUnauthedHandler(w http.ResponseWriter, r *http
 }
 
 func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Request) {
-	var m model.Member
+	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
 	vars := mux.Vars(r)
@@ -83,7 +83,7 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Request) {
-	var m model.Member
+	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
 	vars := mux.Vars(r)
@@ -115,7 +115,7 @@ func (mh MemberHandler) readAllMemberUnauthedHandler(w http.ResponseWriter, r *h
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	liteMemberData := []model.MemberLite{}
+	liteMemberData := []models.MemberLite{}
 
 	err = json.Unmarshal(b, &liteMemberData)
 	if err != nil {

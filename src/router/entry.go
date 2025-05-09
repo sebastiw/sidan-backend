@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	model "github.com/sebastiw/sidan-backend/src/database/models"
+	models "github.com/sebastiw/sidan-backend/src/models"
 	d "github.com/sebastiw/sidan-backend/src/database/operations"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
@@ -23,7 +23,7 @@ type EntryHandler struct {
 }
 
 func (eh EntryHandler) createEntryHandler(w http.ResponseWriter, r *http.Request) {
-	var e model.Entry
+	var e models.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
 	slog.Debug(ru.GetRequestId(r), e)
@@ -44,7 +44,7 @@ func (eh EntryHandler) readEntryHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (eh EntryHandler) updateEntryHandler(w http.ResponseWriter, r *http.Request) {
-	var e model.Entry
+	var e models.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
 	vars := mux.Vars(r)
@@ -59,7 +59,7 @@ func (eh EntryHandler) updateEntryHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request) {
-	var e model.Entry
+	var e models.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
 	vars := mux.Vars(r)

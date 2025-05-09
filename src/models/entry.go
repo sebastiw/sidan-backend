@@ -1,4 +1,4 @@
-package database
+package models
 
 type SideKick struct {
 	Number string `json:"number"`

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	m "github.com/sebastiw/sidan-backend/src/database/models"
+	"github.com/sebastiw/sidan-backend/src/models"
 	d "github.com/sebastiw/sidan-backend/src/database/operations"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
@@ -53,7 +53,7 @@ type SessionInfo struct {
 
 func init() {
 	gob.Register(&oauth2.Token{})
-	gob.Register(&m.User{})
+	gob.Register(&models.User{})
 }
 
 func (oh OAuth2Handler) get_endpoint() *oauth2.Endpoint {
@@ -250,11 +250,11 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 	}
 }
 
-func getScopes(userType m.UserType) []string {
+func getScopes(userType models.UserType) []string {
 	switch userType {
-	case m.MemberType:
+	case models.MemberType:
 		return []string{WriteEmailScope, WriteImageScope, WriteMemberScope, ReadMemberScope}
-	case m.ProspectType:
+	case models.ProspectType:
 		return []string{WriteEmailScope, WriteImageScope, ReadMemberScope}
 	default:
 		return []string{}
@@ -347,8 +347,8 @@ func GetUserSession(auth AuthHandler) http.HandlerFunc {
 		}
 
 		valu := session.Values["user"]
-		var user = &m.User{}
-		user, oku := valu.(*m.User)
+		var user = &models.User{}
+		user, oku := valu.(*models.User)
 		if !oku {
 			http.Error(w, "Couldn't get user", http.StatusInternalServerError)
 			return

@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	. "github.com/sebastiw/sidan-backend/src/database"
-	. "github.com/sebastiw/sidan-backend/src/database/models"
+	"github.com/sebastiw/sidan-backend/src/models"
 )
 
 func NewUserOperation(db *sql.DB) UserOperation {
@@ -18,8 +18,8 @@ type UserOperation struct {
 	db *sql.DB
 }
 
-func (o UserOperation) GetUserFromEmails(emails []string) (User, error) {
-	var u = User{}
+func (o UserOperation) GetUserFromEmails(emails []string) (models.User, error) {
+	var u = models.User{}
 
 	qms := strings.Repeat("?,", len(emails))
 	qms = qms[:len(qms)-1] // remove the trailing ","
@@ -63,8 +63,8 @@ func contains(s []byte, str byte) bool {
 	return false
 }
 
-func (o UserOperation) GetUserFromLogin(username string, password string) (User, error) {
-	var u = User{}
+func (o UserOperation) GetUserFromLogin(username string, password string) (models.User, error) {
+	var u = models.User{}
 
 	q := `
 SELECT
