@@ -11,7 +11,7 @@ import (
 	"github.com/rs/cors"
 
 	a "github.com/sebastiw/sidan-backend/src/auth"
-	c "github.com/sebastiw/sidan-backend/src/config"
+	"github.com/sebastiw/sidan-backend/src/config"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
 
@@ -77,7 +77,7 @@ func corsHeaders(router http.Handler) http.Handler {
 	return corsHandler.Handler(router)
 }
 
-func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Configs map[string]c.OAuth2Configuration) http.Handler {
+func Mux(db *sql.DB) http.Handler {
 	r := mux.NewRouter()
 
 	auth := a.New()
@@ -87,7 +87,7 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	r.HandleFunc("/login/oauth/access_token", sidanProvider.ExchangeAccess()).Methods("POST", "OPTIONS")
 
 	// r.HandleFunc("/auth", defaultHandler)
-	for provider, oauth2Config := range oauth2Configs {
+	for provider, oauth2Config := range config.Get().OAuth2 {
 		oh := a.OAuth2Handler{
 			Provider:     provider,
 			ClientID:     oauth2Config.ClientID,
@@ -103,11 +103,11 @@ func Mux(db *sql.DB, staticPath string, mailConfig c.MailConfiguration, oauth2Co
 	// r.HandleFunc("/notify", defaultHandler)
 
 	fh := FileHandler{}
-	fileServer := http.FileServer(http.Dir(staticPath))
+	fileServer := http.FileServer(http.Dir(config.GetServer().StaticPath))
 	r.HandleFunc("/file/image", auth.CheckScope(fh.createImageHandler, a.WriteImageScope)).Methods("POST", "OPTIONS")
 	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET", "OPTIONS")
 
-	mh := MailHandler{Host: mailConfig.Host, Port: mailConfig.Port, Username: mailConfig.User, Password: mailConfig.Password}
+	mh := MailHandler{Host: config.GetMail().Host, Port: config.GetMail().Port, Username: config.GetMail().User, Password: config.GetMail().Password}
 	r.HandleFunc("/mail", auth.CheckScope(mh.createMailHandler, a.WriteEmailScope)).Methods("POST", "OPTIONS")
 
 	dbEh := NewEntryHandler(db)

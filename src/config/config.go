@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/gorilla/securecookie"
 	"github.com/spf13/viper"
@@ -44,6 +45,19 @@ type OAuth2Configuration struct {
 	Scopes       []string
 }
 
+var (
+       cfg          Configuration
+       once         sync.Once
+)
+
+func Init() {
+       once.Do(load)
+}
+
+func load() {
+	ReadConfig(&cfg)
+}
+
 func ReadConfig(configuration *Configuration) {
 	// Set the path to look for the configurations file
 	viper.AddConfigPath("./config")
@@ -77,3 +91,25 @@ func ReadConfig(configuration *Configuration) {
 	os.Setenv("SESSION_KEY", hex.EncodeToString(securecookie.GenerateRandomKey(32)))
 	slog.Debug("Config", slog.String("SESSION_KEY", os.Getenv("SESSION_KEY")))
 }
+
+func Get() *Configuration {
+	return &cfg
+}
+
+func GetDatabase() *DatabaseConfiguration {
+	return &cfg.Database
+}
+
+func GetServer() *ServerConfiguration {
+	return &cfg.Server
+}
+
+func GetMail() *MailConfiguration {
+	return &cfg.Mail
+}
+
+/*
+func GetOAuth2() *map[string]OAuth2Configuration {
+	return &cfg.OAuth2
+}
+*/

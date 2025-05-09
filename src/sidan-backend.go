@@ -7,25 +7,23 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	l "github.com/sebastiw/sidan-backend/src/logger"
-	c "github.com/sebastiw/sidan-backend/src/config"
+	"github.com/sebastiw/sidan-backend/src/logger"
+	"github.com/sebastiw/sidan-backend/src/config"
 	d "github.com/sebastiw/sidan-backend/src/database"
 	r "github.com/sebastiw/sidan-backend/src/router"
 )
 
 func main() {
-	l.SetupLogging()
+	logger.SetupLogging()
 
-	var configuration c.Configuration
-
-	c.ReadConfig(&configuration)
+	config.Init()
 
 	db := d.Connect(
-		configuration.Database.User,
-		configuration.Database.Password,
-		configuration.Database.Host,
-		configuration.Database.Port,
-		configuration.Database.Schema)
+		config.GetDatabase().User,
+		config.GetDatabase().Password,
+		config.GetDatabase().Host,
+		config.GetDatabase().Port,
+		config.GetDatabase().Schema)
 	defer db.Close()
 
 	// Open doesn't open a connection. Validate DSN data:
@@ -33,10 +31,10 @@ func main() {
 	d.Configure(db)
 	d.ConfigureSession(db)
 
-	address := fmt.Sprintf(":%v", configuration.Server.Port)
+	address := fmt.Sprintf(":%v", config.GetServer().Port)
 	slog.Info("Starting backend service", slog.String("address", address))
 
-	mux := r.Mux(db, configuration.Server.StaticPath, configuration.Mail, configuration.OAuth2)
+	mux := r.Mux(db)
 
 	http.ListenAndServe(address, mux)
 }
