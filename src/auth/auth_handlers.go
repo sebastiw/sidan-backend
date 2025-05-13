@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"database/sql"
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
@@ -16,8 +15,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sebastiw/sidan-backend/src/data"
 	"github.com/sebastiw/sidan-backend/src/models"
-	d "github.com/sebastiw/sidan-backend/src/database/operations"
+	// d "github.com/sebastiw/sidan-backend/src/database/operations"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
 
@@ -183,8 +183,7 @@ func (oh OAuth2Handler) Oauth2CallbackHandler(auth AuthHandler) http.HandlerFunc
 	}
 }
 
-func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFunc {
-	usr := d.NewUserOperation(db)
+func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db data.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := auth.Store.Get(r, "auth-session")
 		if err != nil {
@@ -217,7 +216,7 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 			return
 		}
 
-		user, err := usr.GetUserFromEmails(emails)
+		user, err := db.GetUserFromEmails(emails)
 		if err != nil {
 			// Probably clean up session here
 			slog.Warn(ru.GetRequestId(r), err)
@@ -227,7 +226,7 @@ func (oh OAuth2Handler) VerifyEmail(auth AuthHandler, db *sql.DB) http.HandlerFu
 		}
 
 		sidanScopes := getScopes(user.Type)
-		slog.Info(ru.GetRequestId(r), "User found: ", string(user.Type) + user.Number, "<" + user.Email + ">", sidanScopes)
+		slog.Info(ru.GetRequestId(r), "User found: ", string(user.Type) + string(user.Number), "<" + user.Email + ">", sidanScopes)
 		session.Values["scopes"] = sidanScopes
 		session.Values["user"] = user
 
@@ -356,7 +355,7 @@ func GetUserSession(auth AuthHandler) http.HandlerFunc {
 
 		sessInfo := SessionInfo{
 			Scopes: sidanScopes,
-			UserName: string(user.Type) + user.Number,
+			UserName: string(user.Type) + string(user.Number),
 			Email: user.Email,
 			FulHaxPass: user.FulHaxPass,
 		}

@@ -8,7 +8,7 @@ import (
 //swagger:response Member
 type Member struct {
 	Id                           int64   `json:"id"`
-	Number                       *string `json:"number"`
+	Number                       int64   `json:"number"`
 	Name                         *string `json:"name"`
 	Email                        *string `json:"email"`
 	Im                           string  `json:"im"`
@@ -25,11 +25,15 @@ type Member struct {
 	Password_resetstring         *string `json:"password_resetstring"`
 }
 
+func (Member) TableName() string {
+  return "cl2007_members"
+}
+
 func (m Member) Fmt() string {
 	s := make([]string, 0)
 	isvalid := true
 	s = addI(s, "Id", m.Id)
-	s = addSp(s, "Number", m.Number)
+	s = addI(s, "Number", m.Number)
 	s = addSp(s, "Name", m.Name)
 	s = addSp(s, "Email", m.Email)
 	s = addS(s, "Im", m.Im)
@@ -45,6 +49,6 @@ func (m Member) Fmt() string {
 
 type MemberLite struct {
 	Id     int64   `json:"id"`
-	Number *string `json:"number"`
+	Number *int64 `json:"number"`
 	Title  *string `json:"title"`
 }

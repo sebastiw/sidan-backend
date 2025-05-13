@@ -16,6 +16,10 @@ type Prospect struct {
 	History string `json:"history"`
 }
 
+func (Prospect) TableName() string {
+  return "cl2007_prospects"
+}
+
 func (p Prospect) Fmt() string {
 	s := make([]string, 0)
 	s = addI(s, "Id", p.Id)

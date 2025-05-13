@@ -18,9 +18,13 @@ const(
 //swagger:response User
 type User struct {
 	Type                         UserType `json:"type"`
-	Number                       string `json:"number"`
+	Number                       int64 `json:"number"`
 	Email                        string `json:"email"`
 	FulHaxPass                   string `json:"fulHaxPass"`
+}
+
+func (User) TableName() string {
+  return "cl2007_members"
 }
 
 func (u *User) UnmarshalJSON(data []byte) error {
@@ -45,7 +49,7 @@ func (u *User) UnmarshalJSON(data []byte) error {
 func (u User) Fmt() string {
 	s := make([]string, 0)
 	s = addS(s, "Type", string(u.Type))
-	s = addS(s, "Number", u.Number)
+	s = addI(s, "Number", u.Number)
 	s = addS(s, "Email", u.Email)
 	return fmt.Sprintf("User{%s}", strings.Join(s, ", "))
 }

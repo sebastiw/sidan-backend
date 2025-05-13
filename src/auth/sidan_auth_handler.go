@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"database/sql"
 	// "crypto/sha256"
 	// "encoding/base64"
 	"encoding/hex"
@@ -12,8 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	// m "github.com/sebastiw/sidan-backend/src/database/models"
-	d "github.com/sebastiw/sidan-backend/src/database/operations"
+	"github.com/sebastiw/sidan-backend/src/data"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
 
@@ -78,12 +76,11 @@ func (s SidanAuthProvider) BasicLoginWindow() http.HandlerFunc {
 	}
 }
 
-func (s SidanAuthProvider) LoginCheck(db *sql.DB) http.HandlerFunc {
-	usr := d.NewUserOperation(db)
+func (s SidanAuthProvider) LoginCheck(db data.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		_, err := usr.GetUserFromLogin(username, password)
+		_, err := db.GetUserFromLogin(username, password)
 
 		if err != nil {
 			// Invalid credentials, show the login page with an error message.

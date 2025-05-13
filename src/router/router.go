@@ -1,7 +1,6 @@
 package router
 
 import (
-	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	"github.com/sebastiw/sidan-backend/src/data"
 	a "github.com/sebastiw/sidan-backend/src/auth"
 	"github.com/sebastiw/sidan-backend/src/config"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
@@ -77,7 +77,7 @@ func corsHeaders(router http.Handler) http.Handler {
 	return corsHandler.Handler(router)
 }
 
-func Mux(db *sql.DB) http.Handler {
+func Mux(db data.Database) http.Handler {
 	r := mux.NewRouter()
 
 	auth := a.New()

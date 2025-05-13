@@ -9,7 +9,7 @@ import (
 
 	"github.com/sebastiw/sidan-backend/src/logger"
 	"github.com/sebastiw/sidan-backend/src/config"
-	d "github.com/sebastiw/sidan-backend/src/database"
+	"github.com/sebastiw/sidan-backend/src/data"
 	r "github.com/sebastiw/sidan-backend/src/router"
 )
 
@@ -18,18 +18,10 @@ func main() {
 
 	config.Init()
 
-	db := d.Connect(
-		config.GetDatabase().User,
-		config.GetDatabase().Password,
-		config.GetDatabase().Host,
-		config.GetDatabase().Port,
-		config.GetDatabase().Schema)
-	defer db.Close()
-
-	// Open doesn't open a connection. Validate DSN data:
-	d.Ping(db)
-	d.Configure(db)
-	d.ConfigureSession(db)
+	db, err := data.NewDatabase()
+	if err != nil {
+		slog.Error(err.Error())
+	}
 
 	address := fmt.Sprintf(":%v", config.GetServer().Port)
 	slog.Info("Starting backend service", slog.String("address", address))

@@ -1,7 +1,17 @@
 package models
 
+import (
+	"time"
+)
+
+//swagger:response SideKick
 type SideKick struct {
-	Number string `json:"number"`
+	Id     int64  `gorm:"primaryKey";json:"id"`
+	Number string `gorm:"primaryKey";json:"number"`
+}
+
+func (SideKick) TableName() string {
+  return "cl2003_msgs_kumpaner"
 }
 
 //swagger:response Entry
@@ -9,7 +19,7 @@ type Entry struct {
 	Id             int64      `json:"id"`
 	Date           string     `json:"date"`
 	Time           string     `json:"time"`
-	DateTime       string     `json:"datetime"`
+	DateTime       time.Time  `gorm:"type:time" json:"datetime"` // TODO: convert from "2020-04-15 18:50:13" to ISO.
 	Msg            string     `json:"msg"`
 	Status         int64      `json:"status"`
 	Cl             int64      `json:"cl"`
@@ -26,5 +36,9 @@ type Entry struct {
 	Likes          int64      `json:"likes"`
 	Secret         bool       `json:"secret"`
 	PersonalSecret bool       `json:"personal_secret"`
-	SideKicks      []SideKick `json:"sidekicks"`
+	SideKicks      []SideKick `gorm:"foreignKey:Id";json:"sidekicks"`
+}
+
+func (Entry) TableName() string {
+  return "cl2003_msgs"
 }

@@ -24,6 +24,7 @@ type ServerConfiguration struct {
 }
 
 type DatabaseConfiguration struct {
+	Type     string
 	Host     string
 	Port     int
 	Schema   string
@@ -77,6 +78,7 @@ func ReadConfig(configuration *Configuration) {
 	}
 
 	// Set undefined variables
+	viper.SetDefault("database.type", "mysql")
 	viper.SetDefault("database.host", "localhost")
 	viper.SetDefault("database.port", "3306")
 	viper.SetDefault("mail.host", "localhost")

@@ -158,7 +158,7 @@ WHERE id=? AND number=?
 LIMIT 1
 `
 
-	if 0 == m.Id || nil == m.Number {
+	if 0 == m.Id || 0 == m.Number {
 		// Raise error
 		ErrorCheck(errors.New("id and/or Number is not set"))
 	}
@@ -186,14 +186,14 @@ LIMIT 1
 	ErrorCheck(err)
 
 	if i == 0 {
-		slog.Warn(fmt.Sprintf("0 rows affected (id: %d, number: %s)", m.Id, *m.Number))
+		slog.Warn(fmt.Sprintf("0 rows affected (id: %d, number: %d)", m.Id, m.Number))
 	}
 
 	return m
 }
 
 func (o MemberOperation) Delete(m models.Member) models.Member {
-	if 0 == m.Id || nil == m.Number {
+	if 0 == m.Id || 0 == m.Number {
 		// Raise error
 		ErrorCheck(errors.New("id and/or Number is not set"))
 	}

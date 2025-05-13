@@ -1,25 +1,25 @@
 package router
 
 import (
-	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 
+	"github.com/sebastiw/sidan-backend/src/data"
 	"github.com/sebastiw/sidan-backend/src/models"
-	d "github.com/sebastiw/sidan-backend/src/database/operations"
 	ru "github.com/sebastiw/sidan-backend/src/router_util"
 )
 
-func NewMemberHandler(db *sql.DB) MemberHandler {
-	return MemberHandler{d.NewMemberOperation(db)}
+func NewMemberHandler(db data.Database) MemberHandler {
+	return MemberHandler{db}
 }
 
 type MemberHandler struct {
-	op d.MemberOperation
+	db data.Database
 }
 
 func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,11 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
 	slog.Info(ru.GetRequestId(r), m.Fmt())
-	member := mh.op.Create(m)
+	member, err := mh.db.CreateMember(&m)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -35,9 +39,17 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 
 func (mh MemberHandler) readMemberHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
-	member := mh.op.Read(id)
+	member, err := mh.db.ReadMember(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -45,9 +57,17 @@ func (mh MemberHandler) readMemberHandler(w http.ResponseWriter, r *http.Request
 
 func (mh MemberHandler) readMemberUnauthedHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
-	member := mh.op.Read(id)
+	member, err := mh.db.ReadMember(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	b, err := json.Marshal(member)
 	if err != nil {
@@ -76,7 +96,11 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	slog.Debug(ru.GetRequestId(r), m.Fmt())
 	m.Id = int64(id)
-	member := mh.op.Update(m)
+	member, err := mh.db.UpdateMember(&m)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -91,7 +115,11 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	slog.Debug(ru.GetRequestId(r), m.Fmt())
 	m.Id = int64(id)
-	member := mh.op.Delete(m)
+	member, err := mh.db.DeleteMember(&m)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
@@ -99,7 +127,11 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 
 func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Request) {
 	onlyValid := MakeDefaultBool(r, "onlyValid", "false")
-	members := mh.op.ReadAll(onlyValid)
+	members, err := mh.db.ReadMembers(onlyValid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)
@@ -107,7 +139,11 @@ func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Requ
 
 func (mh MemberHandler) readAllMemberUnauthedHandler(w http.ResponseWriter, r *http.Request) {
 	onlyValid := MakeDefaultBool(r, "onlyValid", "false")
-	members := mh.op.ReadAll(onlyValid)
+	members, err := mh.db.ReadMembers(onlyValid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
 
 	b, err := json.Marshal(members)
 	if err != nil {
