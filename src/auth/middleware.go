@@ -13,6 +13,15 @@ import (
 	"github.com/sebastiw/sidan-backend/src/models"
 )
 
+// Scope constants for authorization
+const (
+	WriteEmailScope  = "write:email"
+	WriteImageScope  = "write:image"
+	WriteMemberScope = "write:member"
+	ReadMemberScope  = "read:member"
+	ModifyEntryScope = "modify:entry"
+)
+
 // Context keys for storing auth data in request context
 type contextKey string
 

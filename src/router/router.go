@@ -81,28 +81,7 @@ func corsHeaders(router http.Handler) http.Handler {
 func Mux(db data.Database) http.Handler {
 	r := mux.NewRouter()
 
-	// OLD AUTH (Phase 5 will remove these)
-	auth := a.New()
-	sidanProvider := a.NewSidanAuthProvider()
-	r.HandleFunc("/login/oauth/authorize", sidanProvider.BasicLoginWindow()).Methods("GET", "OPTIONS")
-	r.HandleFunc("/login", sidanProvider.LoginCheck(db)).Methods("POST", "OPTIONS")
-	r.HandleFunc("/login/oauth/access_token", sidanProvider.ExchangeAccess()).Methods("POST", "OPTIONS")
-
-	// r.HandleFunc("/auth", defaultHandler)
-	for provider, oauth2Config := range config.Get().OAuth2 {
-		oh := a.OAuth2Handler{
-			Provider:     provider,
-			ClientID:     oauth2Config.ClientID,
-			ClientSecret: oauth2Config.ClientSecret,
-			RedirectURL:  oauth2Config.RedirectURL,
-			Scopes:       oauth2Config.Scopes}
-		r.HandleFunc("/auth/"+provider, oh.Oauth2RedirectHandler(auth)).Methods("GET", "OPTIONS")
-		r.HandleFunc("/auth/"+provider+"/authorized", oh.Oauth2CallbackHandler(auth)).Methods("GET", "OPTIONS")
-		r.HandleFunc("/auth/"+provider+"/verifyemail", oh.VerifyEmail(auth, db)).Methods("GET", "OPTIONS")
-	}
-	r.HandleFunc("/auth/getusersession", a.GetUserSession(auth)).Methods("GET", "OPTIONS")
-	
-	// NEW AUTH (Phase 3)
+	// NEW AUTH SYSTEM (Phase 3-4)
 	// Get encryption key from environment or use default for dev
 	encryptionKey := os.Getenv("AUTH_ENCRYPTION_KEY")
 	if encryptionKey == "" {
@@ -114,6 +93,7 @@ func Mux(db data.Database) http.Handler {
 		panic(fmt.Sprintf("Failed to create token crypto: %v", err))
 	}
 	
+	// Auth handlers (public endpoints)
 	authHandler := NewAuthHandler(db, crypto)
 	r.HandleFunc("/auth/login", authHandler.Login).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
@@ -124,46 +104,125 @@ func Mux(db data.Database) http.Handler {
 	// Start cleanup job (runs every 15 minutes)
 	a.StartCleanupJob(db, 15*time.Minute)
 
-	// NOTE: Phase 5 will migrate endpoints to use new auth middleware
-	// For now, old auth system still protects endpoints
+	// Create middleware for protected endpoints
+	authMiddleware := a.NewMiddleware(db)
 
-	// r.HandleFunc("/notify", defaultHandler)
 
+	// File endpoints
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(config.GetServer().StaticPath))
-	r.HandleFunc("/file/image", auth.CheckScope(fh.createImageHandler, a.WriteImageScope)).Methods("POST", "OPTIONS")
+	r.Handle("/file/image", 
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteImageScope)(
+				http.HandlerFunc(fh.createImageHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
 	r.PathPrefix("/file/").Handler(http.StripPrefix("/file/", fileServer)).Methods("GET", "OPTIONS")
 
+	// Mail endpoint
 	mh := MailHandler{Host: config.GetMail().Host, Port: config.GetMail().Port, Username: config.GetMail().User, Password: config.GetMail().Password}
-	r.HandleFunc("/mail", auth.CheckScope(mh.createMailHandler, a.WriteEmailScope)).Methods("POST", "OPTIONS")
+	r.Handle("/mail",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteEmailScope)(
+				http.HandlerFunc(mh.createMailHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
 
+	// Entry endpoints
 	dbEh := NewEntryHandler(db)
 	r.HandleFunc("/db/entries", dbEh.createEntryHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/db/entries/{id:[0-9]+}", dbEh.readEntryHandler).Methods("GET", "OPTIONS")
-	r.HandleFunc("/db/entries/{id:[0-9]+}", auth.CheckScope(dbEh.updateEntryHandler, a.ModifyEntryScope)).Methods("PUT", "OPTIONS")
-	r.HandleFunc("/db/entries/{id:[0-9]+}", auth.CheckScope(dbEh.deleteEntryHandler, a.ModifyEntryScope)).Methods("DELETE", "OPTIONS")
-
+	r.Handle("/db/entries/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.ModifyEntryScope)(
+				http.HandlerFunc(dbEh.updateEntryHandler),
+			),
+		),
+	).Methods("PUT", "OPTIONS")
+	r.Handle("/db/entries/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.ModifyEntryScope)(
+				http.HandlerFunc(dbEh.deleteEntryHandler),
+			),
+		),
+	).Methods("DELETE", "OPTIONS")
 	r.HandleFunc("/db/entries", dbEh.readAllEntryHandler).Methods("GET", "OPTIONS")
 
+	// Member endpoints (with optional auth for read operations)
 	dbMh := NewMemberHandler(db)
-	r.HandleFunc("/db/members", auth.CheckScope(dbMh.createMemberHandler, a.WriteMemberScope)).Methods("POST", "OPTIONS")
-	r.HandleFunc("/db/members/{id:[0-9]+}", routeAuthAndUnauthed(auth, dbMh.readMemberHandler, dbMh.readMemberUnauthedHandler)).Methods("GET", "OPTIONS")
-	r.HandleFunc("/db/members/{id:[0-9]+}", auth.CheckScope(dbMh.updateMemberHandler, a.WriteMemberScope)).Methods("PUT", "OPTIONS")
-	r.HandleFunc("/db/members/{id:[0-9]+}", auth.CheckScope(dbMh.deleteMemberHandler, a.WriteMemberScope)).Methods("DELETE", "OPTIONS")
-	r.HandleFunc("/db/members", routeAuthAndUnauthed(auth, dbMh.readAllMemberHandler, dbMh.readAllMemberUnauthedHandler)).Methods("GET", "OPTIONS")
+	r.Handle("/db/members",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteMemberScope)(
+				http.HandlerFunc(dbMh.createMemberHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
+	r.Handle("/db/members/{id:[0-9]+}",
+		authMiddleware.OptionalAuth(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// Check if authenticated
+				session := a.GetSession(r)
+				if session != nil && session.Data != nil {
+					// Check for read:member scope
+					hasScope := false
+					for _, s := range session.Data.Scopes {
+						if s == a.ReadMemberScope {
+							hasScope = true
+							break
+						}
+					}
+					if hasScope {
+						dbMh.readMemberHandler(w, r)
+						return
+					}
+				}
+				// Not authenticated or no scope - return limited data
+				dbMh.readMemberUnauthedHandler(w, r)
+			}),
+		),
+	).Methods("GET", "OPTIONS")
+	r.Handle("/db/members/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteMemberScope)(
+				http.HandlerFunc(dbMh.updateMemberHandler),
+			),
+		),
+	).Methods("PUT", "OPTIONS")
+	r.Handle("/db/members/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteMemberScope)(
+				http.HandlerFunc(dbMh.deleteMemberHandler),
+			),
+		),
+	).Methods("DELETE", "OPTIONS")
+	r.Handle("/db/members",
+		authMiddleware.OptionalAuth(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// Check if authenticated
+				session := a.GetSession(r)
+				if session != nil && session.Data != nil {
+					// Check for read:member scope
+					hasScope := false
+					for _, s := range session.Data.Scopes {
+						if s == a.ReadMemberScope {
+							hasScope = true
+							break
+						}
+					}
+					if hasScope {
+						dbMh.readAllMemberHandler(w, r)
+						return
+					}
+				}
+				// Not authenticated or no scope - return limited data
+				dbMh.readAllMemberUnauthedHandler(w, r)
+			}),
+		),
+	).Methods("GET", "OPTIONS")
 
 	// r.HandleFunc("/db", defaultHandler)
 
 	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))
-}
-
-func routeAuthAndUnauthed(auth a.AuthHandler, authedRoute, unauthedRoute http.HandlerFunc) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !auth.ScopeOk(w, r, a.ReadMemberScope) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			unauthedRoute(w, r)
-		} else {
-			authedRoute(w, r)
-		}
-	}
 }
