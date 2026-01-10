@@ -32,14 +32,6 @@ func (m Mail) Fmt() string {
 	return fmt.Sprintf("Mail{Title: %s, Message: %s, From: %s, To: %s}", m.Title, m.Message, m.FromEmail, m.ToEmails)
 }
 
-// @Summary Send email
-// @Tags mail
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param mail body Mail true "Email data"
-// @Success 200 {object} ReturnMail
-// @Router /mail [post]
 func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) {
 	var m Mail
 	err := json.NewDecoder(r.Body).Decode(&m)

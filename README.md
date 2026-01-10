@@ -10,24 +10,6 @@ The service should connect automatically to the local database. To
 change configfile (from the default `config/local.yaml`), you can set
 the `CONFIG_FILE` env parameter pointing to an the new config-file.
 
-## API Documentation
-
-**Swagger UI**: http://localhost:8080/swagger/index.html
-
-**Get JWT Token**: http://localhost:8080/swagger-auth (login with Google OAuth2)
-
-**Generate Swagger docs**: `make swagger` (regenerates from code annotations)
-
-### How to Use Swagger UI:
-1. Visit `/swagger-auth` to login with Google
-2. Copy the JWT token that appears
-3. Go to `/swagger/index.html` 
-4. Click "Authorize" button (top right)
-5. Paste token and click "Authorize"
-6. Try API endpoints!
-
-Note: Auth endpoints (`/auth/*`) are excluded from Swagger as they implement the OAuth2 flow used by `/swagger-auth`
-
 ## Structure
 
 under `/`:
@@ -77,11 +59,9 @@ to generate the swagger yaml.
 
 # API
 
-**Interactive documentation**: Navigate to `/swagger/index.html` when the server is running.
+Check `swagger.json` for full API.
 
-All endpoints except `/auth/*` are auto-documented from code annotations. See `docs/AUTH.md` for authentication flow.
-
-## /auth/
+## /auth/{provider}
 
 For oAuth2 flows, please see
 https://developers.google.com/oauthplayground/
