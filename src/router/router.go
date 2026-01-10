@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -102,8 +103,12 @@ func Mux(db data.Database) http.Handler {
 	r.HandleFunc("/auth/getusersession", a.GetUserSession(auth)).Methods("GET", "OPTIONS")
 	
 	// NEW AUTH (Phase 3)
-	// Generate encryption key from environment or use default for dev
-	encryptionKey := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // TODO: Use env var in production
+	// Get encryption key from environment or use default for dev
+	encryptionKey := os.Getenv("AUTH_ENCRYPTION_KEY")
+	if encryptionKey == "" {
+		encryptionKey = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // Dev only
+		slog.Warn("Using default encryption key - set AUTH_ENCRYPTION_KEY in production")
+	}
 	crypto, err := a.NewTokenCrypto(encryptionKey)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create token crypto: %v", err))
@@ -113,7 +118,14 @@ func Mux(db data.Database) http.Handler {
 	r.HandleFunc("/auth/login", authHandler.Login).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/session", authHandler.GetSession).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/refresh", authHandler.Refresh).Methods("POST", "OPTIONS")
 	r.HandleFunc("/auth/logout", authHandler.Logout).Methods("POST", "OPTIONS")
+
+	// Start cleanup job (runs every 15 minutes)
+	a.StartCleanupJob(db, 15*time.Minute)
+
+	// NOTE: Phase 5 will migrate endpoints to use new auth middleware
+	// For now, old auth system still protects endpoints
 
 	// r.HandleFunc("/notify", defaultHandler)
 

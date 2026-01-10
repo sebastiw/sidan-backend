@@ -138,13 +138,37 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Find member by provider email
+	// First, try to find existing member by provider link
 	member, err := h.db.GetMemberByProviderEmail(authState.Provider, userInfo.Email)
 	if err != nil {
-		// Member not found - they need to register first
-		slog.Warn("email not registered", "provider", authState.Provider, "email", userInfo.Email)
-		http.Error(w, "email not registered - please contact admin", http.StatusForbidden)
-		return
+		// No provider link exists yet - check if member exists by email in members table
+		slog.Info("no provider link found, checking member table", "email", userInfo.Email)
+		
+		// Query members table directly
+		members, err := h.db.ReadMembers(true) // Get only valid members
+		if err != nil {
+			slog.Error("failed to read members", "error", err)
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
+		
+		// Find member by email
+		var foundMember *models.Member
+		for _, m := range members {
+			if m.Email != nil && *m.Email == userInfo.Email {
+				foundMember = &m
+				break
+			}
+		}
+		
+		if foundMember == nil {
+			slog.Warn("email not registered in members table", "provider", authState.Provider, "email", userInfo.Email)
+			http.Error(w, "email not registered - please contact admin", http.StatusForbidden)
+			return
+		}
+		
+		member = foundMember
+		slog.Info("member found by email", "member_id", member.Id, "email", userInfo.Email)
 	}
 	
 	// Encrypt and store token
@@ -202,15 +226,18 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	scopes := getScopesForMemberType(member)
 	
 	// Create session
+	now := time.Now()
 	sessionID := auth.GenerateState() // Reuse state generator for session ID
 	session := &models.AuthSession{
-		ID:        sessionID,
-		MemberID:  member.Id,
-		Data:      &models.SessionData{
+		ID:           sessionID,
+		MemberID:     member.Id,
+		Data:         &models.SessionData{
 			Scopes:   scopes,
 			Provider: authState.Provider,
 		},
-		ExpiresAt: time.Now().Add(8 * time.Hour),
+		CreatedAt:    now,
+		ExpiresAt:    now.Add(8 * time.Hour),
+		LastActivity: now,
 	}
 	
 	if err := h.db.CreateAuthSession(session); err != nil {
@@ -309,6 +336,42 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// Refresh refreshes OAuth2 access token
+// POST /auth/refresh
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	sessionID, err := getSessionIDFromRequest(r)
+	if err != nil {
+		http.Error(w, "no session", http.StatusUnauthorized)
+		return
+	}
+	
+	session, err := h.db.GetAuthSession(sessionID)
+	if err != nil {
+		http.Error(w, "invalid session", http.StatusUnauthorized)
+		return
+	}
+	
+	if session.Data == nil {
+		http.Error(w, "invalid session data", http.StatusInternalServerError)
+		return
+	}
+	
+	// Create middleware to use refresh logic
+	middleware := auth.NewMiddleware(h.db)
+	err = middleware.RefreshTokenIfNeeded(session.MemberID, session.Data.Provider, h.crypto)
+	if err != nil {
+		slog.Error("token refresh failed", 
+			slog.Int64("member_id", session.MemberID),
+			slog.String("provider", session.Data.Provider),
+			slog.String("error", err.Error()))
+		http.Error(w, "refresh failed", http.StatusInternalServerError)
+		return
+	}
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})

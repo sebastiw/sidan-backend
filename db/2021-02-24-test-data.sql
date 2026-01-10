@@ -2,7 +2,7 @@
 /* https://www.ipvoid.com/random-ip/ */
 
 INSERT INTO `cl2007_members` VALUES
-  (295,8,'Elias Lundgren','EliasLundgren@armyspy.com','EliasLundgren@armyspy.com','013-4661218','Degerfors','','Wasellift','Design printing machine operator','<a href="http://localhost/">here</a>','    02cd8fa7-ebde-44cf-9a1a-abbb409d2204',1,'thePhahs9ri','',''),
+  (295,8,'Elias Lundgren','max.gabrielsson@gmail.com','EliasLundgren@armyspy.com','013-4661218','Degerfors','','Wasellift','Design printing machine operator','<a href="http://localhost/">here</a>','    02cd8fa7-ebde-44cf-9a1a-abbb409d2204',1,'thePhahs9ri','',''),
   (294,7,'Marc Björk','MarcBjork@rhyta.com','','','','','Solockrapery','Instructional aide','<a href="http://localhost/">here</a>',NULL,1,'Gohja6ae','2015 Toyota 4Runner',''),
   (293,4,'Mathias Lundström','MathiasLundstrom@armyspy.com','','+463728513438','','','Andeaphs1974','Babysitter','<a href="http://localhost/">here</a>',NULL,1,'vahv9fae7ahNa','2007 Lexus RX',''),
   (316,29,'Eldin Jansson','EldinJansson@armyspy.com','','','','','Ablem1975','Tile finisher','',NULL,1,'','1995 Nissan Presea',''),
