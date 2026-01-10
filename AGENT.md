@@ -402,6 +402,18 @@ oauth2:
 - Manual testing via curl or API client recommended
 - Test data available in `db/2021-02-24-test-data.sql`
 
+## Important Notes for LLMs
+
+**NEVER use git commands**. The developer will review and commit all changes manually. This includes:
+- `git add`
+- `git commit`
+- `git push`
+- `git checkout`
+- `git branch`
+- Any other git operations
+
+Focus on code implementation, testing, and documentation only.
+
 ## Security Considerations
 - Passwords stored in plaintext in `password_classic` field (legacy system)
 - OAuth2 tokens stored in encrypted cookies (gorilla/securecookie)
