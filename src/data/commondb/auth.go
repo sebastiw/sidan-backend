@@ -66,7 +66,15 @@ func (d *CommonDatabase) GetAuthTokenByMemberID(memberID int64) ([]models.AuthTo
 }
 
 func (d *CommonDatabase) UpdateAuthToken(token *models.AuthToken) error {
-	result := d.DB.Save(token)
+	// Use Updates to avoid updating zero-value created_at
+	result := d.DB.Model(token).Updates(map[string]interface{}{
+		"access_token":  token.AccessToken,
+		"refresh_token": token.RefreshToken,
+		"token_type":    token.TokenType,
+		"expires_at":    token.ExpiresAt,
+		"scopes":        token.Scopes,
+		"updated_at":    time.Now(),
+	})
 	return result.Error
 }
 

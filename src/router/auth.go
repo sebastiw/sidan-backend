@@ -203,7 +203,9 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	// Create or update token
 	existing, _ := h.db.GetAuthToken(member.Id, authState.Provider)
 	if existing != nil {
+		// Update only specific fields, preserve created_at
 		authToken.ID = existing.ID
+		authToken.CreatedAt = existing.CreatedAt
 		h.db.UpdateAuthToken(authToken)
 	} else {
 		h.db.CreateAuthToken(authToken)
@@ -225,167 +227,114 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	// Determine scopes based on member type
 	scopes := getScopesForMemberType(member)
 	
-	// Create session
-	now := time.Now()
-	sessionID := auth.GenerateState() // Reuse state generator for session ID
-	session := &models.AuthSession{
-		ID:           sessionID,
-		MemberID:     member.Id,
-		Data:         &models.SessionData{
-			Scopes:   scopes,
-			Provider: authState.Provider,
-		},
-		CreatedAt:    now,
-		ExpiresAt:    now.Add(8 * time.Hour),
-		LastActivity: now,
-	}
-	
-	if err := h.db.CreateAuthSession(session); err != nil {
-		slog.Error("failed to create session", "error", err)
-		http.Error(w, "session creation failed", http.StatusInternalServerError)
+	// Generate JWT token
+	jwtToken, err := auth.GenerateJWT(member.Id, userInfo.Email, scopes, authState.Provider, config.GetJWTSecret())
+	if err != nil {
+		slog.Error("JWT generation failed", "error", err)
+		http.Error(w, "token generation failed", http.StatusInternalServerError)
 		return
 	}
-	
-	// Set session cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		MaxAge:   8 * 60 * 60, // 8 hours
-		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: http.SameSiteLaxMode,
-	})
 	
 	slog.Info("login successful", "provider", authState.Provider, "member", member.Id, "email", userInfo.Email)
 	
-	// Redirect to client or show success page
-	if authState.RedirectURI != "" {
-		http.Redirect(w, r, authState.RedirectURI, http.StatusTemporaryRedirect)
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"success": true,
-			"member":  map[string]interface{}{
-				"id":    member.Id,
-				"email": userInfo.Email,
-				"name":  userInfo.Name,
-			},
-		})
-	}
+	// Return JWT token in response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token": jwtToken,
+		"token_type":   "Bearer",
+		"expires_in":   28800, // 8 hours in seconds
+		"member": map[string]interface{}{
+			"id":    member.Id,
+			"email": userInfo.Email,
+			"name":  userInfo.Name,
+		},
+		"scopes": scopes,
+	})
 }
 
-// GetSession returns current session info
+// GetSession returns current JWT claims and member info
 // GET /auth/session
+// Authorization: Bearer <token>
 func (h *AuthHandler) GetSession(w http.ResponseWriter, r *http.Request) {
-	sessionID, err := getSessionIDFromRequest(r)
-	if err != nil {
-		http.Error(w, "no session", http.StatusUnauthorized)
+	// Get claims from context (injected by RequireAuth middleware)
+	claims := auth.GetClaims(r)
+	if claims == nil {
+		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
 		return
 	}
 	
-	session, err := h.db.GetAuthSession(sessionID)
-	if err != nil {
-		http.Error(w, "session not found or expired", http.StatusUnauthorized)
-		return
-	}
-	
-	// Update last activity
-	h.db.TouchAuthSession(sessionID)
-	
-	// Get member info
-	member, err := h.db.ReadMember(session.MemberID)
-	if err != nil {
-		http.Error(w, "member not found", http.StatusInternalServerError)
+	member := auth.GetMember(r)
+	if member == nil {
+		http.Error(w, `{"error":"member not found"}`, http.StatusInternalServerError)
 		return
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"session_id": session.ID,
 		"member": map[string]interface{}{
 			"id":     member.Id,
 			"number": member.Number,
 			"name":   member.Name,
 			"email":  member.Email,
 		},
-		"scopes":     session.Data.Scopes,
-		"provider":   session.Data.Provider,
-		"expires_at": session.ExpiresAt,
+		"scopes":     claims.Scopes,
+		"provider":   claims.Provider,
+		"expires_at": claims.ExpiresAt.Time,
+		"issued_at":  claims.IssuedAt.Time,
 	})
 }
 
-// Logout ends the session
+// Logout ends authentication (JWT remains valid until expiry)
 // POST /auth/logout
+// Authorization: Bearer <token>
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	sessionID, err := getSessionIDFromRequest(r)
-	if err != nil {
-		http.Error(w, "no session", http.StatusBadRequest)
+	// Get claims from context
+	claims := auth.GetClaims(r)
+	if claims == nil {
+		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
 		return
 	}
 	
-	if err := h.db.DeleteAuthSession(sessionID); err != nil {
-		slog.Warn("failed to delete session", "session", sessionID[:8]+"...", "error", err)
-	}
-	
-	// Clear cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: true,
-	})
+	slog.Info("logout successful", "member", claims.MemberID, "email", claims.Email)
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
-// Refresh refreshes OAuth2 access token
+// Refresh generates a new JWT token
 // POST /auth/refresh
+// Authorization: Bearer <token>
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	sessionID, err := getSessionIDFromRequest(r)
-	if err != nil {
-		http.Error(w, "no session", http.StatusUnauthorized)
+	// Get claims from context
+	claims := auth.GetClaims(r)
+	if claims == nil {
+		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
 		return
 	}
 	
-	session, err := h.db.GetAuthSession(sessionID)
-	if err != nil {
-		http.Error(w, "invalid session", http.StatusUnauthorized)
+	member := auth.GetMember(r)
+	if member == nil {
+		http.Error(w, `{"error":"member not found"}`, http.StatusInternalServerError)
 		return
 	}
 	
-	if session.Data == nil {
-		http.Error(w, "invalid session data", http.StatusInternalServerError)
-		return
-	}
-	
-	// Create middleware to use refresh logic
-	middleware := auth.NewMiddleware(h.db)
-	err = middleware.RefreshTokenIfNeeded(session.MemberID, session.Data.Provider, h.crypto)
+	// Generate new JWT with same scopes
+	newToken, err := auth.GenerateJWT(claims.MemberID, claims.Email, claims.Scopes, claims.Provider, config.GetJWTSecret())
 	if err != nil {
-		slog.Error("token refresh failed", 
-			slog.Int64("member_id", session.MemberID),
-			slog.String("provider", session.Data.Provider),
-			slog.String("error", err.Error()))
-		http.Error(w, "refresh failed", http.StatusInternalServerError)
+		slog.Error("JWT refresh failed", "error", err)
+		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
 		return
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token": newToken,
+		"token_type":   "Bearer",
+		"expires_in":   28800, // 8 hours
+	})
 }
 
 // Helper functions
-
-func getSessionIDFromRequest(r *http.Request) (string, error) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		return "", err
-	}
-	return cookie.Value, nil
-}
 
 func getScopesForMemberType(member *models.Member) []string {
 	// All valid members get basic scopes

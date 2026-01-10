@@ -15,6 +15,7 @@ type Configuration struct {
 	Server       ServerConfiguration
 	Database     DatabaseConfiguration
 	Mail         MailConfiguration
+	JWT          JWTConfiguration
 	OAuth2       map[string]OAuth2Configuration
 }
 
@@ -37,6 +38,11 @@ type MailConfiguration struct {
 	Port     int
 	User     string
 	Password string
+}
+
+type JWTConfiguration struct {
+	Secret      string
+	ExpiryHours int
 }
 
 type OAuth2Configuration struct {
@@ -84,6 +90,7 @@ func ReadConfig(configuration *Configuration) {
 	viper.SetDefault("mail.host", "localhost")
 	viper.SetDefault("mail.port", "25")
 	viper.SetDefault("server.staticpath", "./static")
+	viper.SetDefault("jwt.expiryhours", 8)
 
 	err := viper.Unmarshal(configuration)
 	if err != nil {
@@ -108,6 +115,28 @@ func GetServer() *ServerConfiguration {
 
 func GetMail() *MailConfiguration {
 	return &cfg.Mail
+}
+
+func GetJWT() *JWTConfiguration {
+	return &cfg.JWT
+}
+
+// GetJWTSecret returns JWT secret from env or config
+func GetJWTSecret() []byte {
+	// Check environment variable first
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		return []byte(secret)
+	}
+	
+	// Fall back to config
+	if cfg.JWT.Secret != "" && cfg.JWT.Secret != "${JWT_SECRET}" {
+		return []byte(cfg.JWT.Secret)
+	}
+	
+	// Generate and warn about default key (dev only)
+	slog.Warn("Using default JWT secret - SET JWT_SECRET environment variable in production!")
+	defaultKey := securecookie.GenerateRandomKey(32)
+	return defaultKey
 }
 
 /*

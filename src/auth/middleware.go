@@ -26,8 +26,9 @@ const (
 type contextKey string
 
 const (
-	sessionKey contextKey = "session"
-	memberKey  contextKey = "member"
+	claimsKey contextKey = "claims"
+	memberKey contextKey = "member"
+	scopesKey contextKey = "scopes"
 )
 
 // Middleware is a wrapper that provides auth functionality
@@ -40,60 +41,62 @@ func NewMiddleware(db data.Database) *Middleware {
 	return &Middleware{db: db}
 }
 
-// RequireAuth validates session and injects member into context
+// RequireAuth validates JWT Bearer token and injects member into context
 func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_id")
+		// Extract Bearer token from Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, `{"error":"missing authorization header"}`, http.StatusUnauthorized)
+			return
+		}
+
+		token := ExtractBearer(authHeader)
+		if token == "" {
+			http.Error(w, `{"error":"invalid authorization format, use: Bearer <token>"}`, http.StatusUnauthorized)
+			return
+		}
+
+		// Validate JWT
+		claims, err := ValidateJWT(token, config.GetJWTSecret())
 		if err != nil {
-			http.Error(w, `{"error":"no session"}`, http.StatusUnauthorized)
+			if err == ErrExpiredToken {
+				http.Error(w, `{"error":"token expired"}`, http.StatusUnauthorized)
+			} else {
+				http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
+			}
 			return
 		}
 
-		// Validate session
-		session, err := m.db.GetAuthSession(cookie.Value)
-		if err != nil {
-			http.Error(w, `{"error":"invalid session"}`, http.StatusUnauthorized)
-			return
-		}
-
-		// Check expiry
-		if time.Now().After(session.ExpiresAt) {
-			m.db.DeleteAuthSession(session.ID)
-			http.Error(w, `{"error":"session expired"}`, http.StatusUnauthorized)
-			return
-		}
-
-		// Update last activity
-		m.db.TouchAuthSession(session.ID)
-
-		// Get member
-		member, err := m.db.ReadMember(session.MemberID)
+		// Get member from database
+		member, err := m.db.ReadMember(claims.MemberID)
 		if err != nil {
 			http.Error(w, `{"error":"member not found"}`, http.StatusUnauthorized)
 			return
 		}
 
 		// Inject into context
-		ctx := context.WithValue(r.Context(), sessionKey, session)
+		ctx := context.WithValue(r.Context(), claimsKey, claims)
 		ctx = context.WithValue(ctx, memberKey, member)
+		ctx = context.WithValue(ctx, scopesKey, claims.Scopes)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// RequireScope checks if session has required scope
+// RequireScope checks if JWT has required scope
 func (m *Middleware) RequireScope(scope string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			session := GetSession(r)
-			if session == nil || session.Data == nil {
-				http.Error(w, `{"error":"no session in context"}`, http.StatusUnauthorized)
+			scopes := GetScopes(r)
+			if scopes == nil {
+				http.Error(w, `{"error":"no scopes in context"}`, http.StatusUnauthorized)
 				return
 			}
 
-			// Check if scope exists in session scopes
+			// Check if scope exists
 			hasScope := false
-			for _, s := range session.Data.Scopes {
+			for _, s := range scopes {
 				if s == scope {
 					hasScope = true
 					break
@@ -110,49 +113,64 @@ func (m *Middleware) RequireScope(scope string) func(http.Handler) http.Handler 
 	}
 }
 
-// OptionalAuth tries to load session but doesn't fail if missing
+// OptionalAuth tries to load JWT but doesn't fail if missing
 func (m *Middleware) OptionalAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_id")
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			// No auth, continue without it
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		token := ExtractBearer(authHeader)
+		if token == "" {
+			// Invalid format, continue without auth
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		claims, err := ValidateJWT(token, config.GetJWTSecret())
 		if err != nil {
-			// No session, continue without auth
+			// Invalid token, continue without auth
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		session, err := m.db.GetAuthSession(cookie.Value)
-		if err != nil || time.Now().After(session.ExpiresAt) {
-			// Invalid/expired session, continue without auth
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Update last activity
-		m.db.TouchAuthSession(session.ID)
 
 		// Get member
-		member, err := m.db.ReadMember(session.MemberID)
+		member, err := m.db.ReadMember(claims.MemberID)
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		// Inject into context
-		ctx := context.WithValue(r.Context(), sessionKey, session)
+		ctx := context.WithValue(r.Context(), claimsKey, claims)
 		ctx = context.WithValue(ctx, memberKey, member)
+		ctx = context.WithValue(ctx, scopesKey, claims.Scopes)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// GetSession retrieves session from request context
-func GetSession(r *http.Request) *models.AuthSession {
-	val := r.Context().Value(sessionKey)
+// GetClaims retrieves JWT claims from request context
+func GetClaims(r *http.Request) *JWTClaims {
+	val := r.Context().Value(claimsKey)
 	if val == nil {
 		return nil
 	}
-	session, _ := val.(*models.AuthSession)
-	return session
+	claims, _ := val.(*JWTClaims)
+	return claims
+}
+
+// GetScopes retrieves scopes from request context
+func GetScopes(r *http.Request) []string {
+	val := r.Context().Value(scopesKey)
+	if val == nil {
+		return nil
+	}
+	scopes, _ := val.([]string)
+	return scopes
 }
 
 // GetMember retrieves member from request context
@@ -254,14 +272,8 @@ func (m *Middleware) RefreshTokenIfNeeded(memberID int64, provider string, crypt
 	return nil
 }
 
-// CleanupExpired removes expired sessions and states
+// CleanupExpired removes expired auth states
 func CleanupExpired(db data.Database) error {
-	// Delete expired sessions
-	if err := db.CleanupExpiredAuthSessions(); err != nil {
-		slog.Error("failed to delete expired sessions", slog.String("error", err.Error()))
-		return err
-	}
-
 	// Delete expired states
 	if err := db.CleanupExpiredAuthStates(); err != nil {
 		slog.Error("failed to delete expired states", slog.String("error", err.Error()))

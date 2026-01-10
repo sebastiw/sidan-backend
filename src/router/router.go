@@ -93,19 +93,21 @@ func Mux(db data.Database) http.Handler {
 		panic(fmt.Sprintf("Failed to create token crypto: %v", err))
 	}
 	
+	// Create middleware for protected endpoints
+	authMiddleware := a.NewMiddleware(db)
+	
 	// Auth handlers (public endpoints)
 	authHandler := NewAuthHandler(db, crypto)
 	r.HandleFunc("/auth/login", authHandler.Login).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
-	r.HandleFunc("/auth/session", authHandler.GetSession).Methods("GET", "OPTIONS")
-	r.HandleFunc("/auth/refresh", authHandler.Refresh).Methods("POST", "OPTIONS")
-	r.HandleFunc("/auth/logout", authHandler.Logout).Methods("POST", "OPTIONS")
+	
+	// Auth handlers - authenticated endpoints
+	r.Handle("/auth/session", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.GetSession))).Methods("GET", "OPTIONS")
+	r.Handle("/auth/refresh", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Refresh))).Methods("POST", "OPTIONS")
+	r.Handle("/auth/logout", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Logout))).Methods("POST", "OPTIONS")
 
 	// Start cleanup job (runs every 15 minutes)
 	a.StartCleanupJob(db, 15*time.Minute)
-
-	// Create middleware for protected endpoints
-	authMiddleware := a.NewMiddleware(db)
 
 
 	// File endpoints
@@ -163,11 +165,11 @@ func Mux(db data.Database) http.Handler {
 		authMiddleware.OptionalAuth(
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Check if authenticated
-				session := a.GetSession(r)
-				if session != nil && session.Data != nil {
+				scopes := a.GetScopes(r)
+				if scopes != nil {
 					// Check for read:member scope
 					hasScope := false
-					for _, s := range session.Data.Scopes {
+					for _, s := range scopes {
 						if s == a.ReadMemberScope {
 							hasScope = true
 							break
@@ -201,11 +203,11 @@ func Mux(db data.Database) http.Handler {
 		authMiddleware.OptionalAuth(
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Check if authenticated
-				session := a.GetSession(r)
-				if session != nil && session.Data != nil {
+				scopes := a.GetScopes(r)
+				if scopes != nil {
 					// Check for read:member scope
 					hasScope := false
-					for _, s := range session.Data.Scopes {
+					for _, s := range scopes {
 						if s == a.ReadMemberScope {
 							hasScope = true
 							break
