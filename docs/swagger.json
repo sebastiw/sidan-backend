@@ -1,0 +1,609 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Backend for sidan. Authentication: Visit /swagger-auth to login with Google and get your JWT token, then paste it in the Authorize dialog.",
+        "title": "Sidan API",
+        "contact": {},
+        "license": {
+            "name": "MIT",
+            "url": "http://opensource.org/licenses/MIT"
+        },
+        "version": "3.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/db/entries": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entries"
+                ],
+                "summary": "List all entries",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of entries to return",
+                        "name": "take",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of entries to skip",
+                        "name": "skip",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Entry"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entries"
+                ],
+                "summary": "Create entry",
+                "parameters": [
+                    {
+                        "description": "Entry data",
+                        "name": "entry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Entry"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Entry"
+                        }
+                    }
+                }
+            }
+        },
+        "/db/entries/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entries"
+                ],
+                "summary": "Get entry by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Entry ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Entry"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entries"
+                ],
+                "summary": "Update entry",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Entry ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Entry data",
+                        "name": "entry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Entry"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Entry"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "entries"
+                ],
+                "summary": "Delete entry",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Entry ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Entry"
+                        }
+                    }
+                }
+            }
+        },
+        "/db/members": {
+            "get": {
+                "description": "Returns full member data with read:member scope, limited data otherwise",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "List all members",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Return only valid members",
+                        "name": "onlyValid",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Member"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Create member",
+                "parameters": [
+                    {
+                        "description": "Member data",
+                        "name": "member",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Member"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Member"
+                        }
+                    }
+                }
+            }
+        },
+        "/db/members/{id}": {
+            "get": {
+                "description": "Returns full member data with read:member scope, limited data otherwise",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Get member by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Member ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Member"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Update member",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Member ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Member data",
+                        "name": "member",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Member"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Member"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Delete member",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Member ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Member"
+                        }
+                    }
+                }
+            }
+        },
+        "/file/image": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "Upload image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file",
+                        "name": "data",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/router.File"
+                        }
+                    }
+                }
+            }
+        },
+        "/mail": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mail"
+                ],
+                "summary": "Send email",
+                "parameters": [
+                    {
+                        "description": "Email data",
+                        "name": "mail",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/router.Mail"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/router.ReturnMail"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Entry": {
+            "type": "object",
+            "properties": {
+                "cl": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "datetime": {
+                    "description": "TODO: convert from \"2020-04-15 18:50:13\" to ISO.",
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "enheter": {
+                    "type": "integer"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "likes": {
+                    "type": "integer"
+                },
+                "lon": {
+                    "type": "number"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "olsug": {
+                    "type": "integer"
+                },
+                "personal_secret": {
+                    "type": "boolean"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "report": {
+                    "type": "boolean"
+                },
+                "secret": {
+                    "type": "boolean"
+                },
+                "sideKicks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SideKick"
+                    }
+                },
+                "sig": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Member": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "address_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "history": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "im": {
+                    "type": "string"
+                },
+                "is_valid": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "password_classic": {
+                    "type": "string"
+                },
+                "password_classic_resetstring": {
+                    "type": "string"
+                },
+                "password_resetstring": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "picture": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SideKick": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "string"
+                }
+            }
+        },
+        "router.File": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                }
+            }
+        },
+        "router.Mail": {
+            "type": "object",
+            "properties": {
+                "from_email": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "to_emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "router.ReturnMail": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "JWT Bearer token. Visit /swagger-auth to obtain a token via Google OAuth2.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

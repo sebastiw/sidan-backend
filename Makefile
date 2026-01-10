@@ -5,6 +5,10 @@ IS_SERVICE_RUNNING := $(shell docker inspect -f '{{ .State.Running }}' sidan_sql
 
 default: run
 
+.PHONY: swagger
+swagger:
+	~/go/bin/swag init -g src/sidan-backend.go --output docs --parseDependency --parseInternal
+
 .PHONY: run
 run: db-run-$(COMMIT)
 

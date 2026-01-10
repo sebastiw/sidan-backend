@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/sebastiw/sidan-backend/src/data"
 	a "github.com/sebastiw/sidan-backend/src/auth"
@@ -79,6 +80,12 @@ func corsHeaders(router http.Handler) http.Handler {
 
 func Mux(db data.Database) http.Handler {
 	r := mux.NewRouter()
+
+	// Swagger UI and auth helper
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	r.HandleFunc("/swagger-auth", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/swagger-auth.html")
+	}).Methods("GET")
 
 	// Create middleware for protected endpoints
 	authMiddleware := a.NewMiddleware(db)

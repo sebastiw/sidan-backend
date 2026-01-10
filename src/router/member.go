@@ -22,6 +22,14 @@ type MemberHandler struct {
 	db data.Database
 }
 
+// @Summary Create member
+// @Tags members
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param member body models.Member true "Member data"
+// @Success 200 {object} models.Member
+// @Router /db/members [post]
 func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Request) {
 	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
@@ -37,6 +45,13 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(member)
 }
 
+// @Summary Get member by ID
+// @Description Returns full member data with read:member scope, limited data otherwise
+// @Tags members
+// @Produce json
+// @Param id path int true "Member ID"
+// @Success 200 {object} models.Member
+// @Router /db/members/{id} [get]
 func (mh MemberHandler) readMemberHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
@@ -87,6 +102,15 @@ func (mh MemberHandler) readMemberUnauthedHandler(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(liteMemberData)
 }
 
+// @Summary Update member
+// @Tags members
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Member ID"
+// @Param member body models.Member true "Member data"
+// @Success 200 {object} models.Member
+// @Router /db/members/{id} [put]
 func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Request) {
 	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
@@ -106,6 +130,12 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(member)
 }
 
+// @Summary Delete member
+// @Tags members
+// @Security BearerAuth
+// @Param id path int true "Member ID"
+// @Success 200 {object} models.Member
+// @Router /db/members/{id} [delete]
 func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Request) {
 	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
@@ -125,6 +155,13 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(member)
 }
 
+// @Summary List all members
+// @Description Returns full member data with read:member scope, limited data otherwise
+// @Tags members
+// @Produce json
+// @Param onlyValid query bool false "Return only valid members" default(false)
+// @Success 200 {array} models.Member
+// @Router /db/members [get]
 func (mh MemberHandler) readAllMemberHandler(w http.ResponseWriter, r *http.Request) {
 	onlyValid := MakeDefaultBool(r, "onlyValid", "false")
 	members, err := mh.db.ReadMembers(onlyValid)
