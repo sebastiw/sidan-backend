@@ -11,6 +11,10 @@ mail:
   host: "localhost"
   port: 25
 
+jwt:
+  secret: "${JWT_SECRET}"
+  expiryHours: 72
+
 oauth2:
   sidan:
     clientId: "666"
