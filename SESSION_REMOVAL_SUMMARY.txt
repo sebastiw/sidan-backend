@@ -1,0 +1,66 @@
+# Session Table Removal - Summary
+
+## What Was Removed
+
+Successfully removed all cookie/session-related code from the JWT authentication system.
+
+### Database Schema Changes
+- ❌ Removed `auth_sessions` table (no longer needed with stateless JWT)
+- ✅ Created migration: `db/2026-01-10-remove-auth-sessions.sql`
+- ✅ Updated schema: `db/2026-01-10-auth-tables-01-schema.sql`
+
+### Code Changes
+**Removed from `src/models/auth.go`:**
+- `SessionData` struct (44 lines)
+- `AuthSession` struct
+- Related Scan/Value methods
+
+**Removed from `src/data/database.go` (interface):**
+- `CreateAuthSession()`
+- `GetAuthSession()`
+- `UpdateAuthSession()`
+- `DeleteAuthSession()`
+- `DeleteAllAuthSessions()`
+- `CleanupExpiredAuthSessions()`
+- `TouchAuthSession()`
+
+**Removed from `src/data/commondb/auth.go`:**
+- All 7 AuthSession method implementations (50 lines)
+
+**Removed from `src/data/mysqldb/db.go`:**
+- All 7 AuthSession method wrappers (28 lines)
+
+### Total Impact
+- **147 lines of dead code removed**
+- **6 files modified**
+- **0 breaking changes** (code was unused)
+
+### Still Active (OAuth2 Support)
+✅ `auth_states` - OAuth2 CSRF protection
+✅ `auth_tokens` - OAuth2 provider tokens (encrypted)
+✅ `auth_provider_links` - Member-to-provider linking
+
+### Testing
+✅ All 25 auth tests passing
+✅ Code compiles successfully
+✅ No remaining references to AuthSession/SessionData
+
+## Why This Is Safe
+
+JWT tokens are **stateless** - they contain all auth info and are validated via signature.
+The `auth_sessions` table was a remnant from the old cookie-based system and was never
+actually used after the JWT migration.
+
+## Migration Steps
+
+To apply the database change:
+```sql
+-- Run this migration
+source db/2026-01-10-remove-auth-sessions.sql;
+```
+
+Or just restart the database container (migrations auto-run):
+```bash
+make db-stop
+make
+```

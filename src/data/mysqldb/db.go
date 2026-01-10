@@ -100,7 +100,7 @@ func (d *MySQLDatabase) IsEmpty() (bool, error) {
 	return d.CommonDB.IsEmpty()
 }
 
-// Auth operations (Phase 1) - delegated to CommonDB
+// Auth operations - delegated to CommonDB
 func (d *MySQLDatabase) CreateAuthState(state *models.AuthState) error {
 	return d.CommonDB.CreateAuthState(state)
 }
@@ -115,76 +115,4 @@ func (d *MySQLDatabase) DeleteAuthState(id string) error {
 
 func (d *MySQLDatabase) CleanupExpiredAuthStates() error {
 	return d.CommonDB.CleanupExpiredAuthStates()
-}
-
-func (d *MySQLDatabase) CreateAuthToken(token *models.AuthToken) error {
-	return d.CommonDB.CreateAuthToken(token)
-}
-
-func (d *MySQLDatabase) GetAuthToken(memberID int64, provider string) (*models.AuthToken, error) {
-	return d.CommonDB.GetAuthToken(memberID, provider)
-}
-
-func (d *MySQLDatabase) GetAuthTokenByMemberID(memberID int64) ([]models.AuthToken, error) {
-	return d.CommonDB.GetAuthTokenByMemberID(memberID)
-}
-
-func (d *MySQLDatabase) UpdateAuthToken(token *models.AuthToken) error {
-	return d.CommonDB.UpdateAuthToken(token)
-}
-
-func (d *MySQLDatabase) DeleteAuthToken(memberID int64, provider string) error {
-	return d.CommonDB.DeleteAuthToken(memberID, provider)
-}
-
-func (d *MySQLDatabase) DeleteAllAuthTokens(memberID int64) error {
-	return d.CommonDB.DeleteAllAuthTokens(memberID)
-}
-
-func (d *MySQLDatabase) CreateAuthProviderLink(link *models.AuthProviderLink) error {
-	return d.CommonDB.CreateAuthProviderLink(link)
-}
-
-func (d *MySQLDatabase) GetAuthProviderLink(provider, providerUserID string) (*models.AuthProviderLink, error) {
-	return d.CommonDB.GetAuthProviderLink(provider, providerUserID)
-}
-
-func (d *MySQLDatabase) GetAuthProviderLinksByMemberID(memberID int64) ([]models.AuthProviderLink, error) {
-	return d.CommonDB.GetAuthProviderLinksByMemberID(memberID)
-}
-
-func (d *MySQLDatabase) GetMemberByProviderEmail(provider, email string) (*models.Member, error) {
-	return d.CommonDB.GetMemberByProviderEmail(provider, email)
-}
-
-func (d *MySQLDatabase) DeleteAuthProviderLink(provider, providerUserID string) error {
-	return d.CommonDB.DeleteAuthProviderLink(provider, providerUserID)
-}
-
-func (d *MySQLDatabase) CreateAuthSession(session *models.AuthSession) error {
-	return d.CommonDB.CreateAuthSession(session)
-}
-
-func (d *MySQLDatabase) GetAuthSession(id string) (*models.AuthSession, error) {
-	return d.CommonDB.GetAuthSession(id)
-}
-
-func (d *MySQLDatabase) UpdateAuthSession(session *models.AuthSession) error {
-	return d.CommonDB.UpdateAuthSession(session)
-}
-
-func (d *MySQLDatabase) DeleteAuthSession(id string) error {
-	return d.CommonDB.DeleteAuthSession(id)
-}
-
-func (d *MySQLDatabase) DeleteAllAuthSessions(memberID int64) error {
-	return d.CommonDB.DeleteAllAuthSessions(memberID)
-}
-
-func (d *MySQLDatabase) CleanupExpiredAuthSessions() error {
-	return d.CommonDB.CleanupExpiredAuthSessions()
-}
-
-func (d *MySQLDatabase) TouchAuthSession(id string) error {
-	return d.CommonDB.TouchAuthSession(id)
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -81,23 +80,11 @@ func corsHeaders(router http.Handler) http.Handler {
 func Mux(db data.Database) http.Handler {
 	r := mux.NewRouter()
 
-	// NEW AUTH SYSTEM (Phase 3-4)
-	// Get encryption key from environment or use default for dev
-	encryptionKey := os.Getenv("AUTH_ENCRYPTION_KEY")
-	if encryptionKey == "" {
-		encryptionKey = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // Dev only
-		slog.Warn("Using default encryption key - set AUTH_ENCRYPTION_KEY in production")
-	}
-	crypto, err := a.NewTokenCrypto(encryptionKey)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create token crypto: %v", err))
-	}
-	
 	// Create middleware for protected endpoints
 	authMiddleware := a.NewMiddleware(db)
 	
 	// Auth handlers (public endpoints)
-	authHandler := NewAuthHandler(db, crypto)
+	authHandler := NewAuthHandler(db)
 	r.HandleFunc("/auth/login", authHandler.Login).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
 	

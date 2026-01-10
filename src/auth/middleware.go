@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/sebastiw/sidan-backend/src/config"
 	"github.com/sebastiw/sidan-backend/src/data"
 	"github.com/sebastiw/sidan-backend/src/models"
@@ -181,95 +179,6 @@ func GetMember(r *http.Request) *models.Member {
 	}
 	member, _ := val.(*models.Member)
 	return member
-}
-
-// RefreshTokenIfNeeded checks if token is expiring soon and refreshes it
-func (m *Middleware) RefreshTokenIfNeeded(memberID int64, provider string, crypto TokenCrypto) error {
-	token, err := m.db.GetAuthToken(memberID, provider)
-	if err != nil {
-		return err
-	}
-
-	// If no expiry set, nothing to refresh
-	if token.ExpiresAt == nil {
-		return nil
-	}
-
-	// Refresh if less than 5 minutes remaining
-	timeUntilExpiry := time.Until(*token.ExpiresAt)
-	if timeUntilExpiry > 5*time.Minute {
-		return nil // Still valid
-	}
-
-	// Decrypt refresh token
-	if token.RefreshToken == nil {
-		slog.Warn("token expiring but no refresh token available", 
-			slog.Int64("member_id", memberID), 
-			slog.String("provider", provider))
-		return nil
-	}
-
-	refreshToken, err := crypto.Decrypt(*token.RefreshToken)
-	if err != nil {
-		return err
-	}
-
-	// Get provider OAuth2 config from app config
-	oauth2Configs := config.Get().OAuth2
-	providerCfg, ok := oauth2Configs[provider]
-	if !ok {
-		return err
-	}
-
-	// Build OAuth2 config for token refresh
-	providerConfig, err := GetProviderConfig(provider, providerCfg.ClientID, providerCfg.ClientSecret, providerCfg.RedirectURL, providerCfg.Scopes)
-	if err != nil {
-		return err
-	}
-
-	oauth2Config := &oauth2.Config{
-		ClientID:     providerConfig.ClientID,
-		ClientSecret: providerConfig.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			TokenURL: providerConfig.TokenURL,
-		},
-	}
-
-	newToken, err := oauth2Config.TokenSource(context.Background(), &oauth2.Token{
-		RefreshToken: refreshToken,
-	}).Token()
-	if err != nil {
-		return err
-	}
-
-	// Encrypt and update
-	encryptedAccess, err := crypto.Encrypt(newToken.AccessToken)
-	if err != nil {
-		return err
-	}
-
-	var encryptedRefresh *string
-	if newToken.RefreshToken != "" {
-		encrypted, err := crypto.Encrypt(newToken.RefreshToken)
-		if err != nil {
-			return err
-		}
-		encryptedRefresh = &encrypted
-	}
-
-	token.AccessToken = encryptedAccess
-	token.RefreshToken = encryptedRefresh
-	token.ExpiresAt = &newToken.Expiry
-	err = m.db.UpdateAuthToken(token)
-	if err != nil {
-		return err
-	}
-
-	slog.Info("token refreshed successfully",
-		slog.Int64("member_id", memberID),
-		slog.String("provider", provider))
-
-	return nil
 }
 
 // CleanupExpired removes expired auth states

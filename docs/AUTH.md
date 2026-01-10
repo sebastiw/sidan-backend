@@ -44,9 +44,6 @@ oauth2:
 # Generate JWT secret (REQUIRED for production)
 export JWT_SECRET="$(openssl rand -hex 64)"
 
-# Generate encryption key for OAuth2 tokens
-export AUTH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
-
 # Start server
 go run src/sidan-backend.go
 ```
@@ -55,7 +52,6 @@ go run src/sidan-backend.go
 
 ```bash
 export JWT_SECRET="$(openssl rand -hex 64)"
-export AUTH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 go run src/sidan-backend.go
 ```
 
@@ -309,12 +305,10 @@ src/data/commondb/
 ## Production Deployment
 
 1. Set `JWT_SECRET` environment variable (required)
-2. Set `AUTH_ENCRYPTION_KEY` environment variable (for OAuth2 tokens)
-3. Update OAuth2 redirect URIs to production domain
-4. Use HTTPS (required for secure tokens)
-5. Run database migration: `db/2026-01-10-jwt-blacklist.sql`
-6. Update `config/production.yaml` with production settings
-7. Notify users: re-login required after deployment (breaking change)
+2. Update OAuth2 redirect URIs to production domain
+3. Use HTTPS (required for secure tokens)
+4. Update `config/production.yaml` with production settings
+5. Notify users: re-login required after deployment (breaking change)
 
 ## Migration from Cookie-Based Auth
 

@@ -13,13 +13,12 @@ import (
 )
 
 // NewAuthHandler creates auth handlers with database access
-func NewAuthHandler(db data.Database, crypto auth.TokenCrypto) *AuthHandler {
-	return &AuthHandler{db: db, crypto: crypto}
+func NewAuthHandler(db data.Database) *AuthHandler {
+	return &AuthHandler{db: db}
 }
 
 type AuthHandler struct {
-	db     data.Database
-	crypto auth.TokenCrypto
+	db data.Database
 }
 
 // Login initiates OAuth2 flow
@@ -138,91 +137,30 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// First, try to find existing member by provider link
-	member, err := h.db.GetMemberByProviderEmail(authState.Provider, userInfo.Email)
+	// Find member by email in cl2007_members table
+	members, err := h.db.ReadMembers(true) // Get only valid members
 	if err != nil {
-		// No provider link exists yet - check if member exists by email in members table
-		slog.Info("no provider link found, checking member table", "email", userInfo.Email)
-		
-		// Query members table directly
-		members, err := h.db.ReadMembers(true) // Get only valid members
-		if err != nil {
-			slog.Error("failed to read members", "error", err)
-			http.Error(w, "database error", http.StatusInternalServerError)
-			return
-		}
-		
-		// Find member by email
-		var foundMember *models.Member
-		for _, m := range members {
-			if m.Email != nil && *m.Email == userInfo.Email {
-				foundMember = &m
-				break
-			}
-		}
-		
-		if foundMember == nil {
-			slog.Warn("email not registered in members table", "provider", authState.Provider, "email", userInfo.Email)
-			http.Error(w, "email not registered - please contact admin", http.StatusForbidden)
-			return
-		}
-		
-		member = foundMember
-		slog.Info("member found by email", "member_id", member.Id, "email", userInfo.Email)
-	}
-	
-	// Encrypt and store token
-	encryptedAccess, err := h.crypto.Encrypt(token.AccessToken)
-	if err != nil {
-		slog.Error("failed to encrypt access token", "error", err)
-		http.Error(w, "encryption error", http.StatusInternalServerError)
+		slog.Error("failed to read members", "error", err)
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
 	
-	var encryptedRefresh *string
-	if token.RefreshToken != "" {
-		encrypted, err := h.crypto.Encrypt(token.RefreshToken)
-		if err != nil {
-			slog.Error("failed to encrypt refresh token", "error", err)
-			http.Error(w, "encryption error", http.StatusInternalServerError)
-			return
+	// Find member by email
+	var member *models.Member
+	for _, m := range members {
+		if m.Email != nil && *m.Email == userInfo.Email {
+			member = &m
+			break
 		}
-		encryptedRefresh = &encrypted
 	}
 	
-	authToken := &models.AuthToken{
-		MemberID:     member.Id,
-		Provider:     authState.Provider,
-		AccessToken:  encryptedAccess,
-		RefreshToken: encryptedRefresh,
-		TokenType:    token.TokenType,
-		ExpiresAt:    &token.Expiry,
-		Scopes:       oauth2Cfg.Scopes,
+	if member == nil {
+		slog.Warn("email not registered in members table", "provider", authState.Provider, "email", userInfo.Email)
+		http.Error(w, "email not registered - please contact admin", http.StatusForbidden)
+		return
 	}
 	
-	// Create or update token
-	existing, _ := h.db.GetAuthToken(member.Id, authState.Provider)
-	if existing != nil {
-		// Update only specific fields, preserve created_at
-		authToken.ID = existing.ID
-		authToken.CreatedAt = existing.CreatedAt
-		h.db.UpdateAuthToken(authToken)
-	} else {
-		h.db.CreateAuthToken(authToken)
-	}
-	
-	// Create or update provider link
-	link, _ := h.db.GetAuthProviderLink(authState.Provider, userInfo.ProviderUserID)
-	if link == nil {
-		h.db.CreateAuthProviderLink(&models.AuthProviderLink{
-			MemberID:       member.Id,
-			Provider:       authState.Provider,
-			ProviderUserID: userInfo.ProviderUserID,
-			ProviderEmail:  userInfo.Email,
-			EmailVerified:  userInfo.EmailVerified,
-			LinkedAt:       time.Now(),
-		})
-	}
+	slog.Info("member authenticated", "member_id", member.Id, "email", userInfo.Email, "provider", authState.Provider)
 	
 	// Determine scopes based on member type
 	scopes := getScopesForMemberType(member)

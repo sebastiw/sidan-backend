@@ -32,9 +32,8 @@ Migrated from **cookie-based sessions** to **JWT Bearer tokens** for mobile app 
 ## Deployment
 
 ```bash
-# 1. Set environment variables
+# 1. Set environment variable
 export JWT_SECRET="$(openssl rand -hex 64)"
-export AUTH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 
 # 2. Start server
 go run src/sidan-backend.go
