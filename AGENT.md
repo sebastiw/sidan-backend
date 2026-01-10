@@ -414,6 +414,69 @@ oauth2:
 
 Focus on code implementation, testing, and documentation only.
 
+## Code Philosophy: Lean and Pragmatic
+
+**Under NO circumstances implement enterprise patterns or boilerplate code.** This project values:
+
+### What to DO ✅
+- **Simple, direct solutions** - Solve the problem with minimal code
+- **Clear code flow** - Top-to-bottom readability
+- **Plain functions** - Not everything needs to be a class or interface
+- **Switch statements** - Perfectly fine for 2-5 cases
+- **Direct calls** - No unnecessary wrappers or indirection
+- **Explicit code** - Better than clever abstractions
+- **Inline logic** - If it's only used once, don't extract it
+
+### What to AVOID ❌
+- **Abstract factories** - Use simple factory functions only when genuinely needed
+- **Excessive interfaces** - Only create interfaces when you have 3+ implementations
+- **Plugin systems** - YAGNI (You Aren't Gonna Need It)
+- **Middleware layers** - Only add when actually reused 3+ times
+- **Dependency injection frameworks** - Pass dependencies as function parameters
+- **Complex hierarchies** - Flat is better than nested
+- **Registry patterns** - A map and a switch statement work fine
+- **Builder patterns** - For simple objects, just use struct literals
+- **Strategy patterns** - A function parameter works fine
+- **Decorator patterns** - Wrap directly when needed
+
+### Decision Framework
+Before adding abstraction, ask:
+1. **Do I have 3+ implementations?** If no, use a simple function
+2. **Is this code reused 3+ times?** If no, keep it inline
+3. **Will this change frequently?** If no, hardcode is fine
+4. **Does this add real value?** If no, delete it
+
+### Example: The Right Way
+```go
+// ✅ GOOD: Direct and clear
+func GetProviderConfig(provider string) (*Config, error) {
+    switch provider {
+    case "google": return googleConfig()
+    case "github": return githubConfig()
+    default: return nil, errors.New("unknown provider")
+    }
+}
+
+// ❌ BAD: Enterprise bloat
+type ProviderFactory interface {
+    CreateProvider(name string) (Provider, error)
+}
+type Provider interface {
+    GetConfig() Config
+    Initialize() error
+    // ... 10 more methods
+}
+```
+
+### Measuring Success
+- **Line count**: Less is more (within reason)
+- **Time to understand**: Can someone grok it in 5 minutes?
+- **Dependencies**: Fewer is better
+- **Indirection levels**: Max 2 (caller → function → implementation)
+- **Test complexity**: If tests are complex, code is too clever
+
+**Remember**: Professional code is not about showing off patterns. It's about solving problems clearly and maintainably.
+
 ## Security Considerations
 - Passwords stored in plaintext in `password_classic` field (legacy system)
 - OAuth2 tokens stored in encrypted cookies (gorilla/securecookie)

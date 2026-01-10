@@ -80,6 +80,7 @@ func corsHeaders(router http.Handler) http.Handler {
 func Mux(db data.Database) http.Handler {
 	r := mux.NewRouter()
 
+	// OLD AUTH (Phase 5 will remove these)
 	auth := a.New()
 	sidanProvider := a.NewSidanAuthProvider()
 	r.HandleFunc("/login/oauth/authorize", sidanProvider.BasicLoginWindow()).Methods("GET", "OPTIONS")
@@ -99,6 +100,20 @@ func Mux(db data.Database) http.Handler {
 		r.HandleFunc("/auth/"+provider+"/verifyemail", oh.VerifyEmail(auth, db)).Methods("GET", "OPTIONS")
 	}
 	r.HandleFunc("/auth/getusersession", a.GetUserSession(auth)).Methods("GET", "OPTIONS")
+	
+	// NEW AUTH (Phase 3)
+	// Generate encryption key from environment or use default for dev
+	encryptionKey := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // TODO: Use env var in production
+	crypto, err := a.NewTokenCrypto(encryptionKey)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create token crypto: %v", err))
+	}
+	
+	authHandler := NewAuthHandler(db, crypto)
+	r.HandleFunc("/auth/login", authHandler.Login).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/session", authHandler.GetSession).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/logout", authHandler.Logout).Methods("POST", "OPTIONS")
 
 	// r.HandleFunc("/notify", defaultHandler)
 
