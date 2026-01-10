@@ -35,6 +35,33 @@ type Database interface {
 	ReadMembers(onlyValid bool) ([]models.Member, error)
 	UpdateMember(member *models.Member) (*models.Member, error)
 	DeleteMember(member *models.Member) (*models.Member, error)
+
+	// Auth operations (Phase 1)
+	CreateAuthState(state *models.AuthState) error
+	GetAuthState(id string) (*models.AuthState, error)
+	DeleteAuthState(id string) error
+	CleanupExpiredAuthStates() error
+
+	CreateAuthToken(token *models.AuthToken) error
+	GetAuthToken(memberID int64, provider string) (*models.AuthToken, error)
+	GetAuthTokenByMemberID(memberID int64) ([]models.AuthToken, error)
+	UpdateAuthToken(token *models.AuthToken) error
+	DeleteAuthToken(memberID int64, provider string) error
+	DeleteAllAuthTokens(memberID int64) error
+
+	CreateAuthProviderLink(link *models.AuthProviderLink) error
+	GetAuthProviderLink(provider, providerUserID string) (*models.AuthProviderLink, error)
+	GetAuthProviderLinksByMemberID(memberID int64) ([]models.AuthProviderLink, error)
+	GetMemberByProviderEmail(provider, email string) (*models.Member, error)
+	DeleteAuthProviderLink(provider, providerUserID string) error
+
+	CreateAuthSession(session *models.AuthSession) error
+	GetAuthSession(id string) (*models.AuthSession, error)
+	UpdateAuthSession(session *models.AuthSession) error
+	DeleteAuthSession(id string) error
+	DeleteAllAuthSessions(memberID int64) error
+	CleanupExpiredAuthSessions() error
+	TouchAuthSession(id string) error
 }
 
 func NewDatabase() (Database, error) {
