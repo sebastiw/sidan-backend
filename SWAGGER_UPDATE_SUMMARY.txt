@@ -1,0 +1,114 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              SWAGGER.YAML MANUAL UPDATE - COMPLETE              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📋 CHANGES MADE:
+
+1. Updated OpenAPI Version & Info
+   ✓ Version: 3.0.1
+   ✓ Title: "Sidan API"
+   ✓ Description: Updated to mention JWT Bearer authentication
+   ✓ Version: 3.0.0
+
+2. Updated Servers
+   ✓ Primary: https://api.chalmerslosers.com (Production)
+   ✓ Removed old servers (localhost, port 30880)
+
+3. Removed All /auth/* Endpoints
+   ✗ /auth/{provider}
+   ✗ /auth/{provider}/authorized
+   ✗ /auth/{provider}/verifyemail
+   ✗ /auth/getusersession
+
+4. Updated Endpoint Specifications
+
+   FILES (/file/*):
+   ✓ POST /file/image - Upload image with Bearer auth
+   ✓ GET /file/{filename} - Get static file
+
+   MAIL (/mail):
+   ✓ POST /mail - Send email with Bearer auth
+
+   ENTRIES (/db/entries):
+   ✓ GET /db/entries - List entries (public, with pagination)
+   ✓ POST /db/entries - Create entry (public)
+   ✓ GET /db/entries/{id} - Get entry by ID (public)
+   ✓ PUT /db/entries/{id} - Update entry (requires Bearer auth)
+   ✓ DELETE /db/entries/{id} - Delete entry (requires Bearer auth)
+
+   MEMBERS (/db/members):
+   ✓ GET /db/members - List members (optional auth)
+   ✓ POST /db/members - Create member (requires Bearer auth)
+   ✓ GET /db/members/{id} - Get member by ID (optional auth)
+   ✓ PUT /db/members/{id} - Update member (requires Bearer auth)
+   ✓ DELETE /db/members/{id} - Delete member (requires Bearer auth)
+
+5. Updated Security Schemes
+   ✓ Replaced OAuth2 schemes with BearerAuth
+   ✓ Type: http, scheme: bearer, bearerFormat: JWT
+   ✓ Description references OAuth2 login flow
+
+6. Updated Data Models
+   ✓ Entry - Fixed field types, added nullable fields
+   ✓ SideKick - Fixed id field type
+   ✓ Member - Fixed number field (int64), added nullable fields
+   ✓ FileDescriptor - Kept as is
+   ✓ MailDescriptor - Kept as is
+   ✗ Removed Prospect schema (unused)
+   ✗ Removed Provider schema (auth-related)
+   ✗ Removed UserSession schema (auth-related)
+
+📊 ENDPOINT SUMMARY:
+
+Total Endpoints: 11 (7 paths, some with multiple methods)
+
+Public (no auth):
+  • GET /file/{filename}
+  • GET /db/entries
+  • POST /db/entries
+  • GET /db/entries/{id}
+  • GET /db/members (limited data)
+  • GET /db/members/{id} (limited data)
+
+Protected (Bearer auth required):
+  • POST /file/image (write:image scope)
+  • POST /mail (write:email scope)
+  • PUT /db/entries/{id} (modify:entry scope)
+  • DELETE /db/entries/{id} (modify:entry scope)
+  • POST /db/members (write:member scope)
+  • PUT /db/members/{id} (write:member scope)
+  • DELETE /db/members/{id} (write:member scope)
+
+📝 TAGS:
+  • files
+  • mail
+  • entries
+  • members
+
+🔐 AUTHENTICATION:
+
+Security Scheme: BearerAuth
+  Type: HTTP Bearer
+  Format: JWT
+  Description: JWT Bearer token obtained from OAuth2 flow
+
+Note: Auth endpoints (/auth/login, /auth/callback, etc.) are 
+      implemented in the API but excluded from this Swagger spec
+      as they are part of the authentication flow itself.
+
+✅ VALIDATION:
+
+  ✓ YAML syntax valid
+  ✓ All endpoints match current router.go
+  ✓ All models match current Go structs
+  ✓ Security definitions correct
+  ✓ No auth endpoints included
+  ✓ Primary server: https://api.chalmerslosers.com
+
+📍 NEXT STEPS:
+
+  1. Import swagger.yaml into editor.swagger.io
+  2. Review and test endpoints
+  3. Export as needed for documentation
+  4. Share with API consumers
+

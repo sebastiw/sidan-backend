@@ -1,117 +1,24 @@
 openapi: 3.0.1
 info:
-  title: Sidan API.
-  description: |-
-    Backend för sidan.
+  title: Sidan API
+  description: Backend API for sidan - JWT Bearer authentication
   license:
     name: MIT
     url: http://opensource.org/licenses/MIT
-  version: 0.0.1
+  version: 3.0.0
 servers:
   - url: https://api.chalmerslosers.com
-  - url: http://chalmerslosers.com:30880
-  - url: http://localhost:8080
+    description: Production server
 paths:
-  /auth/{provider}:
-    get:
-      summary: Get an authorization code from a provider
-      description: |-
-        Login with provider and get an authorization code.
-        Will automatically redirect to /auth/{provider}/authorized, which will
-        in turn exchange the code for an access token.
-      operationId: authProvider
-      parameters:
-        - name: provider
-          in: path
-          description: Provider to login with.
-          required: true
-          schema:
-            $ref: '#/components/schemas/Provider'
-      responses:
-        307:
-          description: |-
-            Redirect to /auth/{provider}/authorized.
-            The authorization step went well.
-        500:
-          description: Internal server error, couldn't save the session
-  /auth/{provider}/authorized:
-    get:
-      summary: Exchange Authorization token
-      description: |-
-        Exchange Authorization token with an Access token.
-      operationId: authProviderAuthorized
-      parameters:
-        - name: provider
-          in: path
-          description: Provider to check.
-          required: true
-          schema:
-            $ref: '#/components/schemas/Provider'
-        - name: state
-          in: query
-          description: Login state. Need to be verified against the state parameter in /auth/{provider}.
-          required: true
-          schema:
-            type: string
-        - name: code
-          in: query
-          description: Login code.
-          required: true
-          schema:
-            type: string
-      responses:
-        307:
-          description: OK, redirect to /.
-        500:
-          description: Internal Server Error, couldn't get session, save session, incorrect state, or bad or aborted exchange request.
-  /auth/{provider}/verifyemail:
-    get:
-      summary: Verify the user email
-      description: |-
-        Verify the user email from provider with the user email in the database.
-      operationId: getAuthenticatedEmails
-      parameters:
-        - name: provider
-          in: path
-          description: Provider to check.
-          required: true
-          schema:
-            $ref: '#/components/schemas/Provider'
-      security:
-        - oAuth2Google: []
-        - oAuth2Github: []
-      responses:
-        307:
-          description: OK, redirects back to root.
-        401:
-          description: Unauthorized
-        500:
-          description: Internal Server Error, couldn't save session, or get emails from provider.
-  /auth/getusersession:
-    get:
-      summary: Get the user session
-      description: |-
-        Check if user is session is authorized, and return the user session.
-      operationId: getUserSession
-      responses:
-        200:
-          description: OK, redirects back to root.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserSession'
-        401:
-          description: Unauthorized
-        500:
-          description: Internal Server Error, couldn't get session, or variables from session.
   /file/image:
     post:
+      summary: Upload an image
       tags:
-        - image
+        - files
       security:
-        - sidanOAuth:
-          - write:image
+        - BearerAuth: []
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
@@ -120,62 +27,88 @@ paths:
                 data:
                   type: string
                   format: binary
+                  description: Image file (gif, png, jpeg)
+              required:
+                - data
       responses:
         200:
-          description: File descriptor
+          description: File uploaded successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileDescriptor'
+        400:
+          description: Bad request or unsupported file type
+        401:
+          description: Unauthorized - requires write:image scope
   /file/{filename}:
     get:
+      summary: Get a static file
       tags:
-        - image
+        - files
       parameters:
         - name: filename
           in: path
-          description: Provider to check.
+          description: Filename of the static resource
           required: true
           schema:
             type: string
       responses:
         200:
-          description: Serve a static image
+          description: Static file served
+        404:
+          description: File not found
   /mail:
     post:
+      summary: Send an email
       tags:
         - mail
       security:
-        - sidanOAuth:
-          - write:email
+        - BearerAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/MailDescriptor'
       responses:
         200:
-          description: The mail has been sent
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Result:
+                    type: string
+                    example: "ok"
+        400:
+          description: Bad request
+        401:
+          description: Unauthorized - requires write:email scope
   /db/entries:
     get:
+      summary: List entries
       tags:
-        - entry
+        - entries
       parameters:
         - name: skip
           in: query
+          description: Number of entries to skip for pagination
           schema:
             type: integer
             format: int64
             default: 0
         - name: take
           in: query
+          description: Number of entries to return
           schema:
             type: integer
             format: int64
             default: 20
       responses:
         200:
-          description: an array of Entry
+          description: List of entries
           content:
             application/json:
               schema:
@@ -183,39 +116,119 @@ paths:
                 items:
                   $ref: '#/components/schemas/Entry'
     post:
+      summary: Create a new entry
       tags:
-        - entry
-      description: Create on new entry
+        - entries
+      description: Create a new guestbook entry
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Entry'
       responses:
         200:
-          description: Entries
+          description: Entry created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Entry'
+        400:
+          description: Bad request
+  /db/entries/{id}:
+    get:
+      summary: Get entry by ID
+      tags:
+        - entries
+      parameters:
+        - name: id
+          in: path
+          description: Entry ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Entry details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        404:
+          description: Entry not found
+    put:
+      summary: Update an entry
+      tags:
+        - entries
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Entry ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entry'
+      responses:
+        200:
+          description: Entry updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        401:
+          description: Unauthorized - requires modify:entry scope
+        404:
+          description: Entry not found
+    delete:
+      summary: Delete an entry
+      tags:
+        - entries
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Entry ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Entry deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        401:
+          description: Unauthorized - requires modify:entry scope
+        404:
+          description: Entry not found
   /db/members:
     get:
+      summary: List members
       tags:
-        - member
-      security:
-        - sidanOAuth:
-          - read:member
-        - {}
+        - members
+      description: Returns limited member data when unauthenticated, full data with read:member scope
       parameters:
-        - name: valid
-          description: Only get valid numbers
+        - name: onlyValid
+          description: Only return valid members
           in: query
           schema:
             type: boolean
             default: false
       responses:
         200:
-          description: an array of Member
+          description: List of members
           content:
             application/json:
               schema:
@@ -223,72 +236,116 @@ paths:
                 items:
                   $ref: '#/components/schemas/Member'
     post:
+      summary: Create a new member
       tags:
-        - member
+        - members
       security:
-        - sidanOAuth:
-          - write:member
-      description: Create on new member
+        - BearerAuth: []
+      description: Create a new member - requires write:member scope
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Member'
       responses:
         200:
-          description: Members
+          description: Member created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Member'
+        401:
+          description: Unauthorized - requires write:member scope
+        400:
+          description: Bad request
+  /db/members/{id}:
+    get:
+      summary: Get member by ID
+      tags:
+        - members
+      description: Returns limited member data when unauthenticated, full data with read:member scope
+      parameters:
+        - name: id
+          in: path
+          description: Member ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        404:
+          description: Member not found
+    put:
+      summary: Update a member
+      tags:
+        - members
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Member ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Member'
+      responses:
+        200:
+          description: Member updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        401:
+          description: Unauthorized - requires write:member scope
+        404:
+          description: Member not found
+    delete:
+      summary: Delete a member
+      tags:
+        - members
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Member ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Member deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        401:
+          description: Unauthorized - requires write:member scope
+        404:
+          description: Member not found
 components:
   securitySchemes:
-    sidanOAuth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: /auth/{provider}
-          scopes:
-            write:email: Gain ability to write emails.
-            write:image: Upload images
-            write:member: Update information on members
-            read:member: Read detailed information about members
-            modify:entry: Delete or update entries
-    oAuth2Google:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: /auth/google
-          tokenUrl: /auth/google/authorized
-          scopes:
-            {}
-    oAuth2Github:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: /auth/github
-          tokenUrl: /auth/github/authorized
-          scopes:
-            {}
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token obtained from OAuth2 authentication flow (/auth/login?provider=google)
   schemas:
-    Provider:
-      type: string
-      enum:
-        - google
-        - github
-    UserSession:
-      type: object
-      properties:
-        scopes:
-          type: array
-          items:
-            type: string
-            enum:
-              - write:email
-              - write:image
-              - write:member
-              - modify:entry
-              - read:member
     FileDescriptor:
       type: object
       properties:
@@ -317,11 +374,13 @@ components:
       properties:
         id:
           type: integer
+          format: int64
         date:
           type: string
-          format: date
+          description: Date string
         time:
           type: string
+          description: Time string
         datetime:
           type: string
           format: date-time
@@ -329,8 +388,10 @@ components:
           type: string
         status:
           type: integer
+          format: int64
         cl:
           type: integer
+          format: int64
         sig:
           type: string
         email:
@@ -340,91 +401,95 @@ components:
           type: string
         ip:
           type: string
-          format: ipv4
+          nullable: true
         host:
           type: string
+          nullable: true
         olsug:
           type: integer
+          format: int64
         enheter:
           type: integer
+          format: int64
         lat:
           type: number
           format: double
+          nullable: true
         lon:
           type: number
           format: double
+          nullable: true
         report:
           type: boolean
         likes:
           type: integer
+          format: int64
         secret:
           type: boolean
         personal_secret:
           type: boolean
-        side_kicks:
+        sidekicks:
           type: array
           items:
             $ref: '#/components/schemas/SideKick'
     SideKick:
       type: object
       properties:
+        id:
+          type: integer
+          format: int64
         number:
           type: string
-          format: int64
     Member:
       type: object
       required:
         - number
       properties:
-        address:
-            type: string
-        address_url:
-            type: string
-        email:
-            type: string
-        history:
-            type: string
         id:
-            format: int64
-            type: integer
+          type: integer
+          format: int64
+        number:
+          type: integer
+          format: int64
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
         im:
-            type: string
-        is_valid:
-            type: boolean
-        name:
-            type: string
-        number:
-            type: string
-        password:
-            type: string
-        password_classic:
-            type: string
-        password_classic_resetstring:
-            type: string
-        password_resetstring:
-            type: string
+          type: string
         phone:
-            type: string
-        picture:
-            type: string
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        address_url:
+          type: string
+          nullable: true
         title:
-            type: string
-    Prospect:
-      type: object
-      properties:
-        email:
-            type: string
+          type: string
+          nullable: true
         history:
-            type: string
-        id:
-            format: int64
-            type: integer
-        name:
-            type: string
-        number:
-            format: int64
-            type: integer
-        phone:
-            type: string
-        status:
-            type: string
+          type: string
+          nullable: true
+        picture:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        is_valid:
+          type: boolean
+          nullable: true
+        password_classic:
+          type: string
+          nullable: true
+        password_classic_resetstring:
+          type: string
+          nullable: true
+        password_resetstring:
+          type: string
+          nullable: true
