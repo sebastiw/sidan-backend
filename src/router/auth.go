@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/sebastiw/sidan-backend/src/auth"
@@ -174,8 +175,42 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	slog.Info("login successful", "provider", authState.Provider, "member", member.Id, "email", userInfo.Email)
-	
-	// Return JWT token in response
+
+	// If redirect_uri was provided, redirect with token
+	if authState.RedirectURI != "" {
+		// Build token JSON
+		tokenData := map[string]interface{}{
+			"access_token": jwtToken,
+			"token_type":   "Bearer",
+			"expires_in":   28800, // 8 hours in seconds
+			"member": map[string]interface{}{
+				"id":    member.Id,
+				"email": userInfo.Email,
+				"name":  userInfo.Name,
+			},
+			"scopes": scopes,
+		}
+
+		// Encode as JSON
+		tokenJSON, err := json.Marshal(tokenData)
+		if err != nil {
+			slog.Error("failed to encode token JSON", "error", err)
+			http.Error(w, "encoding error", http.StatusInternalServerError)
+			return
+		}
+
+		// URL-encode the JSON
+		tokenParam := url.QueryEscape(string(tokenJSON))
+
+		// Build redirect URL
+		redirectURL := authState.RedirectURI + "?token=" + tokenParam
+
+		slog.Info("redirecting to app", "redirect_uri", authState.RedirectURI)
+		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+		return
+	}
+
+	// No redirect_uri - return JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"access_token": jwtToken,
