@@ -13,7 +13,7 @@ import (
 // - No permissions (public) → show full message
 // - user_id=0 (secret to everyone) → show full message
 // - Has specific user_ids and (requester in list OR requester is author) → show message with prefix
-// - Has specific user_ids and requester NOT in list → show only "hemlis"
+// - Has specific user_ids and requester NOT in list → show only "hemlis" and clear all other fields
 func FilterEntryMessage(entry *models.Entry, viewerMemberID *int64) {
 	// No permissions = public entry, show full message
 	if len(entry.Permissions) == 0 {
@@ -38,9 +38,9 @@ func FilterEntryMessage(entry *models.Entry, viewerMemberID *int64) {
 	}
 
 	// Personal secret - check if viewer has permission
-	// No viewer (unauthenticated) → show "hemlis"
+	// No viewer (unauthenticated) → show "hemlis" and clear all fields
 	if viewerMemberID == nil {
-		entry.Msg = "hemlis"
+		redactEntry(entry)
 		return
 	}
 
@@ -69,8 +69,25 @@ func FilterEntryMessage(entry *models.Entry, viewerMemberID *int64) {
 		return
 	}
 
-	// Viewer NOT authorized → show only "hemlis"
+	// Viewer NOT authorized → show only "hemlis" and clear all fields
+	redactEntry(entry)
+}
+
+// redactEntry clears all sensitive fields from an entry, leaving only "hemlis"
+// Clears: msg (→ "hemlis"), sig, email, place, ip, host, lat, lon, sidekicks, likes
+func redactEntry(entry *models.Entry) {
 	entry.Msg = "hemlis"
+	entry.Sig = ""
+	entry.Email = ""
+	entry.Place = ""
+	entry.Ip = nil
+	entry.Host = nil
+	entry.Lat = nil
+	entry.Lon = nil
+	entry.Olsug = 0
+	entry.Enheter = 0
+	entry.SideKicks = nil
+	entry.Likes = 0
 }
 
 // FilterEntriesMessages applies FilterEntryMessage to a slice of entries

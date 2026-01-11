@@ -369,6 +369,23 @@ if [ ! -z "$personal_entry_id" ]; then
         FAILED_TEST_NAMES+=("Unauthenticated access to personal secret shows hemlis")
         echo -e "${RED}✗ FAIL${NC}: Unauthenticated user should see 'hemlis', got: $msg"
     fi
+    
+    # Test: Verify all sensitive fields are cleared for unauthorized access
+    sig=$(echo "$response" | jq -r '.sig')
+    email=$(echo "$response" | jq -r '.email')
+    place=$(echo "$response" | jq -r '.place')
+    likes=$(echo "$response" | jq -r '.likes')
+    
+    if [ "$sig" = "" ] && [ "$email" = "" ] && [ "$place" = "" ] && [ "$likes" = "0" ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: All sensitive fields cleared for unauthorized access"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("Sensitive fields cleared for unauthorized")
+        echo -e "${RED}✗ FAIL${NC}: Expected empty fields, got sig='$sig', email='$email', place='$place', likes='$likes'"
+    fi
 fi
 
 # Test: Unauthorized user (Member #8 not in permission list) should see "hemlis"
