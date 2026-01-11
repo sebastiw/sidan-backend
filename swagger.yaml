@@ -9,6 +9,9 @@ info:
 servers:
   - url: https://api.chalmerslosers.com
     description: Production server
+security:
+  - BearerAuth: []
+  - {}
 paths:
   /file/image:
     post:
