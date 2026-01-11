@@ -147,9 +147,9 @@ echo "Generating token for Member #7 (user 294)..."
 TOKEN_MEMBER_7=$(generate_token 294 "MarcBjork@rhyta.com")
 echo -e "${GREEN}✓ Member #7 token generated${NC}\n"
 
-echo "Generating token for Member #1 (user 290)..."
-TOKEN_MEMBER_1=$(generate_token 290 "MorganBlom@dayrep.com")
-echo -e "${GREEN}✓ Member #1 token generated${NC}\n"
+echo "Generating token for Member #2 (user 290)..."
+TOKEN_MEMBER_2=$(generate_token 290 "MorganBlom@dayrep.com")
+echo -e "${GREEN}✓ Member #2 token generated${NC}\n"
 
 # ============================================================================
 echo -e "${CYAN}=== Authentication Tests ===${NC}\n"
@@ -249,13 +249,13 @@ echo ""
 
 # Test 6: Create entry with personal secret for specific members
 personal_secret_data='{
-  "msg": "Personal secret from Member #1 - Only for Members #7 and #8!",
-  "sig": "#1",
+  "msg": "Personal secret from Member #2 - Only for Members #7 and #8!",
+  "sig": "#2",
   "email": "MorganBlom@dayrep.com",
   "place": "Private Chat"
 }'
 
-response=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_1" "$personal_secret_data")
+response=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_2" "$personal_secret_data")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 personal_entry_id=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
@@ -271,7 +271,7 @@ if [ ! -z "$personal_entry_id" ]; then
         "INSERT INTO cl2003_permissions (id, user_id) VALUES ($personal_entry_id, 7), ($personal_entry_id, 8)" 2>/dev/null
     
     # Verify the entry is marked as personal secret
-    response=$(api_request "GET" "/db/entries/$personal_entry_id" "$TOKEN_MEMBER_1")
+    response=$(api_request "GET" "/db/entries/$personal_entry_id" "$TOKEN_MEMBER_2")
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
     secret=$(echo "$body" | python3 -c "import sys, json; print(str(json.load(sys.stdin)['secret']).lower())" 2>/dev/null)
@@ -351,6 +351,110 @@ fi
 echo ""
 
 # ============================================================================
+echo -e "${CYAN}=== Message Content Filtering Tests ===${NC}\n"
+# ============================================================================
+
+# Test: Unauthenticated user should see "hemlis" for personal secret message
+if [ ! -z "$personal_entry_id" ]; then
+    response=$(api_request "GET" "/db/entries/$personal_entry_id" "")
+    msg=$(echo "$response" | jq -r '.msg')
+    
+    if [ "$msg" = "hemlis" ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Unauthenticated user sees 'hemlis' for personal secret"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("Unauthenticated access to personal secret shows hemlis")
+        echo -e "${RED}✗ FAIL${NC}: Unauthenticated user should see 'hemlis', got: $msg"
+    fi
+fi
+
+# Test: Unauthorized user (Member #8 not in permission list) should see "hemlis"
+# Create entry visible only to Member #7
+echo -e "  ${YELLOW}Creating entry visible only to Member #7...${NC}"
+restricted_entry=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_2" '{
+    "msg": "This is a restricted message for Member #7 only",
+    "sig": "#2"
+}')
+restricted_entry_id=$(echo "$restricted_entry" | jq -r '.id')
+
+if [ ! -z "$restricted_entry_id" ] && [ "$restricted_entry_id" != "null" ]; then
+    echo -e "  ${GREEN}Created restricted entry ID: $restricted_entry_id${NC}"
+    
+    # Add permission for only Member #7 (user_id 7)
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e \
+        "INSERT INTO cl2003_permissions (id, user_id) VALUES ($restricted_entry_id, 7)" 2>/dev/null
+    
+    # Test: Member #8 (unauthorized) should see "hemlis"
+    response=$(api_request "GET" "/db/entries/$restricted_entry_id" "$TOKEN_MEMBER_8")
+    msg=$(echo "$response" | jq -r '.msg')
+    
+    if [ "$msg" = "hemlis" ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Unauthorized user (Member #8) sees 'hemlis'"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("Unauthorized user sees hemlis")
+        echo -e "${RED}✗ FAIL${NC}: Member #8 should see 'hemlis', got: $msg"
+    fi
+    
+    # Test: Member #7 (authorized) should see full message with prefix
+    response=$(api_request "GET" "/db/entries/$restricted_entry_id" "$TOKEN_MEMBER_7")
+    msg=$(echo "$response" | jq -r '.msg')
+    
+    if echo "$msg" | grep -q "hemlis Till #7"; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Authorized user (Member #7) sees message with prefix"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("Authorized user sees message with prefix")
+        echo -e "${RED}✗ FAIL${NC}: Member #7 should see message with 'hemlis Till #7' prefix"
+        echo -e "  Got: $msg"
+    fi
+    
+    # Test: Author (Member #1) should see full message with prefix
+    response=$(api_request "GET" "/db/entries/$restricted_entry_id" "$TOKEN_MEMBER_2")
+    msg=$(echo "$response" | jq -r '.msg')
+    
+    if echo "$msg" | grep -q "This is a restricted message"; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Author (Member #1) sees full message"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("Author sees full message")
+        echo -e "${RED}✗ FAIL${NC}: Author should see full message"
+        echo -e "  Got: $msg"
+    fi
+fi
+
+# Test: Secret to everyone (user_id=0) should be visible to all
+if [ ! -z "$secret_entry_id" ]; then
+    response=$(api_request "GET" "/db/entries/$secret_entry_id" "")
+    msg=$(echo "$response" | jq -r '.msg')
+    
+    if [ "$msg" != "hemlis" ] && [ ! -z "$msg" ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Secret to everyone (user_id=0) visible to unauthenticated"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("Secret to everyone visible to all")
+        echo -e "${RED}✗ FAIL${NC}: Secret to everyone should be visible, got: $msg"
+    fi
+fi
+
+echo ""
+
+# ============================================================================
 echo -e "${CYAN}=== Cleanup Created Entries ===${NC}\n"
 # ============================================================================
 
@@ -370,6 +474,12 @@ if [ ! -z "$personal_entry_id" ]; then
     docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_permissions WHERE id=$personal_entry_id" 2>/dev/null
     docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$personal_entry_id" 2>/dev/null
     echo -e "${GREEN}✓${NC} Cleaned up personal secret entry (ID: $personal_entry_id)"
+fi
+
+if [ ! -z "$restricted_entry_id" ]; then
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_permissions WHERE id=$restricted_entry_id" 2>/dev/null
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$restricted_entry_id" 2>/dev/null
+    echo -e "${GREEN}✓${NC} Cleaned up restricted entry (ID: $restricted_entry_id)"
 fi
 
 echo ""

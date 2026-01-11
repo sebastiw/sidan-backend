@@ -122,7 +122,9 @@ func Mux(db data.Database) http.Handler {
 	// Entry endpoints
 	dbEh := NewEntryHandler(db)
 	r.HandleFunc("/db/entries", dbEh.createEntryHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/db/entries/{id:[0-9]+}", dbEh.readEntryHandler).Methods("GET", "OPTIONS")
+	r.Handle("/db/entries/{id:[0-9]+}",
+		authMiddleware.OptionalAuth(http.HandlerFunc(dbEh.readEntryHandler)),
+	).Methods("GET", "OPTIONS")
 	r.Handle("/db/entries/{id:[0-9]+}",
 		authMiddleware.RequireAuth(
 			authMiddleware.RequireScope(a.ModifyEntryScope)(
@@ -137,7 +139,9 @@ func Mux(db data.Database) http.Handler {
 			),
 		),
 	).Methods("DELETE", "OPTIONS")
-	r.HandleFunc("/db/entries", dbEh.readAllEntryHandler).Methods("GET", "OPTIONS")
+	r.Handle("/db/entries",
+		authMiddleware.OptionalAuth(http.HandlerFunc(dbEh.readAllEntryHandler)),
+	).Methods("GET", "OPTIONS")
 
 	// Member endpoints (with optional auth for read operations)
 	dbMh := NewMemberHandler(db)
