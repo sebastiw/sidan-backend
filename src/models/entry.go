@@ -19,7 +19,7 @@ type Entry struct {
 	Id             int64      `json:"id"`
 	Date           string     `json:"date"`
 	Time           string     `json:"time"`
-	DateTime       time.Time  `gorm:"type:time" json:"datetime"` // TODO: convert from "2020-04-15 18:50:13" to ISO.
+	DateTime       time.Time  `gorm:"-" json:"datetime"` // Virtual field, not in database
 	Msg            string     `json:"msg"`
 	Status         int64      `json:"status"`
 	Cl             int64      `json:"cl"`
@@ -33,10 +33,16 @@ type Entry struct {
 	Lat            *float64   `json:"lat"`
 	Lon            *float64   `json:"lon"`
 	Report         bool       `json:"report"`
-	Likes          int64      `json:"likes"`
-	Secret         bool       `json:"secret"`
-	PersonalSecret bool       `json:"personal_secret"`
-	SideKicks      []SideKick `gorm:"foreignKey:Id";json:"sidekicks"`
+	
+	// Computed fields from related tables
+	Likes          int64       `gorm:"-" json:"likes"` // Count from 2003_likes table
+	Secret         bool        `gorm:"-" json:"secret"` // TRUE if ANY permission exists
+	PersonalSecret bool        `gorm:"-" json:"personal_secret"` // TRUE if permission with user_id != 0 exists
+	
+	// Relationships
+	SideKicks      []SideKick   `gorm:"foreignKey:Id" json:"sidekicks"`
+	LikeRecords    []Like       `gorm:"foreignKey:Id" json:"-"` // Hidden from JSON
+	Permissions    []Permission `gorm:"foreignKey:Id" json:"-"` // Hidden from JSON
 }
 
 func (Entry) TableName() string {
