@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidan - Forum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .api-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+        
+        .api-selector label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .api-selector select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .api-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .token-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .token-section input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .token-section input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .status {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .status.authenticated {
+            color: #27ae60;
+        }
+        
+        .status.unauthenticated {
+            color: #e74c3c;
+        }
+        
+        .create-section {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .create-section.show {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .entries-section {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .entries-header h2 {
+            color: #333;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .pagination span {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .entry {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px 0;
+        }
+        
+        .entry:last-child {
+            border-bottom: none;
+        }
+        
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .entry-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .entry-sig {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .entry-badges {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-secret {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .badge-personal {
+            background: #ffa502;
+            color: white;
+        }
+        
+        .badge-likes {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .entry-msg {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .entry-msg.hemlis {
+            font-style: italic;
+            color: #999;
+        }
+        
+        .entry-footer {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Token Input -->
+        <div class="header">
+            <h1>🎯 Sidan Forum</h1>
+            
+            <!-- API URL Selector -->
+            <div class="api-selector">
+                <label for="apiSelector">API Server:</label>
+                <select id="apiSelector" onchange="changeApiUrl()">
+                    <option value="https://api.chalmerslosers.com">Production (api.chalmerslosers.com)</option>
+                    <option value="http://localhost:8080">Local Development (localhost:8080)</option>
+                </select>
+            </div>
+            
+            <div class="token-section">
+                <input 
+                    type="text" 
+                    id="tokenInput" 
+                    placeholder="Paste your JWT Bearer token here to post messages..."
+                    value="">
+                <button class="btn btn-primary" onclick="setToken()">Set Token</button>
+                <button class="btn btn-secondary" onclick="clearToken()">Clear</button>
+            </div>
+            <div class="status" id="authStatus">
+                Not authenticated - you can read but not post
+            </div>
+        </div>
+
+        <!-- Create Entry Section -->
+        <div class="create-section" id="createSection">
+            <h2 style="margin-bottom: 20px; color: #333;">✍️ Create New Entry</h2>
+            <div id="createError"></div>
+            <div id="createSuccess"></div>
+            
+            <div class="form-group">
+                <label for="msgInput">Message *</label>
+                <textarea id="msgInput" placeholder="Your message..." required></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sigInput">Signature *</label>
+                    <input type="text" id="sigInput" placeholder="e.g. #123 or P456" required>
+                </div>
+                <div class="form-group">
+                    <label for="emailInput">Email</label>
+                    <input type="email" id="emailInput" placeholder="your@email.com">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="placeInput">Location</label>
+                <input type="text" id="placeInput" placeholder="Where are you?">
+            </div>
+            
+            <button class="btn btn-primary" onclick="createEntry()">Post Message</button>
+        </div>
+
+        <!-- Entries List -->
+        <div class="entries-section">
+            <div class="entries-header">
+                <h2>📋 Recent Entries</h2>
+                <div class="pagination">
+                    <button class="btn btn-secondary" onclick="previousPage()" id="prevBtn">← Previous</button>
+                    <span id="pageInfo">Page 1</span>
+                    <button class="btn btn-secondary" onclick="nextPage()" id="nextBtn">Next →</button>
+                </div>
+            </div>
+            
+            <div id="entriesList">
+                <div class="loading">Loading entries...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let API_BASE = localStorage.getItem('apiBase') || 'https://api.chalmerslosers.com';
+        const ENTRIES_PER_PAGE = 20;
+        
+        // State
+        let currentPage = 1;
+        let bearerToken = localStorage.getItem('bearerToken') || '';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set API selector to saved value
+            document.getElementById('apiSelector').value = API_BASE;
+            
+            if (bearerToken) {
+                document.getElementById('tokenInput').value = bearerToken;
+                updateAuthStatus(true);
+            }
+            loadEntries();
+        });
+        
+        // API URL Management
+        function changeApiUrl() {
+            API_BASE = document.getElementById('apiSelector').value;
+            localStorage.setItem('apiBase', API_BASE);
+            
+            // Reload entries with new API URL
+            currentPage = 1;
+            loadEntries();
+        }
+        
+        // Token Management
+        function setToken() {
+            const input = document.getElementById('tokenInput');
+            bearerToken = input.value.trim();
+            
+            if (bearerToken) {
+                localStorage.setItem('bearerToken', bearerToken);
+                updateAuthStatus(true);
+            }
+        }
+        
+        function clearToken() {
+            bearerToken = '';
+            localStorage.removeItem('bearerToken');
+            document.getElementById('tokenInput').value = '';
+            updateAuthStatus(false);
+        }
+        
+        function updateAuthStatus(authenticated) {
+            const status = document.getElementById('authStatus');
+            const createSection = document.getElementById('createSection');
+            
+            if (authenticated) {
+                status.textContent = '✓ Authenticated - you can now post messages';
+                status.className = 'status authenticated';
+                createSection.classList.add('show');
+            } else {
+                status.textContent = 'Not authenticated - you can read but not post';
+                status.className = 'status unauthenticated';
+                createSection.classList.remove('show');
+            }
+        }
+        
+        // API Calls
+        async function apiCall(endpoint, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (bearerToken && options.auth !== false) {
+                headers['Authorization'] = `Bearer ${bearerToken}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+        
+        // Load Entries
+        async function loadEntries() {
+            const skip = (currentPage - 1) * ENTRIES_PER_PAGE;
+            const listEl = document.getElementById('entriesList');
+            
+            listEl.innerHTML = '<div class="loading">Loading entries...</div>';
+            
+            try {
+                const entries = await apiCall(`/db/entries?skip=${skip}&take=${ENTRIES_PER_PAGE}`, {
+                    auth: bearerToken ? true : false
+                });
+                
+                if (entries.length === 0) {
+                    listEl.innerHTML = '<div class="loading">No entries found</div>';
+                    return;
+                }
+                
+                renderEntries(entries);
+                updatePagination(entries.length);
+            } catch (error) {
+                listEl.innerHTML = `<div class="error">Failed to load entries: ${error.message}</div>`;
+            }
+        }
+        
+        // Render Entries
+        function renderEntries(entries) {
+            const listEl = document.getElementById('entriesList');
+            
+            listEl.innerHTML = entries.map(entry => {
+                const isHemlis = entry.msg === 'hemlis';
+                const date = new Date(entry.date).toLocaleDateString();
+                
+                let badges = '';
+                if (entry.secret) {
+                    badges += '<span class="badge badge-secret">SECRET</span>';
+                }
+                if (entry.personal_secret) {
+                    badges += '<span class="badge badge-personal">PERSONAL</span>';
+                }
+                if (entry.likes > 0) {
+                    badges += `<span class="badge badge-likes">❤️ ${entry.likes}</span>`;
+                }
+                
+                return `
+                    <div class="entry">
+                        <div class="entry-header">
+                            <div class="entry-meta">
+                                <span class="entry-sig">${escapeHtml(entry.sig || 'Anonymous')}</span>
+                                <span>${date} ${entry.time || ''}</span>
+                                ${entry.place ? `<span>📍 ${escapeHtml(entry.place)}</span>` : ''}
+                            </div>
+                            <div class="entry-badges">
+                                ${badges}
+                            </div>
+                        </div>
+                        <div class="entry-msg ${isHemlis ? 'hemlis' : ''}">
+                            ${escapeHtml(entry.msg)}
+                        </div>
+                        ${entry.email && !isHemlis ? `
+                            <div class="entry-footer">
+                                <span>✉️ ${escapeHtml(entry.email)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Create Entry
+        async function createEntry() {
+            const msg = document.getElementById('msgInput').value.trim();
+            const sig = document.getElementById('sigInput').value.trim();
+            const email = document.getElementById('emailInput').value.trim();
+            const place = document.getElementById('placeInput').value.trim();
+            
+            const errorEl = document.getElementById('createError');
+            const successEl = document.getElementById('createSuccess');
+            
+            errorEl.innerHTML = '';
+            successEl.innerHTML = '';
+            
+            if (!msg || !sig) {
+                errorEl.innerHTML = '<div class="error">Message and Signature are required!</div>';
+                return;
+            }
+            
+            try {
+                const entry = await apiCall('/db/entries', {
+                    method: 'POST',
+                    body: JSON.stringify({ msg, sig, email, place })
+                });
+                
+                successEl.innerHTML = '<div class="success">✓ Entry posted successfully!</div>';
+                
+                // Clear form
+                document.getElementById('msgInput').value = '';
+                document.getElementById('sigInput').value = '';
+                document.getElementById('emailInput').value = '';
+                document.getElementById('placeInput').value = '';
+                
+                // Reload entries
+                currentPage = 1;
+                await loadEntries();
+                
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    successEl.innerHTML = '';
+                }, 3000);
+                
+            } catch (error) {
+                errorEl.innerHTML = `<div class="error">Failed to create entry: ${error.message}</div>`;
+            }
+        }
+        
+        // Pagination
+        function updatePagination(entriesCount) {
+            document.getElementById('pageInfo').textContent = `Page ${currentPage}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = entriesCount < ENTRIES_PER_PAGE;
+        }
+        
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadEntries();
+            }
+        }
+        
+        function nextPage() {
+            currentPage++;
+            loadEntries();
+        }
+        
+        // Utility
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
