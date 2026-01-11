@@ -26,7 +26,7 @@ func (d *CommonDatabase) ReadEntry(id int64) (*models.Entry, error) {
 func (d *CommonDatabase) ReadEntries(take int, skip int) ([]models.Entry, error) {
 	var entries []models.Entry
 
-	result := d.DB.Limit(take).Offset(skip).Find(&entries).Preload("SideKicks")
+	result := d.DB.Order("id DESC").Limit(take).Offset(skip).Find(&entries).Preload("SideKicks")
 
 	if result.Error != nil {
 		return nil, result.Error
