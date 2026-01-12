@@ -15,7 +15,11 @@ func (d *CommonDatabase) CreateEntry(entry *models.Entry) (*models.Entry, error)
 	if entry.Time == "" {
 		entry.Time = now.Format("15:04:05")
 	}
-	
+	// Set DateTime field (required for database)
+	if entry.DateTime.IsZero() {
+		entry.DateTime = now
+	}
+
 	result := d.DB.Create(&entry)
 	if result.Error != nil {
 		return nil, result.Error
