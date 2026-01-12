@@ -66,8 +66,8 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Get member from database
-		member, err := m.db.ReadMember(claims.MemberID)
+		// Get member from database by member number
+		member, err := m.db.ReadMemberByNumber(claims.MemberNumber)
 		if err != nil {
 			http.Error(w, `{"error":"member not found"}`, http.StatusUnauthorized)
 			return
@@ -135,8 +135,8 @@ func (m *Middleware) OptionalAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Get member
-		member, err := m.db.ReadMember(claims.MemberID)
+		// Get member by member number
+		member, err := m.db.ReadMemberByNumber(claims.MemberNumber)
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return

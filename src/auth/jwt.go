@@ -14,22 +14,22 @@ var (
 
 // JWTClaims represents the claims stored in JWT
 type JWTClaims struct {
-	MemberID int64    `json:"member_id"`
-	Email    string   `json:"email"`
-	Scopes   []string `json:"scopes"`
-	Provider string   `json:"provider"`
+	MemberNumber int64    `json:"member_number"`
+	Email        string   `json:"email"`
+	Scopes       []string `json:"scopes"`
+	Provider     string   `json:"provider"`
 	jwt.RegisteredClaims
 }
 
 // GenerateJWT creates a signed JWT token
-func GenerateJWT(memberID int64, email string, scopes []string, provider string, secret []byte) (string, error) {
+func GenerateJWT(memberNumber int64, email string, scopes []string, provider string, secret []byte) (string, error) {
 	now := time.Now()
-	
+
 	claims := &JWTClaims{
-		MemberID: memberID,
-		Email:    email,
-		Scopes:   scopes,
-		Provider: provider,
+		MemberNumber: memberNumber,
+		Email:        email,
+		Scopes:       scopes,
+		Provider:     provider,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(8 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -38,7 +38,7 @@ func GenerateJWT(memberID int64, email string, scopes []string, provider string,
 			Subject:   email,
 		},
 	}
-	
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(secret)
 }

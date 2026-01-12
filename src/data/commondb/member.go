@@ -23,6 +23,17 @@ func (d *CommonDatabase) ReadMember(id int64) (*models.Member, error) {
 	return &member, nil
 }
 
+func (d *CommonDatabase) ReadMemberByNumber(number int64) (*models.Member, error) {
+	var member models.Member
+
+	result := d.DB.First(&member, models.Member{Number: number})
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &member, nil
+}
+
 func (d *CommonDatabase) ReadMembers(onlyValid bool) ([]models.Member, error) {
 	var members []models.Member
 

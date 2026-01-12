@@ -7,30 +7,30 @@ import (
 
 func TestGenerateAndValidateJWT(t *testing.T) {
 	secret := []byte("test-secret-key-at-least-32-bytes-long-12345678")
-	memberID := int64(123)
+	memberNumber := int64(123)
 	email := "test@example.com"
 	scopes := []string{"write:email", "read:member"}
 	provider := "google"
-	
+
 	// Generate JWT
-	token, err := GenerateJWT(memberID, email, scopes, provider, secret)
+	token, err := GenerateJWT(memberNumber, email, scopes, provider, secret)
 	if err != nil {
 		t.Fatalf("GenerateJWT failed: %v", err)
 	}
-	
+
 	if token == "" {
 		t.Fatal("Generated token is empty")
 	}
-	
+
 	// Validate JWT
 	claims, err := ValidateJWT(token, secret)
 	if err != nil {
 		t.Fatalf("ValidateJWT failed: %v", err)
 	}
-	
+
 	// Verify claims
-	if claims.MemberID != memberID {
-		t.Errorf("MemberID mismatch: got %d, want %d", claims.MemberID, memberID)
+	if claims.MemberNumber != memberNumber {
+		t.Errorf("MemberNumber mismatch: got %d, want %d", claims.MemberNumber, memberNumber)
 	}
 	
 	if claims.Email != email {

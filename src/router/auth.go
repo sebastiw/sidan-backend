@@ -161,13 +161,13 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	slog.Info("member authenticated", "member_id", member.Id, "email", userInfo.Email, "provider", authState.Provider)
-	
+	slog.Info("member authenticated", "member_number", member.Number, "email", userInfo.Email, "provider", authState.Provider)
+
 	// Determine scopes based on member type
 	scopes := getScopesForMemberType(member)
-	
-	// Generate JWT token
-	jwtToken, err := auth.GenerateJWT(member.Id, userInfo.Email, scopes, authState.Provider, config.GetJWTSecret())
+
+	// Generate JWT token using member number
+	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, authState.Provider, config.GetJWTSecret())
 	if err != nil {
 		slog.Error("JWT generation failed", "error", err)
 		http.Error(w, "token generation failed", http.StatusInternalServerError)
@@ -184,9 +184,9 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 			"token_type":   "Bearer",
 			"expires_in":   28800, // 8 hours in seconds
 			"member": map[string]interface{}{
-				"id":    member.Id,
-				"email": userInfo.Email,
-				"name":  userInfo.Name,
+				"number": member.Number,
+				"email":  userInfo.Email,
+				"name":   userInfo.Name,
 			},
 			"scopes": scopes,
 		}
@@ -217,9 +217,9 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		"token_type":   "Bearer",
 		"expires_in":   28800, // 8 hours in seconds
 		"member": map[string]interface{}{
-			"id":    member.Id,
-			"email": userInfo.Email,
-			"name":  userInfo.Name,
+			"number": member.Number,
+			"email":  userInfo.Email,
+			"name":   userInfo.Name,
 		},
 		"scopes": scopes,
 	})
@@ -245,7 +245,6 @@ func (h *AuthHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"member": map[string]interface{}{
-			"id":     member.Id,
 			"number": member.Number,
 			"name":   member.Name,
 			"email":  member.Email,
@@ -268,7 +267,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	slog.Info("logout successful", "member", claims.MemberID, "email", claims.Email)
+	slog.Info("logout successful", "member_number", claims.MemberNumber, "email", claims.Email)
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
@@ -292,7 +291,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Generate new JWT with same scopes
-	newToken, err := auth.GenerateJWT(claims.MemberID, claims.Email, claims.Scopes, claims.Provider, config.GetJWTSecret())
+	newToken, err := auth.GenerateJWT(claims.MemberNumber, claims.Email, claims.Scopes, claims.Provider, config.GetJWTSecret())
 	if err != nil {
 		slog.Error("JWT refresh failed", "error", err)
 		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
