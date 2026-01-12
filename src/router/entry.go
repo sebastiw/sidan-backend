@@ -32,7 +32,7 @@ func (eh EntryHandler) createEntryHandler(w http.ResponseWriter, r *http.Request
 	var e models.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
-	slog.Debug(ru.GetRequestId(r), e)
+	slog.Debug(ru.GetRequestId(r), "entry", e)
 	entry, err := eh.db.CreateEntry(&e)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -75,7 +75,7 @@ func (eh EntryHandler) updateEntryHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseInt(vars["id"], 10, 64)
 
-	slog.Debug(ru.GetRequestId(r), e)
+	slog.Debug(ru.GetRequestId(r), "entry", e)
 	e.Id = int64(id)
 	entry, err := eh.db.UpdateEntry(&e)
 	if err != nil {
@@ -94,7 +94,7 @@ func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseInt(vars["id"], 10, 64)
 
-	slog.Debug(ru.GetRequestId(r), e)
+	slog.Debug(ru.GetRequestId(r), "entry", e)
 	e.Id = int64(id)
 	entry, err := eh.db.DeleteEntry(&e)
 	if err != nil {

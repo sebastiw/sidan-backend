@@ -26,7 +26,7 @@ func (mh MemberHandler) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	var m models.Member
 	_ = json.NewDecoder(r.Body).Decode(&m)
 
-	slog.Info(ru.GetRequestId(r), m.Fmt())
+	slog.Info(ru.GetRequestId(r), "member", m.Fmt())
 	member, err := mh.db.CreateMember(&m)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -94,7 +94,7 @@ func (mh MemberHandler) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	slog.Debug(ru.GetRequestId(r), m.Fmt())
+	slog.Debug(ru.GetRequestId(r), "member", m.Fmt())
 	m.Id = int64(id)
 	member, err := mh.db.UpdateMember(&m)
 	if err != nil {
@@ -113,7 +113,7 @@ func (mh MemberHandler) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	slog.Debug(ru.GetRequestId(r), m.Fmt())
+	slog.Debug(ru.GetRequestId(r), "member", m.Fmt())
 	m.Id = int64(id)
 	member, err := mh.db.DeleteMember(&m)
 	if err != nil {

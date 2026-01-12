@@ -46,7 +46,7 @@ func (mh MailHandler) createMailHandler(w http.ResponseWriter, r *http.Request) 
 			"\r\n"+
 			"%s\r\n", m.ToEmails, m.Title, m.Message))
 
-	slog.Debug(ru.GetRequestId(r), m.Fmt())
+	slog.Debug(ru.GetRequestId(r), "mail", m.Fmt())
 
 	auth := smtp.PlainAuth("", mh.Username, mh.Password, mh.Host)
 	err = smtp.SendMail(fmt.Sprintf("%s:%d", mh.Host, mh.Port), auth, m.FromEmail, m.ToEmails, msg)

@@ -42,7 +42,7 @@ generate_token() {
     local member_id=$1
     local email=$2
     
-    TOKEN=$(JWT_SECRET="$JWT_SECRET" go run generate_test_jwt.go "$member_id" "$email" 2>&1 | \
+    TOKEN=$(JWT_SECRET="$JWT_SECRET" go run cmd/generate_test_jwt/generate_test_jwt.go "$member_id" "$email" 2>&1 | \
         grep -A 1 "JWT Token:" | tail -1 | xargs)
     
     if [ -z "$TOKEN" ]; then
@@ -139,16 +139,16 @@ assert_field() {
 echo -e "${CYAN}=== Generating Test Tokens ===${NC}\n"
 
 # Generate tokens for different users
-echo "Generating token for Member #8 (user 295)..."
-TOKEN_MEMBER_8=$(generate_token 295 "max.gabrielsson@gmail.com")
+echo "Generating token for Member #8 (ID=295, Number=8)..."
+TOKEN_MEMBER_8=$(generate_token 8 "max.gabrielsson@gmail.com")
 echo -e "${GREEN}✓ Member #8 token generated${NC}\n"
 
-echo "Generating token for Member #7 (user 294)..."
-TOKEN_MEMBER_7=$(generate_token 294 "MarcBjork@rhyta.com")
+echo "Generating token for Member #7 (ID=294, Number=7)..."
+TOKEN_MEMBER_7=$(generate_token 7 "MarcBjork@rhyta.com")
 echo -e "${GREEN}✓ Member #7 token generated${NC}\n"
 
-echo "Generating token for Member #2 (user 290)..."
-TOKEN_MEMBER_2=$(generate_token 290 "MorganBlom@dayrep.com")
+echo "Generating token for Member #2 (ID=290, Number=2)..."
+TOKEN_MEMBER_2=$(generate_token 2 "MorganBlom@dayrep.com")
 echo -e "${GREEN}✓ Member #2 token generated${NC}\n"
 
 # ============================================================================
@@ -167,8 +167,8 @@ body=$(echo "$response" | sed '/HTTP_CODE:/d')
 assert_test "Authenticated user (Member #8) SHOULD access /auth/session" "200" "$http_code"
 
 # Test 3: Member should have correct scopes
-member_id=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['member']['id'])" 2>/dev/null)
-assert_field "Member #8 should have correct ID in session" "id" "295" "$member_id"
+member_number=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['member']['number'])" 2>/dev/null)
+assert_field "Member #8 should have correct Number in session" "number" "8" "$member_number"
 
 echo ""
 
