@@ -19,7 +19,7 @@ type Entry struct {
 	Id             int64      `json:"id"`
 	Date           string     `json:"date"`
 	Time           string     `json:"time"`
-	DateTime       time.Time  `gorm:"-" json:"datetime"` // Virtual field, not in database
+	DateTime       time.Time  `gorm:"column:datetime" json:"datetime"`
 	Msg            string     `json:"msg"`
 	Status         int64      `json:"status"`
 	Cl             int64      `json:"cl"`
