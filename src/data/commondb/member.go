@@ -37,7 +37,7 @@ func (d *CommonDatabase) ReadMemberByNumber(number int64) (*models.Member, error
 func (d *CommonDatabase) ReadMembers(onlyValid bool) ([]models.Member, error) {
 	var members []models.Member
 
-	result := d.DB.Where("isvalid = 1").Find(&members)
+	result := d.DB.Where("isvalid = 1").Order("number desc").Find(&members)
 
 	if result.Error != nil {
 		return nil, result.Error
