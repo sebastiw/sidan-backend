@@ -500,7 +500,7 @@ if [ ! -z "$like_test_entry_id" ]; then
     # Like the entry
     response=$(api_request "POST" "/db/entries/$like_test_entry_id/like" "$TOKEN_MEMBER_8" "")
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-    assert_test "Member #8 SHOULD like the entry" "200" "$http_code"
+    assert_test "Member #8 SHOULD like the entry" "204" "$http_code"
     
     # Verify likes count increased
     sleep 0.5  # Brief pause
@@ -520,7 +520,7 @@ if [ ! -z "$like_test_entry_id" ]; then
     # Test: Another member can like the same entry
     response=$(api_request "POST" "/db/entries/$like_test_entry_id/like" "$TOKEN_MEMBER_7" "")
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-    assert_test "Member #7 SHOULD like the entry" "200" "$http_code"
+    assert_test "Member #7 SHOULD like the entry" "204" "$http_code"
     
     # Verify likes count increased again
     sleep 0.5
