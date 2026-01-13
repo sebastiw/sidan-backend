@@ -104,6 +104,18 @@ func (d *CommonDatabase) DeleteEntry(entry *models.Entry) (*models.Entry, error)
 }
 
 func (d *CommonDatabase) LikeEntry(entryId int64, sig string, host string) error {
+	// Check if like already exists for this entryId and sig combination
+	var count int64
+	result := d.DB.Table("2003_likes").
+		Where("id = ? AND sig = ?", entryId, sig).
+		Count(&count)
+	if result.Error != nil {
+		return result.Error
+	}
+	if count > 0 {
+		return nil // Like already exists, return success (idempotent)
+	}
+
 	now := time.Now()
 	like := map[string]interface{}{
 		"date": now.Format("2006-01-02"),
@@ -112,6 +124,6 @@ func (d *CommonDatabase) LikeEntry(entryId int64, sig string, host string) error
 		"sig":  sig,
 		"host": host,
 	}
-	result := d.DB.Table("2003_likes").Create(like)
+	result = d.DB.Table("2003_likes").Create(like)
 	return result.Error
 }
