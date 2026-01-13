@@ -216,6 +216,31 @@ paths:
           description: Unauthorized - requires modify:entry scope
         404:
           description: Entry not found
+  /db/entries/{id}/like:
+    post:
+      summary: Like an entry
+      description: Add a like to an entry. Extracts member number from JWT token and records the like with timestamp and host.
+      tags:
+        - entries
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Entry ID to like
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        204:
+          description: Entry liked successfully (no content)
+        401:
+          description: Unauthorized - requires authentication
+        404:
+          description: Entry not found
+        500:
+          description: Internal server error
   /db/members:
     get:
       summary: List members
