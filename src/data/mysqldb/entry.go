@@ -24,6 +24,6 @@ func (d *MySQLDatabase) DeleteEntry(entry *models.Entry) (*models.Entry, error) 
 	return d.CommonDB.DeleteEntry(entry)
 }
 
-func (d *MySQLDatabase) LikeEntry(entryId int64, sig string) error {
-	return d.CommonDB.LikeEntry(entryId, sig)
+func (d *MySQLDatabase) LikeEntry(entryId int64, sig string, host string) error {
+	return d.CommonDB.LikeEntry(entryId, sig, host)
 }

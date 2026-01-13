@@ -148,7 +148,8 @@ func (eh EntryHandler) likeEntryHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	sig := strconv.FormatInt(member.Number, 10)
-	err := eh.db.LikeEntry(id, sig)
+	host := r.RemoteAddr
+	err := eh.db.LikeEntry(id, sig, host)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		http.Error(w, fmt.Sprintf(`{"error":"%v"}`, err.Error()), http.StatusInternalServerError)

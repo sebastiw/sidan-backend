@@ -103,14 +103,14 @@ func (d *CommonDatabase) DeleteEntry(entry *models.Entry) (*models.Entry, error)
 	return entry, nil
 }
 
-func (d *CommonDatabase) LikeEntry(entryId int64, sig string) error {
+func (d *CommonDatabase) LikeEntry(entryId int64, sig string, host string) error {
 	now := time.Now()
 	like := map[string]interface{}{
 		"date": now.Format("2006-01-02"),
 		"time": now.Format("15:04:05"),
 		"id":   entryId,
 		"sig":  sig,
-		"host": "",
+		"host": host,
 	}
 	result := d.DB.Table("2003_likes").Create(like)
 	return result.Error
