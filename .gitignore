@@ -10,3 +10,6 @@ node_modules
 # Dependency directories (remove the comment below to include it)
 # vendor/
 config/prod.yaml
+
+# Built binary
+sidan-backend
