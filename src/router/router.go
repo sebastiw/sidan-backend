@@ -142,6 +142,11 @@ func Mux(db data.Database) http.Handler {
 	r.Handle("/db/entries",
 		authMiddleware.OptionalAuth(http.HandlerFunc(dbEh.readAllEntryHandler)),
 	).Methods("GET", "OPTIONS")
+	r.Handle("/db/entries/{id:[0-9]+}/like",
+		authMiddleware.RequireAuth(
+			http.HandlerFunc(dbEh.likeEntryHandler),
+		),
+	).Methods("POST", "OPTIONS")
 
 	// Member endpoints (with optional auth for read operations)
 	dbMh := NewMemberHandler(db)

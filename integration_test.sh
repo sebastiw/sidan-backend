@@ -472,6 +472,70 @@ fi
 echo ""
 
 # ============================================================================
+echo -e "${CYAN}=== Like Endpoint Tests ===${NC}\n"
+# ============================================================================
+
+# Test: Create entry and like it
+echo -e "  ${YELLOW}Creating test entry for like functionality...${NC}"
+like_test_entry=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_8" '{
+    "msg": "Test entry for like functionality",
+    "sig": "#8",
+    "email": "max.gabrielsson@gmail.com",
+    "place": "Test Location"
+}')
+http_code=$(echo "$like_test_entry" | grep "HTTP_CODE:" | cut -d: -f2)
+like_test_entry_id=$(echo "$like_test_entry" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+
+assert_test "SHOULD create test entry for likes" "200" "$http_code"
+
+if [ ! -z "$like_test_entry_id" ]; then
+    echo -e "  ${GREEN}Created entry ID: $like_test_entry_id${NC}"
+    
+    # Get initial likes count
+    response=$(api_request "GET" "/db/entries/$like_test_entry_id" "")
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    likes_before=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['likes'])" 2>/dev/null)
+    echo -e "  ${CYAN}Initial likes count: $likes_before${NC}"
+    
+    # Like the entry
+    response=$(api_request "POST" "/db/entries/$like_test_entry_id/like" "$TOKEN_MEMBER_8" "")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    assert_test "Member #8 SHOULD like the entry" "204" "$http_code"
+    
+    # Verify likes count increased
+    sleep 0.5  # Brief pause
+    response=$(api_request "GET" "/db/entries/$like_test_entry_id" "")
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    likes_after=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['likes'])" 2>/dev/null)
+    echo -e "  ${CYAN}Likes count after like: $likes_after${NC}"
+    
+    expected_likes=$((likes_before + 1))
+    assert_field "Likes count should increase by 1" "likes" "$expected_likes" "$likes_after"
+    
+    # Test: Unauthenticated user cannot like
+    response=$(api_request "POST" "/db/entries/$like_test_entry_id/like" "" "")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    assert_test "Unauthenticated user should NOT like entry" "401" "$http_code"
+    
+    # Test: Another member can like the same entry
+    response=$(api_request "POST" "/db/entries/$like_test_entry_id/like" "$TOKEN_MEMBER_7" "")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    assert_test "Member #7 SHOULD like the entry" "204" "$http_code"
+    
+    # Verify likes count increased again
+    sleep 0.5
+    response=$(api_request "GET" "/db/entries/$like_test_entry_id" "")
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    likes_final=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['likes'])" 2>/dev/null)
+    echo -e "  ${CYAN}Final likes count: $likes_final${NC}"
+    
+    expected_final=$((expected_likes + 1))
+    assert_field "Likes count should be 2 after two likes" "likes" "$expected_final" "$likes_final"
+fi
+
+echo ""
+
+# ============================================================================
 echo -e "${CYAN}=== Cleanup Created Entries ===${NC}\n"
 # ============================================================================
 
@@ -497,6 +561,12 @@ if [ ! -z "$restricted_entry_id" ]; then
     docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_permissions WHERE id=$restricted_entry_id" 2>/dev/null
     docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$restricted_entry_id" 2>/dev/null
     echo -e "${GREEN}✓${NC} Cleaned up restricted entry (ID: $restricted_entry_id)"
+fi
+
+if [ ! -z "$like_test_entry_id" ]; then
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM 2003_likes WHERE id=$like_test_entry_id" 2>/dev/null
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$like_test_entry_id" 2>/dev/null
+    echo -e "${GREEN}✓${NC} Cleaned up like test entry (ID: $like_test_entry_id)"
 fi
 
 echo ""

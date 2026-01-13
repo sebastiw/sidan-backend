@@ -135,3 +135,26 @@ func (eh EntryHandler) readAllEntryHandler(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(entries)
 }
+
+func (eh EntryHandler) likeEntryHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 10, 64)
+
+	member := auth.GetMember(r)
+	if member == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	sig := strconv.FormatInt(member.Number, 10)
+	host := r.RemoteAddr
+	err := eh.db.LikeEntry(id, sig, host)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf(`{"error":"%v"}`, err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
