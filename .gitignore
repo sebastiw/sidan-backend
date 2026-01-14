@@ -13,3 +13,8 @@ config/prod.yaml
 
 # Built binary
 sidan-backend
+
+# Remove sidan-backups and locally uploaded files
+static/*.png
+sidan-backups/
+hypea.png
