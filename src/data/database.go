@@ -38,6 +38,12 @@ type Database interface {
 	UpdateMember(member *models.Member) (*models.Member, error)
 	DeleteMember(member *models.Member) (*models.Member, error)
 
+	CreateArr(arr *models.Arr) (*models.Arr, error)
+	ReadArr(id int64) (*models.Arr, error)
+	ReadArrs(take int, skip int) ([]models.Arr, error)
+	UpdateArr(arr *models.Arr) (*models.Arr, error)
+	DeleteArr(arr *models.Arr) (*models.Arr, error)
+
 	// Auth operations
 	CreateAuthState(state *models.AuthState) error
 	GetAuthState(id string) (*models.AuthState, error)

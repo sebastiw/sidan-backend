@@ -39,6 +39,7 @@ func main() {
 		auth.WriteImageScope,
 		auth.WriteEmailScope,
 		auth.WriteMemberScope,
+		auth.WriteArrScope,
 	}
 
 	// Generate JWT

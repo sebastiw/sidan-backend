@@ -18,6 +18,7 @@ const (
 	WriteMemberScope = "write:member"
 	ReadMemberScope  = "read:member"
 	ModifyEntryScope = "modify:entry"
+	WriteArrScope    = "write:arr"
 )
 
 // Context keys for storing auth data in request context

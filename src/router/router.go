@@ -220,6 +220,32 @@ func Mux(db data.Database) http.Handler {
 		),
 	).Methods("GET", "OPTIONS")
 
+	// Arr endpoints
+	dbAh := NewArrHandler(db)
+	r.Handle("/db/arr",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteArrScope)(
+				http.HandlerFunc(dbAh.createArrHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
+	r.HandleFunc("/db/arr/{id:[0-9]+}", dbAh.readArrHandler).Methods("GET", "OPTIONS")
+	r.Handle("/db/arr/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteArrScope)(
+				http.HandlerFunc(dbAh.updateArrHandler),
+			),
+		),
+	).Methods("PUT", "OPTIONS")
+	r.Handle("/db/arr/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteArrScope)(
+				http.HandlerFunc(dbAh.deleteArrHandler),
+			),
+		),
+	).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/db/arr", dbAh.readAllArrHandler).Methods("GET", "OPTIONS")
+
 	// r.HandleFunc("/db", defaultHandler)
 
 	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))

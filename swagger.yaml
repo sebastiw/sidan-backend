@@ -366,6 +366,137 @@ paths:
           description: Unauthorized - requires write:member scope
         404:
           description: Member not found
+  /db/arr:
+    get:
+      summary: List events (arrangemang)
+      tags:
+        - arr
+      parameters:
+        - name: skip
+          in: query
+          description: Number of events to skip for pagination
+          schema:
+            type: integer
+            format: int64
+            default: 0
+        - name: take
+          in: query
+          description: Number of events to return
+          schema:
+            type: integer
+            format: int64
+            default: 20
+      responses:
+        200:
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Arr'
+    post:
+      summary: Create a new event
+      tags:
+        - arr
+      security:
+        - BearerAuth: []
+      description: Create a new event - requires write:arr scope
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Arr'
+      responses:
+        200:
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Arr'
+        401:
+          description: Unauthorized - requires write:arr scope
+        400:
+          description: Bad request
+  /db/arr/{id}:
+    get:
+      summary: Get event by ID
+      tags:
+        - arr
+      parameters:
+        - name: id
+          in: path
+          description: Event ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Arr'
+        404:
+          description: Event not found
+    put:
+      summary: Update an event
+      tags:
+        - arr
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Event ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Arr'
+      responses:
+        200:
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Arr'
+        401:
+          description: Unauthorized - requires write:arr scope
+        404:
+          description: Event not found
+    delete:
+      summary: Delete an event
+      tags:
+        - arr
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Event ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Event deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Arr'
+        401:
+          description: Unauthorized - requires write:arr scope
+        404:
+          description: Event not found
 components:
   securitySchemes:
     BearerAuth:
@@ -520,4 +651,46 @@ components:
           nullable: true
         password_resetstring:
           type: string
+          nullable: true
+    Arr:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        namn:
+          type: string
+          description: Name of the event
+          nullable: true
+        start_date:
+          type: string
+          description: Start date/time of the event
+          nullable: true
+        plats:
+          type: string
+          description: Location of the event
+          nullable: true
+        organisator:
+          type: string
+          description: Organizer (member number like #10)
+          nullable: true
+        deltagare:
+          type: string
+          description: Comma-separated list of participants
+          nullable: true
+        kanske:
+          type: string
+          description: Comma-separated list of maybe participants
+          nullable: true
+        hetsade:
+          type: string
+          description: Comma-separated list of invited/reminded members
+          nullable: true
+        losen:
+          type: string
+          description: Password for the event
+          nullable: true
+        fularr:
+          type: string
+          description: Flag indicating if event is marked as "fularr"
           nullable: true

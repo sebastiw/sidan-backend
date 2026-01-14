@@ -311,7 +311,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 func getScopesForMemberType(member *models.Member) []string {
 	// All valid members get basic scopes
 	if member.Isvalid != nil && *member.Isvalid {
-		return []string{"write:email", "write:image", "write:member", "read:member", "modify:entry"}
+		return []string{"write:email", "write:image", "write:member", "read:member", "modify:entry", "write:arr"}
 	}
 	// Inactive members get limited access
 	return []string{"read:member"}
