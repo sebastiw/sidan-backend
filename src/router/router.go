@@ -246,6 +246,44 @@ func Mux(db data.Database) http.Handler {
 	).Methods("DELETE", "OPTIONS")
 	r.HandleFunc("/db/arr", dbAh.readAllArrHandler).Methods("GET", "OPTIONS")
 
+	// Article endpoints
+	dbArth := NewArticleHandler(db)
+	r.Handle("/db/articles",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteArticleScope)(
+				http.HandlerFunc(dbArth.createArticleHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
+	r.Handle("/db/articles/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.ReadArticleScope)(
+				http.HandlerFunc(dbArth.readArticleHandler),
+			),
+		),
+	).Methods("GET", "OPTIONS")
+	r.Handle("/db/articles/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteArticleScope)(
+				http.HandlerFunc(dbArth.updateArticleHandler),
+			),
+		),
+	).Methods("PUT", "OPTIONS")
+	r.Handle("/db/articles/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteArticleScope)(
+				http.HandlerFunc(dbArth.deleteArticleHandler),
+			),
+		),
+	).Methods("DELETE", "OPTIONS")
+	r.Handle("/db/articles",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.ReadArticleScope)(
+				http.HandlerFunc(dbArth.readAllArticleHandler),
+			),
+		),
+	).Methods("GET", "OPTIONS")
+
 	// r.HandleFunc("/db", defaultHandler)
 
 	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))

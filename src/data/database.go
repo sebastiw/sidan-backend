@@ -44,6 +44,12 @@ type Database interface {
 	UpdateArr(arr *models.Arr) (*models.Arr, error)
 	DeleteArr(arr *models.Arr) (*models.Arr, error)
 
+	CreateArticle(article *models.Article) (*models.Article, error)
+	ReadArticle(id int64) (*models.Article, error)
+	ReadArticles(take int, skip int) ([]models.Article, error)
+	UpdateArticle(article *models.Article) (*models.Article, error)
+	DeleteArticle(article *models.Article) (*models.Article, error)
+
 	// Auth operations
 	CreateAuthState(state *models.AuthState) error
 	GetAuthState(id string) (*models.AuthState, error)

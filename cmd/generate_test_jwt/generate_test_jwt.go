@@ -40,6 +40,8 @@ func main() {
 		auth.WriteEmailScope,
 		auth.WriteMemberScope,
 		auth.WriteArrScope,
+		auth.ReadArticleScope,
+		auth.WriteArticleScope,
 	}
 
 	// Generate JWT
