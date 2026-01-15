@@ -109,6 +109,31 @@ paths:
             type: integer
             format: int64
             default: 20
+        - name: q
+          in: query
+          description: |
+            RSQL filter query (requires JWT authentication). 
+            Supports operators: == (equal), != (not equal), =gt= (greater than), =ge= (greater or equal), 
+            =lt= (less than), =le= (less or equal), =like= (pattern match), =in= (in list), =out= (not in list).
+            Logical operators: ; (AND), , (OR). Grouping with parentheses supported.
+            
+            Examples:
+            - status==1
+            - status==1;cl==5 (AND)
+            - cl==5,cl==7 (OR)
+            - (status==1;cl==5),place=like=Stockholm
+            - likes=gt=10
+            - secret==true
+            
+            Filterable fields:
+            - Public: id, date, time, datetime, status, cl, place, olsug, enheter, report, likes, secret, personal_secret
+            - Authenticated only: msg, sig, email
+          schema:
+            type: string
+          required: false
+      security:
+        - BearerAuth: []
+        - {}
       responses:
         200:
           description: List of entries
@@ -117,7 +142,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Entry'
+                   $ref: '#/components/schemas/Entry'
+        400:
+          description: Invalid filter query or unauthorized field access
+        401:
+          description: Authentication required to use query filters (q parameter)
     post:
       summary: Create a new entry
       tags:
