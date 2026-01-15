@@ -7,6 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.2
+	github.com/rbicker/go-rsql v0.4.0
 	github.com/rs/cors v1.9.0
 	github.com/spf13/viper v1.7.1
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45

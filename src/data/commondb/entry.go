@@ -4,6 +4,7 @@ import (
 	"time"
 	
 	"github.com/sebastiw/sidan-backend/src/models"
+	"github.com/sebastiw/sidan-backend/src/rsql"
 )
 
 func (d *CommonDatabase) CreateEntry(entry *models.Entry) (*models.Entry, error) {
@@ -65,6 +66,66 @@ func (d *CommonDatabase) ReadEntries(take int, skip int) ([]models.Entry, error)
 		Preload("Permissions").
 		Find(&entries)
 
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	
+	// Compute virtual fields for each entry
+	for i := range entries {
+		entries[i].Likes = int64(len(entries[i].LikeRecords))
+		entries[i].Secret = len(entries[i].Permissions) > 0
+		entries[i].PersonalSecret = false
+		for _, perm := range entries[i].Permissions {
+			if perm.UserId != 0 {
+				entries[i].PersonalSecret = true
+				break
+			}
+		}
+	}
+	
+	return entries, nil
+}
+
+func (d *CommonDatabase) ReadEntriesWithFilter(take int, skip int, filterQuery string, viewerMemberID *int64) ([]models.Entry, error) {
+	var entries []models.Entry
+	
+	// Start building query
+	query := d.DB.Table("cl2003_msgs").
+		Order("id DESC").
+		Limit(take).
+		Offset(skip)
+	
+	// Parse RSQL filter if provided
+	if filterQuery != "" {
+		// Determine if viewer can filter on sensitive fields
+		canViewSecretContent := rsql.CanViewerFilterOnSensitiveFields(viewerMemberID)
+		
+		// Build filter context
+		ctx := rsql.FilterContext{
+			ViewerMemberID:       viewerMemberID,
+			CanViewSecretContent: canViewSecretContent,
+		}
+		
+		// Create GORM adapter
+		adapter, err := rsql.NewGormAdapter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		
+		// Apply RSQL filter to query
+		query, err = adapter.Process(query, filterQuery)
+		if err != nil {
+			return nil, err
+		}
+	}
+	
+	// Execute query with preloads
+	result := query.
+		Preload("SideKicks").
+		Preload("LikeRecords").
+		Preload("Permissions").
+		Find(&entries)
+	
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -115,18 +115,38 @@ func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request
 func (eh EntryHandler) readAllEntryHandler(w http.ResponseWriter, r *http.Request) {
 	take := MakeDefaultInt(r, "take", "20")
 	skip := MakeDefaultInt(r, "skip", "0")
-	entries, err := eh.db.ReadEntries(take, skip)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
-		return
-	}
-
+	
+	// Get RSQL filter query parameter
+	filterQuery := r.URL.Query().Get("q")
+	
 	// Get viewer member ID from auth context (nil if unauthenticated)
 	var viewerMemberID *int64
 	member := GetMemberFromContext(r)
 	if member != nil {
 		viewerMemberID = &member.Number
+	}
+	
+	// Enforce: only authenticated users can use RSQL filtering
+	if filterQuery != "" && viewerMemberID == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, `{"error":"authentication required to use query filters (q parameter)"}`, http.StatusUnauthorized)
+		return
+	}
+	
+	var entries []models.Entry
+	var err error
+	
+	// Use filtered query if q parameter is provided
+	if filterQuery != "" {
+		entries, err = eh.db.ReadEntriesWithFilter(take, skip, filterQuery, viewerMemberID)
+	} else {
+		entries, err = eh.db.ReadEntries(take, skip)
+	}
+	
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error":"invalid filter: %v"}`, err.Error()), http.StatusBadRequest)
+		return
 	}
 
 	// Apply message filtering to all entries
