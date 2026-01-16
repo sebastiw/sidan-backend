@@ -100,6 +100,11 @@ func (d *MySQLDatabase) IsEmpty() (bool, error) {
 	return d.CommonDB.IsEmpty()
 }
 
+// GetDB returns the underlying GORM database connection for advanced queries
+func (d *MySQLDatabase) GetDB() *gorm.DB {
+	return d.DB
+}
+
 // Auth operations - delegated to CommonDB
 func (d *MySQLDatabase) CreateAuthState(state *models.AuthState) error {
 	return d.CommonDB.CreateAuthState(state)

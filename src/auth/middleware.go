@@ -13,14 +13,15 @@ import (
 
 // Scope constants for authorization
 const (
-	WriteEmailScope   = "write:email"
-	WriteImageScope   = "write:image"
-	WriteMemberScope  = "write:member"
-	ReadMemberScope   = "read:member"
-	ModifyEntryScope  = "modify:entry"
-	WriteArrScope     = "write:arr"
-	ReadArticleScope  = "read:article"
-	WriteArticleScope = "write:article"
+	WriteEmailScope      = "write:email"
+	WriteImageScope      = "write:image"
+	WriteMemberScope     = "write:member"
+	ReadMemberScope      = "read:member"
+	ModifyEntryScope     = "modify:entry"
+	WriteArrScope        = "write:arr"
+	ReadArticleScope     = "read:article"
+	WriteArticleScope    = "write:article"
+	UseAdvancedFilterScope = "use:advanced_filter"
 )
 
 // Context keys for storing auth data in request context
