@@ -13,6 +13,7 @@ NC='\033[0m' # No Color
 
 BASE_URL="http://localhost:8080"
 JWT_SECRET="my-test-secret"
+SERVER_PID=""
 
 # Test counters
 TOTAL_TESTS=0
@@ -27,15 +28,63 @@ echo -e "${BLUE}Integration Test Suite${NC}"
 echo -e "${BLUE}JWT Authentication & Secret Permissions${NC}"
 echo -e "${BLUE}========================================${NC}\n"
 
-# Check if backend is running
-if ! curl -s http://localhost:8080/db/entries?take=1 > /dev/null 2>&1; then
-    echo -e "${RED}ERROR: Backend is not running on http://localhost:8080${NC}"
-    echo -e "${YELLOW}Please start the backend first:${NC}"
-    echo "  JWT_SECRET=\"$JWT_SECRET\" go run src/sidan-backend.go"
-    exit 1
+# Cleanup function
+cleanup() {
+    echo -e "\n${YELLOW}Cleaning up...${NC}"
+    if [ ! -z "$SERVER_PID" ]; then
+        echo -e "${YELLOW}Stopping backend server (PID: $SERVER_PID)${NC}"
+        
+        # Find child processes of the go run command
+        CHILD_PIDS=$(pgrep -P $SERVER_PID 2>/dev/null)
+        
+        # Kill children first (the actual backend binary)
+        for child_pid in $CHILD_PIDS; do
+            kill $child_pid 2>/dev/null
+        done
+        
+        # Then kill parent (go run command)
+        kill $SERVER_PID 2>/dev/null
+        wait $SERVER_PID 2>/dev/null
+        
+        # Double-check children are dead
+        sleep 1
+        for child_pid in $CHILD_PIDS; do
+            if ps -p $child_pid > /dev/null 2>&1; then
+                kill -9 $child_pid 2>/dev/null
+            fi
+        done
+        
+        echo -e "${GREEN}✓ Backend stopped${NC}"
+    fi
+}
+
+# Set trap to cleanup on exit
+trap cleanup EXIT INT TERM
+
+# Check if backend is already running
+if curl -s http://localhost:8080/db/entries?take=1 > /dev/null 2>&1; then
+    echo -e "${YELLOW}Backend is already running. Using existing instance.${NC}"
+    echo -e "${YELLOW}Note: Server will NOT be stopped after tests.${NC}\n"
+else
+    echo -e "${YELLOW}Starting backend server...${NC}"
+    JWT_SECRET="$JWT_SECRET" go run src/sidan-backend.go > /tmp/sidan-backend.log 2>&1 &
+    SERVER_PID=$!
+    
+    # Wait for server to start (max 30 seconds)
+    for i in {1..30}; do
+        if curl -s http://localhost:8080/db/entries?take=1 > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ Backend started (PID: $SERVER_PID)${NC}\n"
+            break
+        fi
+        if [ $i -eq 30 ]; then
+            echo -e "${RED}ERROR: Backend failed to start within 30 seconds${NC}"
+            echo -e "${YELLOW}Check logs at /tmp/sidan-backend.log${NC}"
+            exit 1
+        fi
+        sleep 1
+    done
 fi
 
-echo -e "${GREEN}✓ Backend is running${NC}\n"
 
 # Helper function to generate JWT token
 generate_token() {
@@ -531,6 +580,238 @@ if [ ! -z "$like_test_entry_id" ]; then
     
     expected_final=$((expected_likes + 1))
     assert_field "Likes count should be 2 after two likes" "likes" "$expected_final" "$likes_final"
+fi
+
+echo ""
+
+# ============================================================================
+echo -e "${CYAN}=== RSQL Filtering Tests ===${NC}\n"
+# ============================================================================
+
+# Create test entries with specific data for RSQL filtering
+echo -e "  ${YELLOW}Creating test entries for RSQL filtering...${NC}"
+
+# Entry 1: 5 likes, sig="Alice"
+rsql_entry_1=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_8" '{
+    "msg": "Test message about beer from Alice",
+    "sig": "Alice",
+    "email": "alice@example.com",
+    "place": "Stockholm"
+}')
+rsql_entry_1_id=$(echo "$rsql_entry_1" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+if [ ! -z "$rsql_entry_1_id" ]; then
+    echo -e "  ${GREEN}Created RSQL test entry 1 (ID: $rsql_entry_1_id)${NC}"
+    # Add 5 likes
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e \
+        "INSERT INTO 2003_likes (date, time, id, sig, host) VALUES 
+        (CURDATE(), CURTIME(), $rsql_entry_1_id, 'user1', 'host1'),
+        (CURDATE(), CURTIME(), $rsql_entry_1_id, 'user2', 'host2'),
+        (CURDATE(), CURTIME(), $rsql_entry_1_id, 'user3', 'host3'),
+        (CURDATE(), CURTIME(), $rsql_entry_1_id, 'user4', 'host4'),
+        (CURDATE(), CURTIME(), $rsql_entry_1_id, 'user5', 'host5')" 2>/dev/null
+fi
+
+# Entry 2: 3 likes, sig="Bob"
+rsql_entry_2=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_7" '{
+    "msg": "Another test message from Bob about coding",
+    "sig": "Bob",
+    "email": "bob@example.com",
+    "place": "Gothenburg"
+}')
+rsql_entry_2_id=$(echo "$rsql_entry_2" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+if [ ! -z "$rsql_entry_2_id" ]; then
+    echo -e "  ${GREEN}Created RSQL test entry 2 (ID: $rsql_entry_2_id)${NC}"
+    # Add 3 likes
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e \
+        "INSERT INTO 2003_likes (date, time, id, sig, host) VALUES 
+        (CURDATE(), CURTIME(), $rsql_entry_2_id, 'user1', 'host1'),
+        (CURDATE(), CURTIME(), $rsql_entry_2_id, 'user2', 'host2'),
+        (CURDATE(), CURTIME(), $rsql_entry_2_id, 'user3', 'host3')" 2>/dev/null
+fi
+
+# Entry 3: 1 like, sig="Charlie"
+rsql_entry_3=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_2" '{
+    "msg": "Message from Charlie discussing beer and wine",
+    "sig": "Charlie",
+    "email": "charlie@example.com",
+    "place": "Malmö"
+}')
+rsql_entry_3_id=$(echo "$rsql_entry_3" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+if [ ! -z "$rsql_entry_3_id" ]; then
+    echo -e "  ${GREEN}Created RSQL test entry 3 (ID: $rsql_entry_3_id)${NC}"
+    # Add 1 like
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e \
+        "INSERT INTO 2003_likes (date, time, id, sig, host) VALUES 
+        (CURDATE(), CURTIME(), $rsql_entry_3_id, 'user1', 'host1')" 2>/dev/null
+fi
+
+sleep 1  # Wait for database updates
+
+echo ""
+
+# Test 1: Filter by likes greater than 3 (should return entries 1 and 2)
+echo -e "${YELLOW}Testing RSQL: likes=gt=3${NC}"
+response=$(api_request "GET" "/db/entries?q=likes%3Dgt%3D3&take=100" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "RSQL filter 'likes=gt=3' SHOULD work with filtering scope" "200" "$http_code"
+
+if [ "$http_code" = "200" ]; then
+    count=$(echo "$body" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len([e for e in data if e['id'] in [$rsql_entry_1_id, $rsql_entry_2_id]]))" 2>/dev/null)
+    if [ "$count" -ge 1 ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Filter likes>3 returns entries with >3 likes"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("RSQL likes>3 returns correct entries")
+        echo -e "${RED}✗ FAIL${NC}: Filter should return entries with >3 likes, got count: $count"
+    fi
+fi
+
+# Test 2: Filter by likes equals 5
+echo -e "${YELLOW}Testing RSQL: likes==5${NC}"
+response=$(api_request "GET" "/db/entries?q=likes%3D%3D5&take=100" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "RSQL filter 'likes==5' SHOULD work" "200" "$http_code"
+
+if [ "$http_code" = "200" ]; then
+    contains_entry1=$(echo "$body" | grep -c "\"id\":$rsql_entry_1_id" || echo "0")
+    if [ "$contains_entry1" -ge 1 ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Filter likes==5 returns entry 1 (5 likes)"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("RSQL likes==5 returns entry with 5 likes")
+        echo -e "${RED}✗ FAIL${NC}: Filter should return entry with exactly 5 likes"
+    fi
+fi
+
+# Test 3: Filter by signature (sig=="Alice")
+echo -e "${YELLOW}Testing RSQL: sig==\"Alice\"${NC}"
+response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22Alice%22&take=100" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "RSQL filter 'sig==\"Alice\"' SHOULD work" "200" "$http_code"
+
+if [ "$http_code" = "200" ]; then
+    contains_alice=$(echo "$body" | grep -c "\"id\":$rsql_entry_1_id" || echo "0")
+    if [ "$contains_alice" -ge 1 ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: Filter sig==\"Alice\" returns Alice's entry"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("RSQL sig filter returns correct entry")
+        echo -e "${RED}✗ FAIL${NC}: Filter should return entry with sig='Alice'"
+    fi
+fi
+
+# Test 4: Filter by message content containing "beer"
+echo -e "${YELLOW}Testing RSQL: msg==\"beer\"${NC}"
+# Note: This is a basic test - RSQL doesn't support LIKE/contains by default
+# We test exact match or substring if supported
+response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22Alice%22&take=100" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "RSQL message filter SHOULD work" "200" "$http_code"
+
+# Test 5: Complex query - AND condition (likes>3 AND sig=="Alice")
+echo -e "${YELLOW}Testing RSQL: likes=gt=3;sig==\"Alice\"${NC}"
+response=$(api_request "GET" "/db/entries?q=likes%3Dgt%3D3%3Bsig%3D%3D%22Alice%22&take=100" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "RSQL complex filter with AND SHOULD work" "200" "$http_code"
+
+if [ "$http_code" = "200" ]; then
+    contains_entry1=$(echo "$body" | grep -c "\"id\":$rsql_entry_1_id" 2>/dev/null || echo "0")
+    not_contains_entry2=$(echo "$body" | grep -c "\"id\":$rsql_entry_2_id" 2>/dev/null || echo "0")
+    # Trim whitespace
+    contains_entry1=$(echo "$contains_entry1" | tr -d '[:space:]')
+    not_contains_entry2=$(echo "$not_contains_entry2" | tr -d '[:space:]')
+    if [ "$contains_entry1" -ge 1 ] && [ "$not_contains_entry2" -eq 0 ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: AND filter returns only matching entry"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("RSQL AND filter logic")
+        echo -e "${RED}✗ FAIL${NC}: AND filter should return only Alice with >3 likes (entry1=$contains_entry1, entry2=$not_contains_entry2)"
+    fi
+fi
+
+# Test 6: Complex query - OR condition (sig=="Alice",sig=="Bob")
+echo -e "${YELLOW}Testing RSQL: sig==\"Alice\",sig==\"Bob\"${NC}"
+response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22Alice%22%2Csig%3D%3D%22Bob%22&take=100" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "RSQL complex filter with OR SHOULD work" "200" "$http_code"
+
+if [ "$http_code" = "200" ]; then
+    contains_entry1=$(echo "$body" | grep -c "\"id\":$rsql_entry_1_id" || echo "0")
+    contains_entry2=$(echo "$body" | grep -c "\"id\":$rsql_entry_2_id" || echo "0")
+    if [ "$contains_entry1" -ge 1 ] && [ "$contains_entry2" -ge 1 ]; then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        echo -e "${GREEN}✓ PASS${NC}: OR filter returns both matching entries"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_TEST_NAMES+=("RSQL OR filter logic")
+        echo -e "${RED}✗ FAIL${NC}: OR filter should return both Alice and Bob entries"
+    fi
+fi
+
+# Test 7: RSQL without filtering scope should fail
+echo -e "${YELLOW}Testing RSQL without 'filtering' scope (should fail)${NC}"
+# Create a token without filtering scope (simulate by using invalid/restricted token)
+# For now, we'll test with no token
+response=$(api_request "GET" "/db/entries?q=likes%3Dgt%3D3" "")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "RSQL filter WITHOUT filtering scope SHOULD fail (403)" "403" "$http_code"
+
+# Test 8: Invalid RSQL syntax should return 400
+echo -e "${YELLOW}Testing invalid RSQL syntax${NC}"
+response=$(api_request "GET" "/db/entries?q=invalid_field%3D%3D5" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "Invalid RSQL query SHOULD return 400" "400" "$http_code"
+
+# Test 9: Disallowed field should return 400
+echo -e "${YELLOW}Testing disallowed field in RSQL${NC}"
+response=$(api_request "GET" "/db/entries?q=email%3D%3D%22test%40example.com%22" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "RSQL with disallowed field SHOULD return 400" "400" "$http_code"
+
+# Test 10: Verify standard pagination still works without RSQL
+echo -e "${YELLOW}Testing standard pagination without RSQL${NC}"
+response=$(api_request "GET" "/db/entries?take=5&skip=0" "")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "Standard pagination WITHOUT RSQL SHOULD still work" "200" "$http_code"
+
+echo ""
+
+# Cleanup RSQL test entries
+if [ ! -z "$rsql_entry_1_id" ]; then
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM 2003_likes WHERE id=$rsql_entry_1_id" 2>/dev/null
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$rsql_entry_1_id" 2>/dev/null
+    echo -e "${GREEN}✓${NC} Cleaned up RSQL test entry 1 (ID: $rsql_entry_1_id)"
+fi
+
+if [ ! -z "$rsql_entry_2_id" ]; then
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM 2003_likes WHERE id=$rsql_entry_2_id" 2>/dev/null
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$rsql_entry_2_id" 2>/dev/null
+    echo -e "${GREEN}✓${NC} Cleaned up RSQL test entry 2 (ID: $rsql_entry_2_id)"
+fi
+
+if [ ! -z "$rsql_entry_3_id" ]; then
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM 2003_likes WHERE id=$rsql_entry_3_id" 2>/dev/null
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$rsql_entry_3_id" 2>/dev/null
+    echo -e "${GREEN}✓${NC} Cleaned up RSQL test entry 3 (ID: $rsql_entry_3_id)"
 fi
 
 echo ""

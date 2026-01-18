@@ -12,8 +12,8 @@ func (d *MySQLDatabase) ReadEntry(id int64) (*models.Entry, error) {
 	return d.CommonDB.ReadEntry(id)
 }
 
-func (d *MySQLDatabase) ReadEntries(take int, skip int) ([]models.Entry, error) {
-	return d.CommonDB.ReadEntries(take, skip)
+func (d *MySQLDatabase) ReadEntries(take int, skip int, filter string) ([]models.Entry, error) {
+	return d.CommonDB.ReadEntries(take, skip, filter)
 }
 
 func (d *MySQLDatabase) UpdateEntry(entry *models.Entry) (*models.Entry, error) {

@@ -21,6 +21,7 @@ const (
 	WriteArrScope     = "write:arr"
 	ReadArticleScope  = "read:article"
 	WriteArticleScope = "write:article"
+	FilteringScope    = "filtering"
 )
 
 // Context keys for storing auth data in request context

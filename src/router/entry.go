@@ -2,10 +2,11 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
-	"fmt"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -115,8 +116,37 @@ func (eh EntryHandler) deleteEntryHandler(w http.ResponseWriter, r *http.Request
 func (eh EntryHandler) readAllEntryHandler(w http.ResponseWriter, r *http.Request) {
 	take := MakeDefaultInt(r, "take", "20")
 	skip := MakeDefaultInt(r, "skip", "0")
-	entries, err := eh.db.ReadEntries(take, skip)
+	rsqlQuery := r.URL.Query().Get("q")
+	
+	// Security check: filtering requires 'filtering' scope
+	if rsqlQuery != "" {
+		scopes := auth.GetScopes(r)
+		hasFilteringScope := false
+		if scopes != nil {
+			for _, scope := range scopes {
+				if scope == auth.FilteringScope {
+					hasFilteringScope = true
+					break
+				}
+			}
+		}
+		
+		if !hasFilteringScope {
+			w.WriteHeader(http.StatusForbidden)
+			http.Error(w, "filtering requires 'filtering' scope", http.StatusForbidden)
+			return
+		}
+	}
+	
+	// Pass raw RSQL query to database layer
+	entries, err := eh.db.ReadEntries(take, skip, rsqlQuery)
 	if err != nil {
+		// Check if it's an RSQL parsing error (400) vs database error (500)
+		if strings.Contains(err.Error(), "RSQL") || strings.Contains(err.Error(), "not allowed") {
+			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("invalid RSQL query: %v", err), http.StatusBadRequest)
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
 		return

@@ -27,27 +27,27 @@ type AuthHandler struct {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	provider := r.URL.Query().Get("provider")
 	redirectURI := r.URL.Query().Get("redirect_uri")
-	
+
 	if provider == "" {
 		http.Error(w, "provider required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Get OAuth2 config for provider
 	oauth2Cfg, exists := config.Get().OAuth2[provider]
 	if !exists {
 		http.Error(w, "unknown provider", http.StatusBadRequest)
 		return
 	}
-	
-	providerCfg, err := auth.GetProviderConfig(provider, oauth2Cfg.ClientID, 
+
+	providerCfg, err := auth.GetProviderConfig(provider, oauth2Cfg.ClientID,
 		oauth2Cfg.ClientSecret, oauth2Cfg.RedirectURL, oauth2Cfg.Scopes)
 	if err != nil {
 		slog.Error("provider config failed", "provider", provider, "error", err)
 		http.Error(w, "provider configuration error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Generate PKCE
 	verifier, err := auth.GeneratePKCEVerifier()
 	if err != nil {
@@ -56,11 +56,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	challenge := auth.GeneratePKCEChallenge(verifier)
-	
+
 	// Generate state and nonce
 	state := auth.GenerateState()
 	nonce := auth.GenerateNonce()
-	
+
 	// Store state in database (10 min TTL)
 	authState := &models.AuthState{
 		ID:           state,
@@ -70,18 +70,18 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		RedirectURI:  redirectURI,
 		ExpiresAt:    time.Now().Add(10 * time.Minute),
 	}
-	
+
 	if err := h.db.CreateAuthState(authState); err != nil {
 		slog.Error("failed to store auth state", "error", err)
 		http.Error(w, "storage error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Build authorization URL
 	authURL := providerCfg.GetAuthURL(state, challenge)
-	
+
 	slog.Info("oauth2 login initiated", "provider", provider, "state", state[:8]+"...")
-	
+
 	// Redirect to provider
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }
@@ -91,12 +91,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	stateParam := r.URL.Query().Get("state")
 	code := r.URL.Query().Get("code")
-	
+
 	if stateParam == "" || code == "" {
 		http.Error(w, "missing state or code", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Get and validate state from database
 	authState, err := h.db.GetAuthState(stateParam)
 	if err != nil {
@@ -104,10 +104,10 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid or expired state", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Delete state (one-time use)
 	h.db.DeleteAuthState(stateParam)
-	
+
 	// Get provider config
 	oauth2Cfg := config.Get().OAuth2[authState.Provider]
 	providerCfg, err := auth.GetProviderConfig(authState.Provider, oauth2Cfg.ClientID,
@@ -116,7 +116,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "provider configuration error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Exchange code for token using PKCE verifier
 	token, err := providerCfg.ExchangeCode(code, authState.PKCEVerifier)
 	if err != nil {
@@ -124,7 +124,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "token exchange failed", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Get user info from provider
 	userInfo, err := providerCfg.GetUserInfo(token.AccessToken)
 	if err != nil {
@@ -132,12 +132,12 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to get user info", http.StatusInternalServerError)
 		return
 	}
-	
+
 	if !userInfo.EmailVerified {
 		http.Error(w, "email not verified with provider", http.StatusForbidden)
 		return
 	}
-	
+
 	// Find member by email in cl2007_members table
 	members, err := h.db.ReadMembers(true) // Get only valid members
 	if err != nil {
@@ -145,7 +145,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Find member by email
 	var member *models.Member
 	for _, m := range members {
@@ -154,13 +154,13 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	
+
 	if member == nil {
 		slog.Warn("email not registered in members table", "provider", authState.Provider, "email", userInfo.Email)
 		http.Error(w, "email not registered - please contact admin", http.StatusForbidden)
 		return
 	}
-	
+
 	slog.Info("member authenticated", "member_number", member.Number, "email", userInfo.Email, "provider", authState.Provider)
 
 	// Determine scopes based on member type
@@ -173,7 +173,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "token generation failed", http.StatusInternalServerError)
 		return
 	}
-	
+
 	slog.Info("login successful", "provider", authState.Provider, "member", member.Id, "email", userInfo.Email)
 
 	// If redirect_uri was provided, redirect with token
@@ -235,13 +235,13 @@ func (h *AuthHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
 		return
 	}
-	
+
 	member := auth.GetMember(r)
 	if member == nil {
 		http.Error(w, `{"error":"member not found"}`, http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"member": map[string]interface{}{
@@ -266,9 +266,9 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
 		return
 	}
-	
+
 	slog.Info("logout successful", "member_number", claims.MemberNumber, "email", claims.Email)
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
@@ -283,13 +283,13 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
 		return
 	}
-	
+
 	member := auth.GetMember(r)
 	if member == nil {
 		http.Error(w, `{"error":"member not found"}`, http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Generate new JWT with same scopes
 	newToken, err := auth.GenerateJWT(claims.MemberNumber, claims.Email, claims.Scopes, claims.Provider, config.GetJWTSecret())
 	if err != nil {
@@ -297,7 +297,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"access_token": newToken,
@@ -311,7 +311,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 func getScopesForMemberType(member *models.Member) []string {
 	// All valid members get basic scopes
 	if member.Isvalid != nil && *member.Isvalid {
-		return []string{"write:email", "write:image", "write:member", "read:member", "modify:entry", "write:arr", "read:article", "write:article"}
+		return []string{"write:email", "write:image", "write:member", "read:member", "modify:entry", "write:arr", "read:article", "write:article", "filtering"}
 	}
 	// Inactive members get limited access
 	return []string{"read:member", "read:article"}
