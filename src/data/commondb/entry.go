@@ -12,8 +12,8 @@ import (
 var (
 	// Virtual field mappings: user-facing names -> SQL expressions
 	entryVirtualMap = map[string]string{
-		"likes":    "COUNT(LikeRecords.id)", // Aggregate from 2003_likes
-		"kumpaner": "SideKicks.number",      // Field from cl2003_msgs_kumpaner
+		"likes":    "COUNT(DISTINCT LikeRecords.sig)", // Count unique signatures to avoid SideKick multiplication
+		"kumpaner": "SideKicks.number",                // Field from cl2003_msgs_kumpaner
 	}
 	
 	// Allowed keys after transformation (security allowlist)
@@ -23,8 +23,8 @@ var (
 		"cl2003_msgs.sig",
 		"cl2003_msgs.lat",
 		"cl2003_msgs.lon",
-		"COUNT(LikeRecords.id)", // Virtual: likes
-		"SideKicks.number",      // Virtual: kumpaner
+		"COUNT(DISTINCT LikeRecords.sig)", // Virtual: likes
+		"SideKicks.number",                // Virtual: kumpaner
 	}
 )
 
