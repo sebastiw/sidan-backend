@@ -1,9 +1,31 @@
 package commondb
 
 import (
+	"fmt"
 	"time"
 	
+	rsql "github.com/sebastiw/go-rsql-mysql"
 	"github.com/sebastiw/sidan-backend/src/models"
+)
+
+// RSQL configuration for entries filtering
+var (
+	// Virtual field mappings: user-facing names -> SQL expressions
+	entryVirtualMap = map[string]string{
+		"likes":    "COUNT(LikeRecords.id)", // Aggregate from 2003_likes
+		"kumpaner": "SideKicks.number",      // Field from cl2003_msgs_kumpaner
+	}
+	
+	// Allowed keys after transformation (security allowlist)
+	entryAllowedKeys = []string{
+		"cl2003_msgs.datetime",
+		"cl2003_msgs.msg",
+		"cl2003_msgs.sig",
+		"cl2003_msgs.lat",
+		"cl2003_msgs.lon",
+		"COUNT(LikeRecords.id)", // Virtual: likes
+		"SideKicks.number",      // Virtual: kumpaner
+	}
 )
 
 func (d *CommonDatabase) CreateEntry(entry *models.Entry) (*models.Entry, error) {
@@ -54,10 +76,49 @@ func (d *CommonDatabase) ReadEntry(id int64) (*models.Entry, error) {
 	return &entry, nil
 }
 
-func (d *CommonDatabase) ReadEntries(take int, skip int) ([]models.Entry, error) {
+func (d *CommonDatabase) ReadEntries(take int, skip int, rsqlFilter string) ([]models.Entry, error) {
 	var entries []models.Entry
+	
+	// Start with base query
+	query := d.DB.Model(&models.Entry{})
 
-	result := d.DB.Order("id DESC").
+	// If RSQL filtering requested, parse and apply
+	if rsqlFilter != "" {
+		// Create parser with key transformer
+		parser, err := rsql.NewParser(
+			rsql.MySQL(),
+			rsql.WithKeyTransformers(func(key string) string {
+				// Map virtual fields to SQL expressions
+				if sqlExpr, ok := entryVirtualMap[key]; ok {
+					return sqlExpr
+				}
+				// Prefix regular fields with table name for JOIN clarity
+				return "cl2003_msgs." + key
+			}),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("RSQL parser creation failed: %w", err)
+		}
+
+		// Parse RSQL query string to SQL
+		sqlHaving, err := parser.Process(rsqlFilter, rsql.SetAllowedKeys(entryAllowedKeys))
+		if err != nil {
+			return nil, fmt.Errorf("RSQL parse error: %w", err)
+		}
+
+		// Apply joins and filtering
+		// Using aliases that match entryVirtualMap
+		query = query.
+			Select("cl2003_msgs.*").
+			Joins("LEFT JOIN `2003_likes` LikeRecords ON LikeRecords.id = cl2003_msgs.id").
+			Joins("LEFT JOIN `cl2003_msgs_kumpaner` SideKicks ON SideKicks.id = cl2003_msgs.id").
+			Group("cl2003_msgs.id").
+			Having(sqlHaving)
+	}
+
+	// Execute query with ordering and pagination
+	result := query.
+		Order("cl2003_msgs.id DESC"). // Explicit table prefix to avoid ambiguity
 		Limit(take).
 		Offset(skip).
 		Preload("SideKicks").
@@ -68,8 +129,8 @@ func (d *CommonDatabase) ReadEntries(take int, skip int) ([]models.Entry, error)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	
-	// Compute virtual fields for each entry
+
+	// Post-process: compute virtual fields from loaded relationships
 	for i := range entries {
 		entries[i].Likes = int64(len(entries[i].LikeRecords))
 		entries[i].Secret = len(entries[i].Permissions) > 0
@@ -81,7 +142,7 @@ func (d *CommonDatabase) ReadEntries(take int, skip int) ([]models.Entry, error)
 			}
 		}
 	}
-	
+
 	return entries, nil
 }
 

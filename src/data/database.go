@@ -26,7 +26,7 @@ type Database interface {
 
 	CreateEntry(entry *models.Entry) (*models.Entry, error)
 	ReadEntry(id int64) (*models.Entry, error)
-	ReadEntries(take int, skip int) ([]models.Entry, error)
+	ReadEntries(take int, skip int, filter string) ([]models.Entry, error)
 	UpdateEntry(entry *models.Entry) (*models.Entry, error)
 	DeleteEntry(entry *models.Entry) (*models.Entry, error)
 	LikeEntry(entryId int64, sig string, host string) error
