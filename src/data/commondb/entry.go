@@ -23,8 +23,8 @@ var (
 		"cl2003_msgs.sig",
 		"cl2003_msgs.lat",
 		"cl2003_msgs.lon",
-		"COUNT(DISTINCT LikeRecords.sig)", // Virtual: likes
-		"SideKicks.number",                // Virtual: kumpaner
+		"COUNT(DISTINCT LikeRecords.sig, LikeRecords.host)", // Virtual: likes
+		"SideKicks.number", // Virtual: kumpaner
 	}
 )
 
