@@ -3,7 +3,7 @@ package commondb
 import (
 	"fmt"
 	"time"
-	
+
 	rsql "github.com/sebastiw/go-rsql-mysql"
 	"github.com/sebastiw/sidan-backend/src/models"
 )
@@ -12,10 +12,10 @@ import (
 var (
 	// Virtual field mappings: user-facing names -> SQL expressions
 	entryVirtualMap = map[string]string{
-		"likes":    "COUNT(DISTINCT LikeRecords.sig)", // Count unique signatures to avoid SideKick multiplication
-		"kumpaner": "SideKicks.number",                // Field from cl2003_msgs_kumpaner
+		"likes":    "COUNT(DISTINCT LikeRecords.sig, LikeRecords.host)", // Count unique signatures to avoid SideKick multiplication
+		"kumpaner": "SideKicks.number",                                  // Field from cl2003_msgs_kumpaner
 	}
-	
+
 	// Allowed keys after transformation (security allowlist)
 	entryAllowedKeys = []string{
 		"cl2003_msgs.datetime",
@@ -61,7 +61,7 @@ func (d *CommonDatabase) ReadEntry(id int64) (*models.Entry, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	
+
 	// Compute virtual fields
 	entry.Likes = int64(len(entry.LikeRecords))
 	entry.Secret = len(entry.Permissions) > 0
@@ -72,13 +72,13 @@ func (d *CommonDatabase) ReadEntry(id int64) (*models.Entry, error) {
 			break
 		}
 	}
-	
+
 	return &entry, nil
 }
 
 func (d *CommonDatabase) ReadEntries(take int, skip int, rsqlFilter string) ([]models.Entry, error) {
 	var entries []models.Entry
-	
+
 	// Start with base query
 	query := d.DB.Model(&models.Entry{})
 
