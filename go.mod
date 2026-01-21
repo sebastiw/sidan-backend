@@ -43,5 +43,3 @@ require (
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/sebastiw/go-rsql-mysql => github.com/sebastiw/go-rsql-mysql v0.0.0-20260118190419-633fc825b223
