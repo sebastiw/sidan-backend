@@ -134,6 +134,11 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !userInfo.EmailVerified {
+		if authState.RedirectURI != "" {
+			redirectURL := authState.RedirectURI + "?error=email_not_verified&error_description=" + url.QueryEscape("email not verified with provider")
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+			return
+		}
 		http.Error(w, "email not verified with provider", http.StatusForbidden)
 		return
 	}
@@ -157,6 +162,11 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	if member == nil {
 		slog.Warn("email not registered in members table", "provider", authState.Provider, "email", userInfo.Email)
+		if authState.RedirectURI != "" {
+			redirectURL := authState.RedirectURI + "?error=access_denied&error_description=" + url.QueryEscape("email not registered - please contact admin")
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+			return
+		}
 		http.Error(w, "email not registered - please contact admin", http.StatusForbidden)
 		return
 	}
