@@ -10,21 +10,19 @@ import (
 
 // RSQL configuration for entries filtering
 var (
-	// Virtual field mappings: user-facing names -> SQL expressions
 	entryVirtualMap = map[string]string{
-		"likes":    "COUNT(DISTINCT LikeRecords.sig, LikeRecords.host)", // Count unique signatures to avoid SideKick multiplication
-		"kumpaner": "SideKicks.number",                                  // Field from cl2003_msgs_kumpaner
+		"likes":    "COUNT(DISTINCT CONCAT(LikeRecords.sig, '|', LikeRecords.host))",
+		"kumpaner": "SideKicks.number",
 	}
 
-	// Allowed keys after transformation (security allowlist)
 	entryAllowedKeys = []string{
 		"cl2003_msgs.datetime",
 		"cl2003_msgs.msg",
 		"cl2003_msgs.sig",
 		"cl2003_msgs.lat",
 		"cl2003_msgs.lon",
-		"COUNT(DISTINCT LikeRecords.sig, LikeRecords.host)", // Virtual: likes
-		"SideKicks.number", // Virtual: kumpaner
+		"COUNT(DISTINCT CONCAT(LikeRecords.sig, '|', LikeRecords.host))",
+		"SideKicks.number",
 	}
 )
 
@@ -101,19 +99,32 @@ func (d *CommonDatabase) ReadEntries(take int, skip int, rsqlFilter string) ([]m
 		}
 
 		// Parse RSQL query string to SQL
-		sqlHaving, err := parser.Process(rsqlFilter, rsql.SetAllowedKeys(entryAllowedKeys))
+		sqlCondition, err := parser.Process(rsqlFilter, rsql.SetAllowedKeys(entryAllowedKeys))
 		if err != nil {
 			return nil, fmt.Errorf("RSQL parse error: %w", err)
 		}
 
-		// Apply joins and filtering
+		whereClause, havingClause := SplitWhereHaving(sqlCondition)
+
+		// Apply joins
 		// Using aliases that match entryVirtualMap
 		query = query.
 			Select("cl2003_msgs.*").
 			Joins("LEFT JOIN `2003_likes` LikeRecords ON LikeRecords.id = cl2003_msgs.id").
-			Joins("LEFT JOIN `cl2003_msgs_kumpaner` SideKicks ON SideKicks.id = cl2003_msgs.id").
-			Group("cl2003_msgs.id").
-			Having(sqlHaving)
+			Joins("LEFT JOIN `cl2003_msgs_kumpaner` SideKicks ON SideKicks.id = cl2003_msgs.id")
+
+		// Apply WHERE clause if there are non-aggregated conditions
+		if whereClause != "" {
+			query = query.Where(whereClause)
+		}
+
+		// Group by is always needed when we have joins with potential multiple rows
+		query = query.Group("cl2003_msgs.id")
+
+		// Apply HAVING clause if there are aggregated conditions
+		if havingClause != "" {
+			query = query.Having(havingClause)
+		}
 	}
 
 	// Execute query with ordering and pagination
