@@ -21,6 +21,7 @@ var (
 		"cl2003_msgs.sig",
 		"cl2003_msgs.lat",
 		"cl2003_msgs.lon",
+		"cl2003_msgs.enheter",
 		"COUNT(DISTINCT CONCAT(LikeRecords.sig, '|', LikeRecords.host))",
 		"SideKicks.number",
 	}
