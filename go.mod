@@ -8,10 +8,12 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/rs/cors v1.9.0
-	github.com/sebastiw/go-rsql-mysql v0.0.0
+	github.com/sebastiw/go-rsql-mysql v0.0.0-20260121215516-2e9f902553be
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gorm.io/driver/mysql v1.5.7
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 )
 
@@ -32,7 +34,6 @@ require (
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
@@ -41,7 +42,6 @@ require (
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
 replace github.com/sebastiw/go-rsql-mysql => github.com/sebastiw/go-rsql-mysql v0.0.0-20260118190419-633fc825b223
