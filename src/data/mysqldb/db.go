@@ -116,3 +116,28 @@ func (d *MySQLDatabase) DeleteAuthState(id string) error {
 func (d *MySQLDatabase) CleanupExpiredAuthStates() error {
 	return d.CommonDB.CleanupExpiredAuthStates()
 }
+
+// Device flow operations - delegated to CommonDB
+func (d *MySQLDatabase) CreateDeviceCode(code *models.DeviceCode) error {
+	return d.CommonDB.CreateDeviceCode(code)
+}
+
+func (d *MySQLDatabase) GetDeviceCodeByUserCode(userCode string) (*models.DeviceCode, error) {
+	return d.CommonDB.GetDeviceCodeByUserCode(userCode)
+}
+
+func (d *MySQLDatabase) GetDeviceCodeByDeviceCode(deviceCode string) (*models.DeviceCode, error) {
+	return d.CommonDB.GetDeviceCodeByDeviceCode(deviceCode)
+}
+
+func (d *MySQLDatabase) UpdateDeviceCode(code *models.DeviceCode) error {
+	return d.CommonDB.UpdateDeviceCode(code)
+}
+
+func (d *MySQLDatabase) DeleteDeviceCode(deviceCode string) error {
+	return d.CommonDB.DeleteDeviceCode(deviceCode)
+}
+
+func (d *MySQLDatabase) CleanupExpiredDeviceCodes() error {
+	return d.CommonDB.CleanupExpiredDeviceCodes()
+}
