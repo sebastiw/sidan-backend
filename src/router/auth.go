@@ -316,6 +316,76 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeviceVerify exchanges a Google access token (from device flow) for our JWT
+// POST /auth/device/verify
+// Body: {"access_token": "google-access-token"}
+func (h *AuthHandler) DeviceVerify(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.AccessToken == "" {
+		http.Error(w, `{"error":"access_token required"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Fetch user info from Google using the access token
+	userInfo, err := auth.FetchGoogleUserInfo(req.AccessToken)
+	if err != nil {
+		slog.Error("failed to verify google token", "error", err)
+		http.Error(w, `{"error":"invalid google token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if !userInfo.EmailVerified {
+		http.Error(w, `{"error":"email not verified with google"}`, http.StatusForbidden)
+		return
+	}
+
+	// Find member by email
+	members, err := h.db.ReadMembers(true)
+	if err != nil {
+		slog.Error("failed to read members", "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	var member *models.Member
+	for _, m := range members {
+		if m.Email != nil && *m.Email == userInfo.Email {
+			member = &m
+			break
+		}
+	}
+
+	if member == nil {
+		slog.Warn("device auth: email not registered", "email", userInfo.Email)
+		http.Error(w, `{"error":"email not registered"}`, http.StatusForbidden)
+		return
+	}
+
+	scopes := getScopesForMemberType(member)
+	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, "google-device", config.GetJWTSecret())
+	if err != nil {
+		slog.Error("JWT generation failed", "error", err)
+		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("device auth successful", "member", member.Number, "email", userInfo.Email)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token": jwtToken,
+		"token_type":   "Bearer",
+		"expires_in":   28800,
+		"member": map[string]interface{}{
+			"number": member.Number,
+			"email":  userInfo.Email,
+		},
+		"scopes": scopes,
+	})
+}
+
 // Helper functions
 
 func getScopesForMemberType(member *models.Member) []string {

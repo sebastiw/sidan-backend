@@ -201,6 +201,31 @@ func parseGitHubUserInfo(body []byte, accessToken string) (*UserInfo, error) {
 	}, nil
 }
 
+// FetchGoogleUserInfo fetches user info directly from Google using an access token
+func FetchGoogleUserInfo(accessToken string) (*UserInfo, error) {
+	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v2/userinfo", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("google userinfo failed: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return parseGoogleUserInfo(body)
+}
+
 func getGitHubEmail(accessToken string) (string, bool, error) {
 	req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
 	if err != nil {
