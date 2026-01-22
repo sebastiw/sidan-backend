@@ -638,6 +638,264 @@ paths:
           description: Unauthorized - requires write:article scope
         404:
           description: Article not found
+  /auth/device:
+    post:
+      summary: Request device authorization code
+      description: Initiates OAuth2 device flow for CLI and limited-input devices
+      tags:
+        - authentication
+      parameters:
+        - name: provider
+          in: query
+          description: OAuth2 provider (google, github)
+          required: true
+          schema:
+            type: string
+            enum: [google, github]
+      responses:
+        200:
+          description: Device code created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_code:
+                    type: string
+                    description: Device code for token polling
+                  user_code:
+                    type: string
+                    description: Human-friendly code (e.g., ABCD-1234)
+                  verification_uri:
+                    type: string
+                    description: URL for user verification
+                  expires_in:
+                    type: integer
+                    description: Seconds until code expires (600)
+                  interval:
+                    type: integer
+                    description: Polling interval in seconds (5)
+        400:
+          description: Invalid request or unknown provider
+  /auth/device/verify:
+    get:
+      summary: Device verification page
+      description: Web page where users verify device codes
+      tags:
+        - authentication
+      parameters:
+        - name: code
+          in: query
+          description: User code (e.g., ABCD-1234)
+          required: true
+          schema:
+            type: string
+        - name: provider
+          in: query
+          description: OAuth2 provider
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Verification page displayed
+          content:
+            text/html:
+              schema:
+                type: string
+        400:
+          description: Invalid or expired code
+  /auth/device/token:
+    post:
+      summary: Poll for device token
+      description: Device polls this endpoint to check if user has authorized
+      tags:
+        - authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - device_code
+                - grant_type
+              properties:
+                device_code:
+                  type: string
+                  description: Device code from /auth/device
+                grant_type:
+                  type: string
+                  enum: ["urn:ietf:params:oauth:grant-type:device_code"]
+      responses:
+        200:
+          description: Authorization complete, token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT Bearer token
+                  token_type:
+                    type: string
+                    example: Bearer
+                  expires_in:
+                    type: integer
+                    description: Token lifetime in seconds (28800)
+        400:
+          description: Pending authorization or error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum: [authorization_pending, expired_token]
+                  error_description:
+                    type: string
+  /auth/login:
+    get:
+      summary: Initiate OAuth2 login
+      description: Redirects to OAuth2 provider for authentication
+      tags:
+        - authentication
+      parameters:
+        - name: provider
+          in: query
+          description: OAuth2 provider (google, github)
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          description: Client redirect URI after auth
+          schema:
+            type: string
+      responses:
+        307:
+          description: Redirect to OAuth2 provider
+  /auth/callback:
+    get:
+      summary: OAuth2 callback
+      description: Handles OAuth2 callback and issues JWT token
+      tags:
+        - authentication
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+                  member:
+                    type: object
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+        307:
+          description: Redirect with token
+        400:
+          description: Invalid state or code
+        403:
+          description: Email not verified or not registered
+  /auth/session:
+    get:
+      summary: Get current session
+      description: Returns JWT claims and member info
+      tags:
+        - authentication
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Session information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member:
+                    type: object
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                  provider:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  issued_at:
+                    type: string
+                    format: date-time
+        401:
+          description: Unauthorized
+  /auth/refresh:
+    post:
+      summary: Refresh JWT token
+      description: Generates new JWT with same scopes
+      tags:
+        - authentication
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: New token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        401:
+          description: Unauthorized
+  /auth/logout:
+    post:
+      summary: Logout
+      description: Ends authentication (JWT remains valid until expiry)
+      tags:
+        - authentication
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        401:
+          description: Unauthorized
 components:
   securitySchemes:
     BearerAuth:
