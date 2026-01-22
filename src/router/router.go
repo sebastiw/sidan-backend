@@ -92,6 +92,13 @@ func Mux(db data.Database) http.Handler {
 	r.Handle("/auth/session", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.GetSession))).Methods("GET", "OPTIONS")
 	r.Handle("/auth/refresh", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Refresh))).Methods("POST", "OPTIONS")
 	r.Handle("/auth/logout", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Logout))).Methods("POST", "OPTIONS")
+	
+	// Device flow handlers (public endpoints)
+	deviceFlowHandler := NewDeviceFlowHandler(db)
+	r.HandleFunc("/auth/device", deviceFlowHandler.DeviceAuthRequest).Methods("POST", "OPTIONS")
+	r.HandleFunc("/auth/device/verify", deviceFlowHandler.DeviceVerifyPage).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/device/callback", deviceFlowHandler.DeviceCallback).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/device/token", deviceFlowHandler.DeviceToken).Methods("POST", "OPTIONS")
 
 	// Start cleanup job (runs every 15 minutes)
 	a.StartCleanupJob(db, 15*time.Minute)
