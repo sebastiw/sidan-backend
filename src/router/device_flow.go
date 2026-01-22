@@ -128,6 +128,14 @@ func (h *DeviceFlowHandler) DeviceVerifyPage(w http.ResponseWriter, r *http.Requ
 
 	// Show verification page with OAuth2 login option
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	
+	// Build callback URL with same protocol as request
+	protocol := "http"
+	if r.TLS != nil {
+		protocol = "https"
+	}
+	callbackURL := fmt.Sprintf("%s://%s/auth/device/callback?code=%s", protocol, r.Host, userCode)
+	
 	fmt.Fprintf(w, `<!DOCTYPE html>
 <html>
 <head>
@@ -148,9 +156,7 @@ body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; padd
 <a href="/auth/login?provider=%s&redirect_uri=%s" class="btn">Sign in with %s</a>
 <p><small>Code expires in 10 minutes</small></p>
 </body>
-</html>`, userCode, provider, provider, 
-		fmt.Sprintf("http://%s/auth/device/callback?code=%s", r.Host, userCode),
-		provider)
+</html>`, userCode, provider, provider, callbackURL, provider)
 }
 
 // DeviceCallback handles OAuth2 callback for device verification
@@ -254,6 +260,13 @@ func (h *DeviceFlowHandler) DeviceToken(w http.ResponseWriter, r *http.Request) 
 			"error":             "authorization_pending",
 			"error_description": "User has not yet authorized the device",
 		})
+		return
+	}
+
+	// Validate required fields are set
+	if deviceCode.MemberNumber == nil || deviceCode.Email == nil {
+		slog.Error("device code approved but missing member data", "device_code", req.DeviceCode)
+		http.Error(w, `{"error":"server_error"}`, http.StatusInternalServerError)
 		return
 	}
 

@@ -42,6 +42,16 @@ func (d *CommonDatabase) CleanupExpiredAuthStates() error {
 
 // DeviceCode operations
 
+// validateAndGetDeviceCode checks if device code exists and is not expired
+func (d *CommonDatabase) validateAndGetDeviceCode(code *models.DeviceCode) (*models.DeviceCode, error) {
+	// Check if expired
+	if code.ExpiresAt.Before(time.Now()) {
+		d.DB.Delete(code)
+		return nil, errors.New("device code expired")
+	}
+	return code, nil
+}
+
 func (d *CommonDatabase) CreateDeviceCode(code *models.DeviceCode) error {
 	result := d.DB.Create(code)
 	return result.Error
@@ -54,13 +64,7 @@ func (d *CommonDatabase) GetDeviceCodeByUserCode(userCode string) (*models.Devic
 		return nil, result.Error
 	}
 	
-	// Check if expired
-	if code.ExpiresAt.Before(time.Now()) {
-		d.DB.Delete(&code)
-		return nil, errors.New("device code expired")
-	}
-	
-	return &code, nil
+	return d.validateAndGetDeviceCode(&code)
 }
 
 func (d *CommonDatabase) GetDeviceCodeByDeviceCode(deviceCode string) (*models.DeviceCode, error) {
@@ -70,13 +74,7 @@ func (d *CommonDatabase) GetDeviceCodeByDeviceCode(deviceCode string) (*models.D
 		return nil, result.Error
 	}
 	
-	// Check if expired
-	if code.ExpiresAt.Before(time.Now()) {
-		d.DB.Delete(&code)
-		return nil, errors.New("device code expired")
-	}
-	
-	return &code, nil
+	return d.validateAndGetDeviceCode(&code)
 }
 
 func (d *CommonDatabase) UpdateDeviceCode(code *models.DeviceCode) error {
