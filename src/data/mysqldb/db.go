@@ -116,3 +116,21 @@ func (d *MySQLDatabase) DeleteAuthState(id string) error {
 func (d *MySQLDatabase) CleanupExpiredAuthStates() error {
 	return d.CommonDB.CleanupExpiredAuthStates()
 }
+
+// Device Auth operations - delegated to CommonDB
+
+func (d *MySQLDatabase) CreateDeviceAuthState(state *models.DeviceAuthState) error {
+	return d.CommonDB.CreateDeviceAuthState(state)
+}
+
+func (d *MySQLDatabase) GetDeviceAuthStateByDeviceCode(code string) (*models.DeviceAuthState, error) {
+	return d.CommonDB.GetDeviceAuthStateByDeviceCode(code)
+}
+
+func (d *MySQLDatabase) GetDeviceAuthStateByUserCode(code string) (*models.DeviceAuthState, error) {
+	return d.CommonDB.GetDeviceAuthStateByUserCode(code)
+}
+
+func (d *MySQLDatabase) UpdateDeviceAuthState(state *models.DeviceAuthState) error {
+	return d.CommonDB.UpdateDeviceAuthState(state)
+}
