@@ -284,6 +284,21 @@ func Mux(db data.Database) http.Handler {
 		),
 	).Methods("GET", "OPTIONS")
 
+	// F-Droid repository endpoints
+	// Upload must be registered before the file-server prefix to take precedence
+	fdroidH := NewFDroidHandler()
+	r.Handle("/repo/fdroid/upload",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteFDroidScope)(
+				http.HandlerFunc(fdroidH.uploadAPKHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
+	fdroidFileServer := http.FileServer(http.Dir(config.GetFDroid().RepoPath))
+	r.PathPrefix("/repo/fdroid/").Handler(
+		http.StripPrefix("/repo/fdroid/", fdroidFileServer),
+	).Methods("GET", "HEAD")
+
 	// r.HandleFunc("/db", defaultHandler)
 
 	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))

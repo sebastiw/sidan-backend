@@ -817,6 +817,58 @@ fi
 echo ""
 
 # ============================================================================
+echo -e "${CYAN}=== F-Droid Repository Tests ===${NC}\n"
+# ============================================================================
+
+# Test: index endpoint is reachable (200 if repo has content, 404 if empty — never 500)
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$BASE_URL/repo/fdroid/index-v1.json")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+if [ "$http_code" = "200" ] || [ "$http_code" = "404" ]; then
+    TOTAL_TESTS=$((TOTAL_TESTS + 1))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
+    echo -e "${GREEN}✓ PASS${NC}: F-Droid index endpoint reachable (HTTP $http_code)"
+else
+    TOTAL_TESTS=$((TOTAL_TESTS + 1))
+    FAILED_TESTS=$((FAILED_TESTS + 1))
+    FAILED_TEST_NAMES+=("F-Droid index endpoint reachable")
+    echo -e "${RED}✗ FAIL${NC}: Expected 200 or 404, got $http_code"
+fi
+
+# Test: upload without auth returns 401
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST "$BASE_URL/repo/fdroid/upload")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "F-Droid upload without auth SHOULD return 401" "401" "$http_code"
+
+# Test: upload with auth but missing apk field returns 400
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
+    -H "Authorization: Bearer $TOKEN_MEMBER_8" \
+    "$BASE_URL/repo/fdroid/upload")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "F-Droid upload with missing apk field SHOULD return 400" "400" "$http_code"
+
+# Test: upload with wrong file extension returns 400
+echo "not an apk" > /tmp/test_fdroid.txt
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
+    -H "Authorization: Bearer $TOKEN_MEMBER_8" \
+    -F "apk=@/tmp/test_fdroid.txt;filename=test.txt" \
+    "$BASE_URL/repo/fdroid/upload")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "F-Droid upload with .txt extension SHOULD return 400" "400" "$http_code"
+rm -f /tmp/test_fdroid.txt
+
+# Test: upload valid .apk extension but invalid content returns 422
+echo "not a real apk file" > /tmp/test_fdroid.apk
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
+    -H "Authorization: Bearer $TOKEN_MEMBER_8" \
+    -F "apk=@/tmp/test_fdroid.apk" \
+    "$BASE_URL/repo/fdroid/upload")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "F-Droid upload with invalid APK content SHOULD return 422" "422" "$http_code"
+rm -f /tmp/test_fdroid.apk
+
+echo ""
+
+# ============================================================================
 echo -e "${CYAN}=== Cleanup Created Entries ===${NC}\n"
 # ============================================================================
 
