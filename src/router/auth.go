@@ -316,28 +316,37 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeviceVerify exchanges a Google access token (from device flow) for our JWT
+// DeviceVerify exchanges a provider access token (from device flow) for our JWT
 // POST /auth/device/verify
-// Body: {"access_token": "google-access-token"}
+// Body: {"access_token": "...", "provider": "google"} (provider defaults to "google")
 func (h *AuthHandler) DeviceVerify(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		AccessToken string `json:"access_token"`
+		Provider    string `json:"provider"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.AccessToken == "" {
 		http.Error(w, `{"error":"access_token required"}`, http.StatusBadRequest)
 		return
 	}
+	if req.Provider == "" {
+		req.Provider = "google"
+	}
 
-	// Fetch user info from Google using the access token
-	userInfo, err := auth.FetchGoogleUserInfo(req.AccessToken)
+	// Fetch user info from the provider using the access token
+	providerCfg, err := auth.GetProviderConfig(req.Provider, "", "", "", nil)
 	if err != nil {
-		slog.Error("failed to verify google token", "error", err)
-		http.Error(w, `{"error":"invalid google token"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+	userInfo, err := providerCfg.GetUserInfo(req.AccessToken)
+	if err != nil {
+		slog.Error("failed to verify device token", "provider", req.Provider, "error", err)
+		http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 		return
 	}
 
 	if !userInfo.EmailVerified {
-		http.Error(w, `{"error":"email not verified with google"}`, http.StatusForbidden)
+		http.Error(w, `{"error":"email not verified"}`, http.StatusForbidden)
 		return
 	}
 
@@ -364,14 +373,14 @@ func (h *AuthHandler) DeviceVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	scopes := getScopesForMemberType(member)
-	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, "google-device", config.GetJWTSecret())
+	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, req.Provider+"-device", config.GetJWTSecret())
 	if err != nil {
 		slog.Error("JWT generation failed", "error", err)
 		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
 		return
 	}
 
-	slog.Info("device auth successful", "member", member.Number, "email", userInfo.Email)
+	slog.Info("device auth successful", "provider", req.Provider, "member", member.Number, "email", userInfo.Email)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{

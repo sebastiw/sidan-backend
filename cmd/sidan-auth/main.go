@@ -15,8 +15,32 @@ import (
 const (
 	googleDeviceURL = "https://oauth2.googleapis.com/device/code"
 	googleTokenURL  = "https://oauth2.googleapis.com/token"
+	githubDeviceURL = "https://github.com/login/device/code"
+	githubTokenURL  = "https://github.com/login/oauth/access_token"
 	defaultAPI      = "https://api.chalmerslosers.com"
 )
+
+type providerCfg struct {
+	clientIDEnv string
+	deviceURL   string
+	tokenURL    string
+	scope       string
+}
+
+var providers = map[string]providerCfg{
+	"google": {
+		clientIDEnv: "GOOGLE_CLIENT_ID",
+		deviceURL:   googleDeviceURL,
+		tokenURL:    googleTokenURL,
+		scope:       "email",
+	},
+	"github": {
+		clientIDEnv: "GITHUB_CLIENT_ID",
+		deviceURL:   githubDeviceURL,
+		tokenURL:    githubTokenURL,
+		scope:       "user:email",
+	},
+}
 
 type Config struct {
 	AccessToken string `json:"access_token"`
@@ -39,7 +63,11 @@ func main() {
 		}
 		switch os.Args[2] {
 		case "add":
-			tokenAdd()
+			provider := "google"
+			if len(os.Args) > 3 {
+				provider = os.Args[3]
+			}
+			tokenAdd(provider)
 		case "show":
 			tokenShow()
 		default:
@@ -56,19 +84,25 @@ func printUsage() {
 	fmt.Println("Usage: sidan-auth <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("  token add    Authenticate with Google and get API token")
-	fmt.Println("  token show   Show current token")
+	fmt.Println("  token add [provider]   Authenticate and get API token (provider: google, github; default: google)")
+	fmt.Println("  token show             Show current token")
 	fmt.Println()
 	fmt.Println("Environment:")
 	fmt.Println("  SIDAN_API_URL       API URL (default: https://api.chalmerslosers.com)")
-	fmt.Println("  GOOGLE_CLIENT_ID    Google OAuth2 client ID (required for token add)")
+	fmt.Println("  GOOGLE_CLIENT_ID    Google OAuth2 client ID (for token add google)")
+	fmt.Println("  GITHUB_CLIENT_ID    GitHub OAuth2 client ID (for token add github)")
 }
 
-func tokenAdd() {
-	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+func tokenAdd(provider string) {
+	pcfg, ok := providers[provider]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "Error: unsupported provider '%s'. Use 'google' or 'github'\n", provider)
+		os.Exit(1)
+	}
+
+	clientID := os.Getenv(pcfg.clientIDEnv)
 	if clientID == "" {
-		fmt.Fprintln(os.Stderr, "Error: GOOGLE_CLIENT_ID environment variable required")
-		fmt.Fprintln(os.Stderr, "Get it from Google Cloud Console > APIs & Services > Credentials")
+		fmt.Fprintf(os.Stderr, "Error: %s environment variable required\n", pcfg.clientIDEnv)
 		os.Exit(1)
 	}
 
@@ -77,33 +111,37 @@ func tokenAdd() {
 		apiURL = defaultAPI
 	}
 
-	// Step 1: Request device code from Google
-	deviceResp, err := requestDeviceCode(clientID)
+	// Step 1: Request device code
+	deviceResp, err := requestDeviceCode(clientID, pcfg.deviceURL, pcfg.scope)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error requesting device code: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Step 2: Display verification URL and code
+	verifyURL := deviceResp.VerificationURL
+	if verifyURL == "" {
+		verifyURL = deviceResp.VerificationURI
+	}
 	fmt.Println()
 	fmt.Println("To authenticate, visit:")
-	fmt.Printf("  %s\n", deviceResp.VerificationURL)
+	fmt.Printf("  %s\n", verifyURL)
 	fmt.Println()
 	fmt.Printf("And enter code: %s\n", deviceResp.UserCode)
 	fmt.Println()
 	fmt.Println("Waiting for authorization...")
 
-	// Step 3: Poll for Google token
-	googleToken, err := pollForToken(clientID, deviceResp)
+	// Step 3: Poll for provider token
+	providerToken, err := pollForToken(clientID, pcfg.tokenURL, deviceResp)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Google authorization successful!")
+	fmt.Printf("%s authorization successful!\n", provider)
 
-	// Step 4: Exchange Google token for our JWT
-	jwt, member, err := exchangeForJWT(apiURL, googleToken)
+	// Step 4: Exchange provider token for our JWT
+	jwt, member, err := exchangeForJWT(apiURL, provider, providerToken)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error exchanging token: %v\n", err)
 		os.Exit(1)
@@ -146,18 +184,19 @@ func tokenShow() {
 type DeviceCodeResponse struct {
 	DeviceCode      string `json:"device_code"`
 	UserCode        string `json:"user_code"`
-	VerificationURL string `json:"verification_url"`
+	VerificationURL string `json:"verification_url"` // Google
+	VerificationURI string `json:"verification_uri"` // GitHub
 	ExpiresIn       int    `json:"expires_in"`
 	Interval        int    `json:"interval"`
 }
 
-func requestDeviceCode(clientID string) (*DeviceCodeResponse, error) {
+func requestDeviceCode(clientID, deviceURL, scope string) (*DeviceCodeResponse, error) {
 	data := url.Values{
 		"client_id": {clientID},
-		"scope":     {"email"},
+		"scope":     {scope},
 	}
 
-	resp, err := http.PostForm(googleDeviceURL, data)
+	resp, err := http.PostForm(deviceURL, data)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +204,7 @@ func requestDeviceCode(clientID string) (*DeviceCodeResponse, error) {
 
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("google returned %d: %s", resp.StatusCode, body)
+		return nil, fmt.Errorf("provider returned %d: %s", resp.StatusCode, body)
 	}
 
 	var result DeviceCodeResponse
@@ -175,7 +214,7 @@ func requestDeviceCode(clientID string) (*DeviceCodeResponse, error) {
 	return &result, nil
 }
 
-func pollForToken(clientID string, device *DeviceCodeResponse) (string, error) {
+func pollForToken(clientID, tokenURL string, device *DeviceCodeResponse) (string, error) {
 	interval := time.Duration(device.Interval) * time.Second
 	if interval < 5*time.Second {
 		interval = 5 * time.Second
@@ -192,7 +231,7 @@ func pollForToken(clientID string, device *DeviceCodeResponse) (string, error) {
 			"grant_type":  {"urn:ietf:params:oauth:grant-type:device_code"},
 		}
 
-		resp, err := http.PostForm(googleTokenURL, data)
+		resp, err := http.PostForm(tokenURL, data)
 		if err != nil {
 			return "", err
 		}
@@ -231,8 +270,8 @@ type MemberInfo struct {
 	Email  string `json:"email"`
 }
 
-func exchangeForJWT(apiURL, googleToken string) (string, *MemberInfo, error) {
-	body, _ := json.Marshal(map[string]string{"access_token": googleToken})
+func exchangeForJWT(apiURL, provider, accessToken string) (string, *MemberInfo, error) {
+	body, _ := json.Marshal(map[string]string{"access_token": accessToken, "provider": provider})
 
 	resp, err := http.Post(apiURL+"/auth/device/verify", "application/json", bytes.NewReader(body))
 	if err != nil {

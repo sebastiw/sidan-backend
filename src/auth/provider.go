@@ -112,45 +112,47 @@ func (p *ProviderConfig) ExchangeCode(code, codeVerifier string) (*oauth2.Token,
 
 // GetUserInfo fetches user information from provider using access token
 func (p *ProviderConfig) GetUserInfo(accessToken string) (*UserInfo, error) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
+	client := oauth2.NewClient(ctx, ts)
+
 	req, err := http.NewRequest("GET", p.UserInfoURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	
+
 	// GitHub requires Accept header
 	if p.Name == "github" {
 		req.Header.Set("Accept", "application/json")
 	}
-	
-	client := &http.Client{}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("userinfo request failed: %d %s", resp.StatusCode, string(body))
 	}
-	
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Parse provider-specific response
 	switch p.Name {
 	case "google":
 		return parseGoogleUserInfo(body)
 	case "github":
-		return parseGitHubUserInfo(body, accessToken)
+		return parseGitHubUserInfo(body, client)
 	default:
 		return nil, errors.New("unknown provider")
 	}
 }
+
 
 func parseGoogleUserInfo(body []byte) (*UserInfo, error) {
 	var data struct {
@@ -174,24 +176,24 @@ func parseGoogleUserInfo(body []byte) (*UserInfo, error) {
 	}, nil
 }
 
-func parseGitHubUserInfo(body []byte, accessToken string) (*UserInfo, error) {
+func parseGitHubUserInfo(body []byte, client *http.Client) (*UserInfo, error) {
 	var data struct {
 		ID     int64  `json:"id"`
 		Login  string `json:"login"`
 		Name   string `json:"name"`
 		Avatar string `json:"avatar_url"`
 	}
-	
+
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, err
 	}
-	
+
 	// GitHub requires separate call for email
-	email, verified, err := getGitHubEmail(accessToken)
+	email, verified, err := getGitHubEmail(client)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &UserInfo{
 		ProviderUserID: fmt.Sprintf("%d", data.ID),
 		Email:          email,
@@ -201,41 +203,14 @@ func parseGitHubUserInfo(body []byte, accessToken string) (*UserInfo, error) {
 	}, nil
 }
 
-// FetchGoogleUserInfo fetches user info directly from Google using an access token
-func FetchGoogleUserInfo(accessToken string) (*UserInfo, error) {
-	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v2/userinfo", nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("google userinfo failed: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return parseGoogleUserInfo(body)
-}
-
-func getGitHubEmail(accessToken string) (string, bool, error) {
+func getGitHubEmail(client *http.Client) (string, bool, error) {
 	req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
 	if err != nil {
 		return "", false, err
 	}
-	
-	req.Header.Set("Authorization", "Bearer "+accessToken)
+
 	req.Header.Set("Accept", "application/json")
-	
-	client := &http.Client{}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", false, err
