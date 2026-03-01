@@ -16,7 +16,19 @@ type Configuration struct {
 	Database     DatabaseConfiguration
 	Mail         MailConfiguration
 	JWT          JWTConfiguration
+	FDroid       FDroidConfiguration
 	OAuth2       map[string]OAuth2Configuration
+}
+
+type FDroidConfiguration struct {
+	RepoName         string
+	RepoDescription  string
+	RepoAddress      string
+	RepoPath         string
+	KeystorePath     string
+	KeystorePassword string
+	KeyAlias         string
+	KeyPassword      string
 }
 
 type ServerConfiguration struct {
@@ -91,6 +103,11 @@ func ReadConfig(configuration *Configuration) {
 	viper.SetDefault("mail.port", "25")
 	viper.SetDefault("server.staticpath", "./static")
 	viper.SetDefault("jwt.expiryhours", 8)
+	viper.SetDefault("fdroid.reponame", "F-Droid Repository")
+	viper.SetDefault("fdroid.repodescription", "App repository")
+	viper.SetDefault("fdroid.repopath", "./static/fdroid/repo")
+	viper.SetDefault("fdroid.keystorepath", "./fdroid.keystore")
+	viper.SetDefault("fdroid.keyalias", "fdroid")
 
 	err := viper.Unmarshal(configuration)
 	if err != nil {
@@ -115,6 +132,10 @@ func GetServer() *ServerConfiguration {
 
 func GetMail() *MailConfiguration {
 	return &cfg.Mail
+}
+
+func GetFDroid() *FDroidConfiguration {
+	return &cfg.FDroid
 }
 
 func GetJWT() *JWTConfiguration {

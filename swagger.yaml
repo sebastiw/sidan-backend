@@ -638,6 +638,82 @@ paths:
           description: Unauthorized - requires write:article scope
         404:
           description: Article not found
+  /repo/fdroid/upload:
+    post:
+      summary: Upload an APK to the F-Droid repository
+      tags:
+        - fdroid
+      security:
+        - BearerAuth: []
+      description: >
+        Uploads an APK file, parses its metadata, writes a sidecar, and regenerates
+        the signed index-v1.jar. Requires the write:apk scope.
+        Package name, version, SDK levels and permissions are extracted automatically.
+        Supplementary fields are optional and can be updated by re-uploading.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                apk:
+                  type: string
+                  format: binary
+                  description: APK file (must have .apk extension)
+                name:
+                  type: string
+                  description: App display name
+                summary:
+                  type: string
+                  description: One-line description shown in F-Droid
+                description:
+                  type: string
+                  description: Full app description
+                license:
+                  type: string
+                  description: SPDX license identifier (e.g. MIT, Apache-2.0)
+                source_code:
+                  type: string
+                  description: URL to source code repository
+                categories:
+                  type: string
+                  description: Comma-separated category list (e.g. "Utilities,Internet")
+              required:
+                - apk
+      responses:
+        201:
+          description: APK uploaded, index regenerated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APKUploadResult'
+        400:
+          description: Missing file, wrong extension, or malformed request
+        401:
+          description: Unauthorized — requires write:apk scope
+        422:
+          description: File could not be parsed as a valid APK
+  /repo/fdroid/{filename}:
+    get:
+      summary: Download a file from the F-Droid repository
+      tags:
+        - fdroid
+      description: >
+        Serves static files from the repository directory: index-v1.jar, index-v1.json,
+        APK files, and icons. This is the endpoint the F-Droid client uses.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: File path relative to repo root (e.g. index-v1.jar, icons/com.example.app.png)
+      responses:
+        200:
+          description: File contents
+        404:
+          description: File not found
 components:
   securitySchemes:
     BearerAuth:
@@ -646,6 +722,17 @@ components:
       bearerFormat: JWT
       description: JWT Bearer token obtained from OAuth2 authentication flow (/auth/login?provider=google)
   schemas:
+    APKUploadResult:
+      type: object
+      properties:
+        package_name:
+          type: string
+          description: Android package name (e.g. com.example.myapp)
+        version_code:
+          type: integer
+          format: int64
+        version_name:
+          type: string
     FileDescriptor:
       type: object
       properties:

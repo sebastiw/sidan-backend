@@ -15,6 +15,16 @@ jwt:
   secret: "${JWT_SECRET}"
   expiryHours: 72
 
+fdroid:
+  repoName: "Sidan Apps"
+  repoDescription: "Chalmers Losers official app repository"
+  repoAddress: "https://api.chalmerslosers.com/repo/fdroid/repo"
+  repoPath: "./static/fdroid/repo"
+  keystorePath: "./fdroid.keystore"
+  keystorePassword: "changeme"
+  keyAlias: "fdroid"
+  keyPassword: "changeme"
+
 oauth2:
   sidan:
     clientId: "666"

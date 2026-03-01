@@ -14,6 +14,9 @@ config/prod.yaml
 # Built binary
 sidan-backend
 
+# F-Droid signing keystore — never commit, losing it breaks existing repo installs
+*.keystore
+
 # Remove sidan-backups and locally uploaded files
 static/*.png
 sidan-backups/
