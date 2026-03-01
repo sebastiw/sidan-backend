@@ -24,12 +24,10 @@ func main() {
 	fdroidCfg := config.GetFDroid()
 	os.MkdirAll(fdroidCfg.RepoPath+"/icons", 0755)
 
-	// Regenerate the signed index on startup if the repo already has content,
-	// so a fresh deploy never serves a stale JAR.
-	if metas, err := fdroid.LoadAllMeta(fdroidCfg.RepoPath); err == nil && len(metas) > 0 {
-		if err := fdroid.GenerateIndex(fdroidCfg.RepoPath, fdroidCfg); err != nil {
-			slog.Warn("F-Droid index regeneration on startup failed", "error", err)
-		}
+	// Always generate the signed index on startup so the F-Droid client can
+	// reach the repo even before any APKs have been uploaded.
+	if err := fdroid.GenerateIndex(fdroidCfg.RepoPath, fdroidCfg); err != nil {
+		slog.Warn("F-Droid index generation on startup failed (is jarsigner on PATH and keystore present?)", "error", err)
 	}
 
 	db, err := data.NewDatabase()
