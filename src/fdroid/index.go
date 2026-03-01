@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/sebastiw/sidan-backend/src/config"
@@ -68,7 +69,7 @@ type appMeta struct {
 	SourceCode           string   `json:"sourceCode"`
 	Added                int64    `json:"added"`
 	LastUpdated          int64    `json:"lastUpdated"`
-	SuggestedVersionCode int64    `json:"suggestedVersionCode"`
+	SuggestedVersionCode string   `json:"suggestedVersionCode"`
 	SuggestedVersionName string   `json:"suggestedVersionName"`
 	Icon                 string   `json:"icon"`
 }
@@ -126,7 +127,7 @@ func buildIndex(metas []APKMeta, cfg *config.FDroidConfiguration) fdroidIndex {
 			SourceCode:           latest.SourceCode,
 			Added:                versions[len(versions)-1].AddedMs, // oldest upload
 			LastUpdated:          latest.AddedMs,
-			SuggestedVersionCode: latest.VersionCode,
+			SuggestedVersionCode: strconv.FormatInt(latest.VersionCode, 10),
 			SuggestedVersionName: latest.VersionName,
 			Icon:                 "icons/" + pkgName + ".png",
 		})
