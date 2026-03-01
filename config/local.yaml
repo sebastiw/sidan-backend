@@ -18,7 +18,7 @@ jwt:
 fdroid:
   repoName: "Sidan Apps"
   repoDescription: "Chalmers Losers official app repository"
-  repoAddress: "https://api.chalmerslosers.com/repo/fdroid"
+  repoAddress: "https://api.chalmerslosers.com/repo/fdroid/repo"
   repoPath: "./static/fdroid/repo"
   keystorePath: "./fdroid.keystore"
   keystorePassword: "changeme"

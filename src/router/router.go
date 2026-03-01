@@ -295,8 +295,8 @@ func Mux(db data.Database) http.Handler {
 		),
 	).Methods("POST", "OPTIONS")
 	fdroidFileServer := http.FileServer(http.Dir(config.GetFDroid().RepoPath))
-	r.PathPrefix("/repo/fdroid/").Handler(
-		http.StripPrefix("/repo/fdroid/", fdroidFileServer),
+	r.PathPrefix("/repo/fdroid/repo/").Handler(
+		http.StripPrefix("/repo/fdroid/repo/", fdroidFileServer),
 	).Methods("GET", "HEAD")
 
 	// r.HandleFunc("/db", defaultHandler)

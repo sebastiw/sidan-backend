@@ -87,9 +87,12 @@ should have.
 
 ## /repo/fdroid/ — F-Droid app repository
 
-The backend hosts a private [F-Droid](https://f-droid.org)-compatible repository at
-`/repo/fdroid/`. Add it to the F-Droid client with the URL:
+The backend hosts a private [F-Droid](https://f-droid.org)-compatible repository.
+Add it to the F-Droid client with the URL:
 `https://api.chalmerslosers.com/repo/fdroid`
+
+F-Droid 1.20+ automatically appends `/repo` to this URL when fetching the index,
+so the actual files are served at `/repo/fdroid/repo/`.
 
 ### Uploading an app for the first time
 
