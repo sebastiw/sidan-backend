@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -21,24 +23,29 @@ const (
 )
 
 type providerCfg struct {
-	clientIDEnv string
-	deviceURL   string
-	tokenURL    string
-	scope       string
+	clientIDEnv     string
+	clientSecretEnv string
+	credentialsFile string // optional JSON credentials file env var
+	deviceURL       string
+	tokenURL        string
+	scope           string
 }
 
 var providers = map[string]providerCfg{
 	"google": {
-		clientIDEnv: "GOOGLE_CLIENT_ID",
-		deviceURL:   googleDeviceURL,
-		tokenURL:    googleTokenURL,
-		scope:       "email",
+		clientIDEnv:     "GOOGLE_CLIENT_ID",
+		clientSecretEnv: "GOOGLE_CLIENT_SECRET",
+		credentialsFile: "GOOGLE_CREDENTIALS_FILE",
+		deviceURL:       googleDeviceURL,
+		tokenURL:        googleTokenURL,
+		scope:           "email",
 	},
 	"github": {
-		clientIDEnv: "GITHUB_CLIENT_ID",
-		deviceURL:   githubDeviceURL,
-		tokenURL:    githubTokenURL,
-		scope:       "user:email",
+		clientIDEnv:     "GITHUB_CLIENT_ID",
+		clientSecretEnv: "GITHUB_CLIENT_SECRET",
+		deviceURL:       githubDeviceURL,
+		tokenURL:        githubTokenURL,
+		scope:           "user:email",
 	},
 }
 
@@ -88,9 +95,12 @@ func printUsage() {
 	fmt.Println("  token show             Show current token")
 	fmt.Println()
 	fmt.Println("Environment:")
-	fmt.Println("  SIDAN_API_URL       API URL (default: https://api.chalmerslosers.com)")
-	fmt.Println("  GOOGLE_CLIENT_ID    Google OAuth2 client ID (for token add google)")
-	fmt.Println("  GITHUB_CLIENT_ID    GitHub OAuth2 client ID (for token add github)")
+	fmt.Println("  SIDAN_API_URL            API URL (default: https://api.chalmerslosers.com)")
+	fmt.Println("  GOOGLE_CREDENTIALS_FILE  Path to Google credentials JSON file (for token add google)")
+	fmt.Println("  GOOGLE_CLIENT_ID         Google OAuth2 client ID (alternative to credentials file)")
+	fmt.Println("  GOOGLE_CLIENT_SECRET     Google OAuth2 client secret (alternative to credentials file)")
+	fmt.Println("  GITHUB_CLIENT_ID         GitHub OAuth2 client ID (for token add github)")
+	fmt.Println("  GITHUB_CLIENT_SECRET     GitHub OAuth2 client secret (for token add github)")
 }
 
 func tokenAdd(provider string) {
@@ -100,9 +110,26 @@ func tokenAdd(provider string) {
 		os.Exit(1)
 	}
 
-	clientID := os.Getenv(pcfg.clientIDEnv)
+	clientID, clientSecret := os.Getenv(pcfg.clientIDEnv), os.Getenv(pcfg.clientSecretEnv)
+
+	// For providers that support a credentials JSON file, try loading it
+	if clientID == "" && pcfg.credentialsFile != "" {
+		if path := os.Getenv(pcfg.credentialsFile); path != "" {
+			var err error
+			clientID, clientSecret, err = loadCredentialsFile(path)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error reading credentials file: %v\n", err)
+				os.Exit(1)
+			}
+		}
+	}
+
 	if clientID == "" {
-		fmt.Fprintf(os.Stderr, "Error: %s environment variable required\n", pcfg.clientIDEnv)
+		fmt.Fprintf(os.Stderr, "Error: set %s or %s\n", pcfg.credentialsFile, pcfg.clientIDEnv)
+		os.Exit(1)
+	}
+	if clientSecret == "" {
+		fmt.Fprintf(os.Stderr, "Error: %s environment variable required\n", pcfg.clientSecretEnv)
 		os.Exit(1)
 	}
 
@@ -118,21 +145,28 @@ func tokenAdd(provider string) {
 		os.Exit(1)
 	}
 
-	// Step 2: Display verification URL and code
-	verifyURL := deviceResp.VerificationURL
-	if verifyURL == "" {
-		verifyURL = deviceResp.VerificationURI
+	// Step 2: Open browser and display code
+	// Use verification_url_complete (code pre-filled) if available, otherwise construct it
+	baseURL := deviceResp.VerificationURL
+	if baseURL == "" {
+		baseURL = deviceResp.VerificationURI
+	}
+	browserURL := deviceResp.VerificationURLComplete
+	if browserURL == "" && deviceResp.UserCode != "" {
+		browserURL = baseURL + "?user_code=" + url.QueryEscape(deviceResp.UserCode)
 	}
 	fmt.Println()
-	fmt.Println("To authenticate, visit:")
-	fmt.Printf("  %s\n", verifyURL)
-	fmt.Println()
-	fmt.Printf("And enter code: %s\n", deviceResp.UserCode)
+	fmt.Printf("Code: %s\n", deviceResp.UserCode)
+	if openBrowser(browserURL) {
+		fmt.Println("Browser opened — approve the request to continue.")
+	} else {
+		fmt.Printf("Visit: %s\n", browserURL)
+	}
 	fmt.Println()
 	fmt.Println("Waiting for authorization...")
 
 	// Step 3: Poll for provider token
-	providerToken, err := pollForToken(clientID, pcfg.tokenURL, deviceResp)
+	providerToken, err := pollForToken(clientID, clientSecret, pcfg.tokenURL, deviceResp)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -182,12 +216,48 @@ func tokenShow() {
 // Google device flow types and functions
 
 type DeviceCodeResponse struct {
-	DeviceCode      string `json:"device_code"`
-	UserCode        string `json:"user_code"`
-	VerificationURL string `json:"verification_url"` // Google
-	VerificationURI string `json:"verification_uri"` // GitHub
-	ExpiresIn       int    `json:"expires_in"`
-	Interval        int    `json:"interval"`
+	DeviceCode              string `json:"device_code"`
+	UserCode                string `json:"user_code"`
+	VerificationURL         string `json:"verification_url"`          // Google
+	VerificationURLComplete string `json:"verification_url_complete"` // Google: code pre-filled
+	VerificationURI         string `json:"verification_uri"`          // GitHub
+	ExpiresIn               int    `json:"expires_in"`
+	Interval                int    `json:"interval"`
+}
+
+func loadCredentialsFile(path string) (clientID, clientSecret string, err error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", "", err
+	}
+	var f struct {
+		Installed struct {
+			ClientID     string `json:"client_id"`
+			ClientSecret string `json:"client_secret"`
+		} `json:"installed"`
+	}
+	if err := json.Unmarshal(data, &f); err != nil {
+		return "", "", err
+	}
+	if f.Installed.ClientID == "" {
+		return "", "", fmt.Errorf("client_id not found in %s", path)
+	}
+	return f.Installed.ClientID, f.Installed.ClientSecret, nil
+}
+
+func openBrowser(url string) bool {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("xdg-open", url)
+	case "darwin":
+		cmd = exec.Command("open", url)
+	case "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	default:
+		return false
+	}
+	return cmd.Start() == nil
 }
 
 func requestDeviceCode(clientID, deviceURL, scope string) (*DeviceCodeResponse, error) {
@@ -214,7 +284,7 @@ func requestDeviceCode(clientID, deviceURL, scope string) (*DeviceCodeResponse, 
 	return &result, nil
 }
 
-func pollForToken(clientID, tokenURL string, device *DeviceCodeResponse) (string, error) {
+func pollForToken(clientID, clientSecret, tokenURL string, device *DeviceCodeResponse) (string, error) {
 	interval := time.Duration(device.Interval) * time.Second
 	if interval < 5*time.Second {
 		interval = 5 * time.Second
@@ -226,9 +296,10 @@ func pollForToken(clientID, tokenURL string, device *DeviceCodeResponse) (string
 		time.Sleep(interval)
 
 		data := url.Values{
-			"client_id":   {clientID},
-			"device_code": {device.DeviceCode},
-			"grant_type":  {"urn:ietf:params:oauth:grant-type:device_code"},
+			"client_id":     {clientID},
+			"client_secret": {clientSecret},
+			"device_code":   {device.DeviceCode},
+			"grant_type":    {"urn:ietf:params:oauth:grant-type:device_code"},
 		}
 
 		resp, err := http.PostForm(tokenURL, data)
@@ -256,7 +327,7 @@ func pollForToken(clientID, tokenURL string, device *DeviceCodeResponse) (string
 		case "access_denied":
 			return "", fmt.Errorf("access denied by user")
 		default:
-			return "", fmt.Errorf("google error: %s", result.Error)
+			return "", fmt.Errorf("provider error: %s", result.Error)
 		}
 	}
 
