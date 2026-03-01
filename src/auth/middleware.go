@@ -22,6 +22,7 @@ const (
 	ReadArticleScope  = "read:article"
 	WriteArticleScope = "write:article"
 	FilteringScope    = "filtering"
+	WriteFDroidScope  = "write:apk"
 )
 
 // Context keys for storing auth data in request context
