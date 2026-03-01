@@ -99,7 +99,7 @@ func buildIndex(metas []APKMeta, cfg *config.FDroidConfiguration) fdroidIndex {
 			Timestamp:   time.Now().UnixMilli(),
 			Version:     20002,
 			Name:        cfg.RepoName,
-			Icon:        "",
+			Icon:        "icon.png",
 			Address:     cfg.RepoAddress,
 			Description: cfg.RepoDescription,
 			Mirrors:     []string{},
