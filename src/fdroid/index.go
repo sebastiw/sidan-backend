@@ -175,8 +175,8 @@ func signIndex(repoPath string, cfg *config.FDroidConfiguration) error {
 		"-keystore", cfg.KeystorePath,
 		"-storepass", cfg.KeystorePassword,
 		"-keypass", cfg.KeyPassword,
-		"-sigalg", "SHA256withRSA",
-		"-digestalg", "SHA-256",
+		"-sigalg", "SHA1withRSA",
+		"-digestalg", "SHA1",
 		jarPath,
 		cfg.KeyAlias,
 	)
