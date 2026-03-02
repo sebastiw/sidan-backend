@@ -114,6 +114,52 @@ func (c *manifestCapture) EncodeToken(t xml.Token) error {
 
 func (c *manifestCapture) Flush() error { return nil }
 
+// iconCandidates lists icon paths to try in order of preference (highest DPI first).
+var iconCandidates = []string{
+	"res/mipmap-xxxhdpi/ic_launcher.png",
+	"res/mipmap-xxhdpi/ic_launcher.png",
+	"res/mipmap-xhdpi/ic_launcher.png",
+	"res/mipmap-hdpi/ic_launcher.png",
+	"res/mipmap-mdpi/ic_launcher.png",
+	"res/drawable-xxxhdpi/ic_launcher.png",
+	"res/drawable-xxhdpi/ic_launcher.png",
+	"res/drawable-xhdpi/ic_launcher.png",
+	"res/drawable-hdpi/ic_launcher.png",
+	"res/drawable-mdpi/ic_launcher.png",
+}
+
+// ExtractIcon extracts the app icon from the APK and writes it to destPath.
+func ExtractIcon(apkPath, destPath string) error {
+	zr, err := zip.OpenReader(apkPath)
+	if err != nil {
+		return err
+	}
+	defer zr.Close()
+
+	index := make(map[string]*zip.File, len(zr.File))
+	for _, f := range zr.File {
+		index[f.Name] = f
+	}
+
+	for _, candidate := range iconCandidates {
+		f, ok := index[candidate]
+		if !ok {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(destPath, data, 0644)
+	}
+	return errors.New("no icon found in APK")
+}
+
 // scanAPKZip scans the APK ZIP for native code ABIs and the signing certificate.
 // Errors are silently ignored — these fields are best-effort.
 func scanAPKZip(apkPath string, info *APKInfo) {

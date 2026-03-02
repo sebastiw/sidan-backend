@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -85,6 +86,11 @@ func (fh FDroidHandler) uploadAPKHandler(w http.ResponseWriter, r *http.Request)
 		License:          r.FormValue("license"),
 		SourceCode:       r.FormValue("source_code"),
 		Categories:       r.FormValue("categories"),
+	}
+
+	iconPath := filepath.Join(cfg.RepoPath, "icons", fmt.Sprintf("%s.%d.png", info.PackageName, info.VersionCode))
+	if err := fdroid.ExtractIcon(destPath, iconPath); err != nil {
+		slog.Warn("could not extract icon from APK", "error", err)
 	}
 
 	if err := fdroid.WriteSidecar(meta, destPath); err != nil {
