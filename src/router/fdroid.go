@@ -89,7 +89,7 @@ func (fh FDroidHandler) uploadAPKHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	iconPath := filepath.Join(cfg.RepoPath, "icons", fmt.Sprintf("%s.%d.png", info.PackageName, info.VersionCode))
-	if err := fdroid.ExtractIcon(destPath, iconPath); err != nil {
+	if err := fdroid.ExtractIcon(destPath, iconPath, info.Icon); err != nil {
 		slog.Warn("could not extract icon from APK", "error", err)
 	}
 
