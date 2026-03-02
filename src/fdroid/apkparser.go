@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/asn1"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/xml"
 	"errors"
@@ -32,6 +33,7 @@ type APKInfo struct {
 	Signer           string   // SHA256 of signing certificate DER
 	Hash             string   // SHA256 of the entire APK file
 	Size             int64
+	Icon             string // resolved icon path within the APK ZIP (may be empty or an XML adaptive icon)
 }
 
 // ParseAPK extracts metadata from an APK file at the given path.
@@ -108,13 +110,19 @@ func (c *manifestCapture) EncodeToken(t xml.Token) error {
 				c.info.Features = append(c.info.Features, attr.Value)
 			}
 		}
+	case "application":
+		for _, attr := range start.Attr {
+			if attr.Name.Local == "icon" && c.info.Icon == "" {
+				c.info.Icon = attr.Value
+			}
+		}
 	}
 	return nil
 }
 
 func (c *manifestCapture) Flush() error { return nil }
 
-// iconCandidates lists icon paths to try in order of preference (highest DPI first).
+// iconCandidates lists well-known icon paths for non-obfuscated APKs (highest DPI first).
 var iconCandidates = []string{
 	"res/mipmap-xxxhdpi/ic_launcher.png",
 	"res/mipmap-xxhdpi/ic_launcher.png",
@@ -128,8 +136,13 @@ var iconCandidates = []string{
 	"res/drawable-mdpi/ic_launcher.png",
 }
 
+// standardIconSizes lists standard Android launcher icon dimensions in pixels,
+// ordered from highest to lowest DPI preference.
+var standardIconSizes = []int{192, 144, 96, 72, 48}
+
 // ExtractIcon extracts the app icon from the APK and writes it to destPath.
-func ExtractIcon(apkPath, destPath string) error {
+// iconHint is the icon path resolved from the manifest (info.Icon); may be empty or an XML path.
+func ExtractIcon(apkPath, destPath, iconHint string) error {
 	zr, err := zip.OpenReader(apkPath)
 	if err != nil {
 		return err
@@ -141,19 +154,101 @@ func ExtractIcon(apkPath, destPath string) error {
 		index[f.Name] = f
 	}
 
-	for _, candidate := range iconCandidates {
-		f, ok := index[candidate]
+	tryExtract := func(name string) bool {
+		f, ok := index[name]
 		if !ok {
-			continue
+			return false
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return err
+			return false
 		}
 		data, err := io.ReadAll(rc)
 		rc.Close()
 		if err != nil {
-			return err
+			return false
+		}
+		return os.WriteFile(destPath, data, 0644) == nil
+	}
+
+	// 1. Try the manifest-resolved path if it's a raster image (not an XML adaptive icon).
+	lower := strings.ToLower(iconHint)
+	if iconHint != "" && !strings.HasSuffix(lower, ".xml") {
+		if tryExtract(iconHint) {
+			return nil
+		}
+	}
+
+	// 2. Try well-known paths for non-obfuscated APKs.
+	for _, candidate := range iconCandidates {
+		if tryExtract(candidate) {
+			return nil
+		}
+	}
+
+	// 3. Fallback: scan for square PNGs at standard launcher icon dimensions.
+	// This handles obfuscated APKs (e.g. Flutter release builds with R8 resource shrinking)
+	// where icons have short random names in a flat res/ directory.
+	return extractIconByDimensions(zr.File, destPath)
+}
+
+// extractIconByDimensions scans ZIP entries for PNGs whose dimensions match standard
+// Android launcher icon sizes, preferring the highest DPI and largest file at each size.
+func extractIconByDimensions(files []*zip.File, destPath string) error {
+	type candidate struct {
+		f        *zip.File
+		fileSize uint64
+	}
+	best := make(map[int]candidate)
+
+	for _, f := range files {
+		name := f.Name
+		if !strings.HasPrefix(name, "res/") || strings.HasSuffix(name, ".9.png") {
+			continue
+		}
+		if !strings.HasSuffix(name, ".png") && !strings.HasSuffix(name, ".webp") {
+			continue
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			continue
+		}
+		hdr := make([]byte, 24)
+		n, _ := io.ReadFull(rc, hdr)
+		rc.Close()
+		if n < 24 || string(hdr[:8]) != "\x89PNG\r\n\x1a\n" {
+			continue
+		}
+
+		w := int(binary.BigEndian.Uint32(hdr[16:20]))
+		h := int(binary.BigEndian.Uint32(hdr[20:24]))
+		if w != h {
+			continue
+		}
+		for _, size := range standardIconSizes {
+			if w == size {
+				if c, exists := best[size]; !exists || f.UncompressedSize64 > c.fileSize {
+					best[size] = candidate{f, f.UncompressedSize64}
+				}
+				break
+			}
+		}
+	}
+
+	for _, size := range standardIconSizes {
+		c, ok := best[size]
+		if !ok {
+			continue
+		}
+		rc, err := c.f.Open()
+		if err != nil {
+			continue
+		}
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			continue
 		}
 		return os.WriteFile(destPath, data, 0644)
 	}
