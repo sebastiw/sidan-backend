@@ -47,6 +47,7 @@ type fdroidIndex struct {
 type repoMeta struct {
 	Timestamp   int64    `json:"timestamp"`
 	Version     int      `json:"version"`
+	MaxAge      int      `json:"maxage"`
 	Name        string   `json:"name"`
 	Icon        string   `json:"icon"`
 	Address     string   `json:"address"`
@@ -74,17 +75,27 @@ type appMeta struct {
 	Icon                 string   `json:"icon"`
 }
 
+// permission serialises as a 2-element JSON array [name, maxSdkVersion|null]
+// matching the F-Droid index-v1 spec.
+type permission [2]interface{}
+
 type packageMeta struct {
-	VersionCode      int64    `json:"versionCode"`
-	VersionName      string   `json:"versionName"`
-	ApkName          string   `json:"apkName"`
-	Hash             string   `json:"hash"`
-	HashType         string   `json:"hashType"`
-	Size             int64    `json:"size"`
-	MinSdkVersion    int      `json:"minSdkVersion"`
-	TargetSdkVersion int      `json:"targetSdkVersion"`
-	Permissions      []string `json:"uses-permission"`
-	Added            int64    `json:"added"`
+	PackageName      string       `json:"packageName"`
+	VersionCode      int64        `json:"versionCode"`
+	VersionName      string       `json:"versionName"`
+	ApkName          string       `json:"apkName"`
+	Hash             string       `json:"hash"`
+	HashType         string       `json:"hashType"`
+	Sig              string       `json:"sig,omitempty"`
+	Signer           string       `json:"signer,omitempty"`
+	Size             int64        `json:"size"`
+	MinSdkVersion    int          `json:"minSdkVersion"`
+	TargetSdkVersion int          `json:"targetSdkVersion"`
+	Permissions      []permission `json:"uses-permission"`
+	PermissionsSDK23 []permission `json:"uses-permission-sdk-23,omitempty"`
+	Features         []string     `json:"features,omitempty"`   // informational: hardware/software features
+	NativeCode       []string     `json:"nativecode,omitempty"` // informational: ABI list
+	Added            int64        `json:"added"`
 }
 
 // --- index building ---
@@ -99,6 +110,7 @@ func buildIndex(metas []APKMeta, cfg *config.FDroidConfiguration) fdroidIndex {
 		Repo: repoMeta{
 			Timestamp:   time.Now().UnixMilli(),
 			Version:     20002,
+			MaxAge:      14,
 			Name:        cfg.RepoName,
 			Icon:        "icon.png",
 			Address:     cfg.RepoAddress,
@@ -129,25 +141,28 @@ func buildIndex(metas []APKMeta, cfg *config.FDroidConfiguration) fdroidIndex {
 			LastUpdated:          latest.AddedMs,
 			SuggestedVersionCode: strconv.FormatInt(latest.VersionCode, 10),
 			SuggestedVersionName: latest.VersionName,
-			Icon:                 "icons/" + pkgName + ".png",
+			// F-Droid client prepends "icons/" itself when fetching
+			Icon: fmt.Sprintf("%s.%d.png", pkgName, latest.VersionCode),
 		})
 
 		pkgs := make([]packageMeta, 0, len(versions))
 		for _, v := range versions {
-			perms := v.Permissions
-			if perms == nil {
-				perms = []string{}
-			}
 			pkgs = append(pkgs, packageMeta{
+				PackageName:      v.PackageName,
 				VersionCode:      v.VersionCode,
 				VersionName:      v.VersionName,
 				ApkName:          v.ApkName,
 				Hash:             v.Hash,
 				HashType:         "sha256",
+				Sig:              v.Sig,
+				Signer:           v.Signer,
 				Size:             v.Size,
 				MinSdkVersion:    v.MinSdkVersion,
 				TargetSdkVersion: v.TargetSdkVersion,
-				Permissions:      perms,
+				Permissions:      toPermissions(v.Permissions),
+				PermissionsSDK23: toPermissions(v.PermissionsSDK23),
+				Features:         v.Features,
+				NativeCode:       v.NativeCode,
 				Added:            v.AddedMs,
 			})
 		}
@@ -218,6 +233,16 @@ func buildJar(jarPath, repoPath string) error {
 	jf.Write(jsonData)
 
 	return w.Close()
+}
+
+// toPermissions converts a flat list of permission names to the F-Droid index-v1
+// format: each entry is a 2-element array [name, maxSdkVersion|null].
+func toPermissions(names []string) []permission {
+	perms := make([]permission, len(names))
+	for i, name := range names {
+		perms[i] = permission{name, nil}
+	}
+	return perms
 }
 
 func coalesce(vals ...string) string {

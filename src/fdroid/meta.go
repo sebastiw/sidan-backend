@@ -20,6 +20,11 @@ type APKMeta struct {
 	MinSdkVersion    int      `json:"min_sdk_version"`
 	TargetSdkVersion int      `json:"target_sdk_version"`
 	Permissions      []string `json:"permissions"`
+	PermissionsSDK23 []string `json:"permissions_sdk23"`
+	Features         []string `json:"features"`    // informational: hardware/software features
+	NativeCode       []string `json:"native_code"` // informational: ABI list
+	Sig              string   `json:"sig"`
+	Signer           string   `json:"signer"`
 	AddedMs          int64    `json:"added_ms"` // unix milliseconds at upload time
 
 	// Supplementary — provided optionally at upload time, stored as-is
