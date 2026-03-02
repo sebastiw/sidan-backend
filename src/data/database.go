@@ -55,6 +55,12 @@ type Database interface {
 	GetAuthState(id string) (*models.AuthState, error)
 	DeleteAuthState(id string) error
 	CleanupExpiredAuthStates() error
+
+	// Device Auth operations
+	CreateDeviceAuthState(state *models.DeviceAuthState) error
+	GetDeviceAuthStateByDeviceCode(code string) (*models.DeviceAuthState, error)
+	GetDeviceAuthStateByUserCode(code string) (*models.DeviceAuthState, error)
+	UpdateDeviceAuthState(state *models.DeviceAuthState) error
 }
 
 func NewDatabase() (Database, error) {
