@@ -316,6 +316,85 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeviceVerify exchanges a provider access token (from device flow) for our JWT
+// POST /auth/device/verify
+// Body: {"access_token": "...", "provider": "google"} (provider defaults to "google")
+func (h *AuthHandler) DeviceVerify(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		AccessToken string `json:"access_token"`
+		Provider    string `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.AccessToken == "" {
+		http.Error(w, `{"error":"access_token required"}`, http.StatusBadRequest)
+		return
+	}
+	if req.Provider == "" {
+		req.Provider = "google"
+	}
+
+	// Fetch user info from the provider using the access token
+	providerCfg, err := auth.GetProviderConfig(req.Provider, "", "", "", nil)
+	if err != nil {
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+	userInfo, err := providerCfg.GetUserInfo(req.AccessToken)
+	if err != nil {
+		slog.Error("failed to verify device token", "provider", req.Provider, "error", err)
+		http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if !userInfo.EmailVerified {
+		http.Error(w, `{"error":"email not verified"}`, http.StatusForbidden)
+		return
+	}
+
+	// Find member by email
+	members, err := h.db.ReadMembers(true)
+	if err != nil {
+		slog.Error("failed to read members", "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	var member *models.Member
+	for _, m := range members {
+		if m.Email != nil && *m.Email == userInfo.Email {
+			member = &m
+			break
+		}
+	}
+
+	if member == nil {
+		slog.Warn("device auth: email not registered", "email", userInfo.Email)
+		http.Error(w, `{"error":"email not registered"}`, http.StatusForbidden)
+		return
+	}
+
+	scopes := getScopesForMemberType(member)
+	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, req.Provider+"-device", config.GetJWTSecret())
+	if err != nil {
+		slog.Error("JWT generation failed", "error", err)
+		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("device auth successful", "provider", req.Provider, "member", member.Number, "email", userInfo.Email)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token": jwtToken,
+		"token_type":   "Bearer",
+		"expires_in":   28800,
+		"member": map[string]interface{}{
+			"number": member.Number,
+			"email":  userInfo.Email,
+		},
+		"scopes": scopes,
+	})
+}
+
 // Helper functions
 
 func getScopesForMemberType(member *models.Member) []string {
