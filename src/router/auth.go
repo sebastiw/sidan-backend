@@ -335,7 +335,8 @@ func (h *AuthHandler) DeviceStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	providerCfg, err := auth.GetProviderConfig(req.Provider, oauth2Cfg.ClientID, oauth2Cfg.ClientSecret, "", oauth2Cfg.Scopes)
+	deviceClientID, deviceClientSecret := oauth2Cfg.DeviceCredentials()
+	providerCfg, err := auth.GetProviderConfig(req.Provider, deviceClientID, deviceClientSecret, "", oauth2Cfg.Scopes)
 	if err != nil {
 		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
 		return
@@ -399,7 +400,8 @@ func (h *AuthHandler) DevicePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	oauth2Cfg := config.Get().OAuth2[authState.Provider]
-	providerCfg, err := auth.GetProviderConfig(authState.Provider, oauth2Cfg.ClientID, oauth2Cfg.ClientSecret, "", nil)
+	deviceClientID, deviceClientSecret := oauth2Cfg.DeviceCredentials()
+	providerCfg, err := auth.GetProviderConfig(authState.Provider, deviceClientID, deviceClientSecret, "", nil)
 	if err != nil {
 		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
 		return
@@ -587,7 +589,8 @@ func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	providerCfg, err := auth.GetProviderConfig(req.Provider, oauth2Cfg.ClientID, oauth2Cfg.ClientSecret, "", nil)
+	deviceClientID, deviceClientSecret := oauth2Cfg.DeviceCredentials()
+	providerCfg, err := auth.GetProviderConfig(req.Provider, deviceClientID, deviceClientSecret, "", nil)
 	if err != nil {
 		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
 		return
