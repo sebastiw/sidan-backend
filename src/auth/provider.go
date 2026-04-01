@@ -15,6 +15,11 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+var (
+	ErrAuthPending = errors.New("authorization_pending")
+	ErrSlowDown    = errors.New("slow_down")
+)
+
 // ProviderConfig holds OAuth2 provider configuration
 type ProviderConfig struct {
 	Name         string
@@ -22,10 +27,10 @@ type ProviderConfig struct {
 	ClientSecret string
 	RedirectURL  string
 	Scopes       []string
-	AuthURL      string
-	TokenURL     string
+	Endpoint     oauth2.Endpoint
 	UserInfoURL  string
 }
+
 
 // UserInfo represents user information from OAuth2 provider
 type UserInfo struct {
@@ -46,8 +51,7 @@ func GetProviderConfig(provider string, clientID, clientSecret, redirectURL stri
 			ClientSecret: clientSecret,
 			RedirectURL:  redirectURL,
 			Scopes:       scopes,
-			AuthURL:      google.Endpoint.AuthURL,
-			TokenURL:     google.Endpoint.TokenURL,
+			Endpoint:     google.Endpoint,
 			UserInfoURL:  "https://www.googleapis.com/oauth2/v2/userinfo",
 		}, nil
 	case "github":
@@ -57,8 +61,7 @@ func GetProviderConfig(provider string, clientID, clientSecret, redirectURL stri
 			ClientSecret: clientSecret,
 			RedirectURL:  redirectURL,
 			Scopes:       scopes,
-			AuthURL:      github.Endpoint.AuthURL,
-			TokenURL:     github.Endpoint.TokenURL,
+			Endpoint:     github.Endpoint,
 			UserInfoURL:  "https://api.github.com/user",
 		}, nil
 	default:
@@ -77,14 +80,14 @@ func (p *ProviderConfig) GetAuthURL(state, codeChallenge string) string {
 		"code_challenge":        {codeChallenge},
 		"code_challenge_method": {"S256"},
 	}
-	
+
 	// Google-specific: add access_type for refresh token
 	if p.Name == "google" {
 		params.Set("access_type", "offline")
 		params.Set("prompt", "consent")
 	}
-	
-	return p.AuthURL + "?" + params.Encode()
+
+	return p.Endpoint.AuthURL + "?" + params.Encode()
 }
 
 // ExchangeCode exchanges authorization code for access token
@@ -94,20 +97,92 @@ func (p *ProviderConfig) ExchangeCode(code, codeVerifier string) (*oauth2.Token,
 		ClientSecret: p.ClientSecret,
 		RedirectURL:  p.RedirectURL,
 		Scopes:       p.Scopes,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  p.AuthURL,
-			TokenURL: p.TokenURL,
-		},
+		Endpoint:     p.Endpoint,
 	}
-	
-	// Exchange with PKCE verifier
+
 	ctx := context.Background()
 	token, err := config.Exchange(ctx, code, oauth2.SetAuthURLParam("code_verifier", codeVerifier))
 	if err != nil {
 		return nil, fmt.Errorf("code exchange failed: %w", err)
 	}
-	
+
 	return token, nil
+}
+
+// StartDeviceFlow initiates the device authorization flow with the provider
+func (p *ProviderConfig) StartDeviceFlow(ctx context.Context) (*oauth2.DeviceAuthResponse, error) {
+	cfg := &oauth2.Config{
+		ClientID:     p.ClientID,
+		ClientSecret: p.ClientSecret,
+		Scopes:       p.Scopes,
+		Endpoint:     p.Endpoint,
+	}
+	return cfg.DeviceAuth(ctx)
+}
+
+// PollDeviceToken polls the provider token endpoint to check if the user has authorized the device
+func (p *ProviderConfig) PollDeviceToken(deviceCode string) (accessToken, refreshToken string, err error) {
+	data := url.Values{
+		"client_id":     {p.ClientID},
+		"client_secret": {p.ClientSecret},
+		"device_code":   {deviceCode},
+		"grant_type":    {"urn:ietf:params:oauth:grant-type:device_code"},
+	}
+
+	resp, err := http.PostForm(p.Endpoint.TokenURL, data)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		Error        string `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", "", err
+	}
+
+	switch result.Error {
+	case "":
+		return result.AccessToken, result.RefreshToken, nil
+	case "authorization_pending":
+		return "", "", ErrAuthPending
+	case "slow_down":
+		return "", "", ErrSlowDown
+	default:
+		return "", "", fmt.Errorf("provider error: %s", result.Error)
+	}
+}
+
+// RefreshAccessToken exchanges a refresh token for a new provider access token
+func (p *ProviderConfig) RefreshAccessToken(refreshToken string) (string, error) {
+	data := url.Values{
+		"client_id":     {p.ClientID},
+		"client_secret": {p.ClientSecret},
+		"refresh_token": {refreshToken},
+		"grant_type":    {"refresh_token"},
+	}
+
+	resp, err := http.PostForm(p.Endpoint.TokenURL, data)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		AccessToken string `json:"access_token"`
+		Error       string `json:"error"`
+		ErrorDesc   string `json:"error_description"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	if result.Error != "" {
+		return "", fmt.Errorf("refresh failed: %s", result.ErrorDesc)
+	}
+	return result.AccessToken, nil
 }
 
 // GetUserInfo fetches user information from provider using access token
@@ -142,7 +217,6 @@ func (p *ProviderConfig) GetUserInfo(accessToken string) (*UserInfo, error) {
 		return nil, err
 	}
 
-	// Parse provider-specific response
 	switch p.Name {
 	case "google":
 		return parseGoogleUserInfo(body)
@@ -153,7 +227,6 @@ func (p *ProviderConfig) GetUserInfo(accessToken string) (*UserInfo, error) {
 	}
 }
 
-
 func parseGoogleUserInfo(body []byte) (*UserInfo, error) {
 	var data struct {
 		ID            string `json:"id"`
@@ -162,11 +235,11 @@ func parseGoogleUserInfo(body []byte) (*UserInfo, error) {
 		Name          string `json:"name"`
 		Picture       string `json:"picture"`
 	}
-	
+
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, err
 	}
-	
+
 	return &UserInfo{
 		ProviderUserID: data.ID,
 		Email:          data.Email,
@@ -188,7 +261,6 @@ func parseGitHubUserInfo(body []byte, client *http.Client) (*UserInfo, error) {
 		return nil, err
 	}
 
-	// GitHub requires separate call for email
 	email, verified, err := getGitHubEmail(client)
 	if err != nil {
 		return nil, err
@@ -216,30 +288,28 @@ func getGitHubEmail(client *http.Client) (string, bool, error) {
 		return "", false, err
 	}
 	defer resp.Body.Close()
-	
+
 	var emails []struct {
 		Email    string `json:"email"`
 		Verified bool   `json:"verified"`
 		Primary  bool   `json:"primary"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
 		return "", false, err
 	}
-	
-	// Find primary verified email
+
 	for _, e := range emails {
 		if e.Primary && e.Verified {
 			return e.Email, true, nil
 		}
 	}
-	
-	// Fallback to first verified email
+
 	for _, e := range emails {
 		if e.Verified {
 			return e.Email, true, nil
 		}
 	}
-	
+
 	return "", false, errors.New("no verified email found")
 }

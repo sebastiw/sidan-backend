@@ -1,6 +1,6 @@
 module github.com/sebastiw/sidan-backend
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/go-sql-driver/mysql v1.7.0
@@ -11,7 +11,7 @@ require (
 	github.com/sebastiw/go-rsql-mysql v0.0.0-20260121215516-2e9f902553be
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/oauth2 v0.36.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
