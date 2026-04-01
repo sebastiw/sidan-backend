@@ -129,7 +129,14 @@ func (p *ProviderConfig) PollDeviceToken(deviceCode string) (accessToken, refres
 		"grant_type":    {"urn:ietf:params:oauth:grant-type:device_code"},
 	}
 
-	resp, err := http.PostForm(p.Endpoint.TokenURL, data)
+	req, err := http.NewRequest("POST", p.Endpoint.TokenURL, strings.NewReader(data.Encode()))
+	if err != nil {
+		return "", "", err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", "", err
 	}
@@ -165,7 +172,14 @@ func (p *ProviderConfig) RefreshAccessToken(refreshToken string) (string, error)
 		"grant_type":    {"refresh_token"},
 	}
 
-	resp, err := http.PostForm(p.Endpoint.TokenURL, data)
+	req, err := http.NewRequest("POST", p.Endpoint.TokenURL, strings.NewReader(data.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
