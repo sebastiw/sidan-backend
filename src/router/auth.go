@@ -593,7 +593,7 @@ func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := providerCfg.RefreshAccessToken(req.RefreshToken)
+	accessToken, newRefreshToken, err := providerCfg.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		slog.Warn("device refresh failed", "provider", req.Provider, "error", err)
 		http.Error(w, `{"error":"token refresh failed"}`, http.StatusUnauthorized)
@@ -645,9 +645,10 @@ func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"access_token": jwtToken,
-		"token_type":   "Bearer",
-		"expires_in":   28800,
+		"access_token":  jwtToken,
+		"refresh_token": newRefreshToken,
+		"token_type":    "Bearer",
+		"expires_in":    28800,
 		"member": map[string]interface{}{
 			"number": member.Number,
 			"email":  userInfo.Email,

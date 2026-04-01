@@ -163,8 +163,9 @@ func (p *ProviderConfig) PollDeviceToken(deviceCode string) (accessToken, refres
 	}
 }
 
-// RefreshAccessToken exchanges a refresh token for a new provider access token
-func (p *ProviderConfig) RefreshAccessToken(refreshToken string) (string, error) {
+// RefreshAccessToken exchanges a refresh token for a new provider access token and refresh token.
+// Note: GitHub invalidates the old refresh token on each use and issues a new one.
+func (p *ProviderConfig) RefreshAccessToken(refreshToken string) (accessToken, newRefreshToken string, err error) {
 	data := url.Values{
 		"client_id":     {p.ClientID},
 		"client_secret": {p.ClientSecret},
@@ -174,29 +175,30 @@ func (p *ProviderConfig) RefreshAccessToken(refreshToken string) (string, error)
 
 	req, err := http.NewRequest("POST", p.Endpoint.TokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer resp.Body.Close()
 
 	var result struct {
-		AccessToken string `json:"access_token"`
-		Error       string `json:"error"`
-		ErrorDesc   string `json:"error_description"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		Error        string `json:"error"`
+		ErrorDesc    string `json:"error_description"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return "", "", err
 	}
 	if result.Error != "" {
-		return "", fmt.Errorf("refresh failed: %s", result.ErrorDesc)
+		return "", "", fmt.Errorf("refresh failed: %s", result.ErrorDesc)
 	}
-	return result.AccessToken, nil
+	return result.AccessToken, result.RefreshToken, nil
 }
 
 // GetUserInfo fetches user information from provider using access token

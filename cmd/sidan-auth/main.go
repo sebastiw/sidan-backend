@@ -179,22 +179,25 @@ func tokenRefresh() {
 		os.Exit(1)
 	}
 
-	jwt, member, err := refreshJWT(cfg.Provider, cfg.RefreshToken)
+	result, err := refreshJWT(cfg.Provider, cfg.RefreshToken)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error refreshing token: %v\n", err)
 		os.Exit(1)
 	}
 
-	cfg.AccessToken = jwt
-	cfg.MemberNum = member.Number
-	cfg.Email = member.Email
+	cfg.AccessToken = result.AccessToken
+	if result.RefreshToken != "" {
+		cfg.RefreshToken = result.RefreshToken
+	}
+	cfg.MemberNum = result.Member.Number
+	cfg.Email = result.Member.Email
 	cfg.ExpiresAt = time.Now().Add(8 * time.Hour).Format(time.RFC3339)
 	if err := saveConfig(*cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "Error saving config: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Token refreshed for member #%d (%s)\n", member.Number, member.Email)
+	fmt.Printf("Token refreshed for member #%d (%s)\n", result.Member.Number, result.Member.Email)
 	fmt.Printf("Expires: %s\n", cfg.ExpiresAt)
 }
 
@@ -278,11 +281,17 @@ func pollDeviceFlow(sessionID string) (*pollFlowResponse, bool, error) {
 	return &result, true, nil
 }
 
-func refreshJWT(provider, refreshToken string) (string, *MemberInfo, error) {
+type refreshJWTResponse struct {
+	AccessToken  string     `json:"access_token"`
+	RefreshToken string     `json:"refresh_token"`
+	Member       MemberInfo `json:"member"`
+}
+
+func refreshJWT(provider, refreshToken string) (*refreshJWTResponse, error) {
 	body, _ := json.Marshal(map[string]string{"refresh_token": refreshToken, "provider": provider})
 	resp, err := http.Post(apiURL()+"/auth/device/refresh", "application/json", bytes.NewReader(body))
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -291,19 +300,16 @@ func refreshJWT(provider, refreshToken string) (string, *MemberInfo, error) {
 		var errResp struct{ Error string `json:"error"` }
 		json.Unmarshal(respBody, &errResp)
 		if errResp.Error != "" {
-			return "", nil, fmt.Errorf(errResp.Error)
+			return nil, fmt.Errorf(errResp.Error)
 		}
-		return "", nil, fmt.Errorf("API returned %d", resp.StatusCode)
+		return nil, fmt.Errorf("API returned %d", resp.StatusCode)
 	}
 
-	var result struct {
-		AccessToken string     `json:"access_token"`
-		Member      MemberInfo `json:"member"`
-	}
+	var result refreshJWTResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	return result.AccessToken, &result.Member, nil
+	return &result, nil
 }
 
 // Utilities
