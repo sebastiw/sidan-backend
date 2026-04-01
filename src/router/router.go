@@ -89,7 +89,6 @@ func Mux(db data.Database) http.Handler {
 	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/device/start", authHandler.DeviceStart).Methods("POST", "OPTIONS")
 	r.HandleFunc("/auth/device/poll", authHandler.DevicePoll).Methods("POST", "OPTIONS")
-	r.HandleFunc("/auth/device/verify", authHandler.DeviceVerify).Methods("POST", "OPTIONS")
 	r.HandleFunc("/auth/device/refresh", authHandler.DeviceRefresh).Methods("POST", "OPTIONS")
 
 	// Auth handlers - authenticated endpoints

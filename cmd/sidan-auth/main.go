@@ -38,11 +38,11 @@ func main() {
 		}
 		switch os.Args[2] {
 		case "add":
-			provider := "google"
-			if len(os.Args) > 3 {
-				provider = os.Args[3]
+			if len(os.Args) < 4 {
+				printUsage()
+				os.Exit(1)
 			}
-			tokenAdd(provider)
+			tokenAdd(os.Args[3])
 		case "refresh":
 			tokenRefresh()
 		case "show":
@@ -61,7 +61,7 @@ func printUsage() {
 	fmt.Println("Usage: sidan-auth <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("  token add [provider]   Authenticate and get API token (provider: google, github; default: google)")
+	fmt.Println("  token add <provider>   Authenticate and get API token (provider: google, github)")
 	fmt.Println("  token refresh          Silently refresh expired token using stored refresh token")
 	fmt.Println("  token show             Show current token")
 	fmt.Println()
