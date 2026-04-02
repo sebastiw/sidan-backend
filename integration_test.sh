@@ -869,6 +869,115 @@ rm -f /tmp/test_fdroid.apk
 echo ""
 
 # ============================================================================
+echo -e "${CYAN}=== Prospect/Suspect CRUD Tests ===${NC}\n"
+# ============================================================================
+
+# Test: Unauthenticated cannot list prospects
+response=$(api_request "GET" "/db/prospects" "")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "Unauthenticated user should NOT list prospects" "401" "$http_code"
+
+# Test: Token without read:member scope cannot list prospects
+response=$(api_request "GET" "/db/prospects" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+assert_test "Member #8 (read:member scope) SHOULD list prospects" "200" "$http_code"
+
+# Test: Create a prospect
+prospect_data='{
+  "status": "P",
+  "number": 9901,
+  "name": "Test Prospect",
+  "email": "prospect@example.com",
+  "phone": "0701234567",
+  "history": "Integration test prospect"
+}'
+response=$(api_request "POST" "/db/prospects" "$TOKEN_MEMBER_8" "$prospect_data")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+prospect_id=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+assert_test "Member #8 SHOULD create a prospect" "200" "$http_code"
+if [ ! -z "$prospect_id" ]; then
+    echo -e "  ${GREEN}Created prospect ID: $prospect_id${NC}"
+fi
+
+# Test: Create a suspect
+suspect_data='{
+  "status": "S",
+  "number": 9902,
+  "name": "Test Suspect",
+  "email": "suspect@example.com"
+}'
+response=$(api_request "POST" "/db/prospects" "$TOKEN_MEMBER_8" "$suspect_data")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+suspect_id=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+assert_test "Member #8 SHOULD create a suspect" "200" "$http_code"
+if [ ! -z "$suspect_id" ]; then
+    echo -e "  ${GREEN}Created suspect ID: $suspect_id${NC}"
+fi
+
+# Test: Read single prospect
+if [ ! -z "$prospect_id" ]; then
+    response=$(api_request "GET" "/db/prospects/$prospect_id" "$TOKEN_MEMBER_8")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    assert_test "Member #8 SHOULD read prospect by ID" "200" "$http_code"
+    prospect_status=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['status'])" 2>/dev/null)
+    assert_field "Prospect should have status P" "status" "P" "$prospect_status"
+fi
+
+# Test: Filter prospects by status=P
+response=$(api_request "GET" "/db/prospects?status=P" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "Member #8 SHOULD list prospects filtered by status=P" "200" "$http_code"
+p_count=$(echo "$body" | python3 -c "import sys, json; data=json.load(sys.stdin); print(sum(1 for x in data if x['status']=='P'))" 2>/dev/null)
+s_count=$(echo "$body" | python3 -c "import sys, json; data=json.load(sys.stdin); print(sum(1 for x in data if x['status']=='S'))" 2>/dev/null)
+assert_field "status=P filter should return only prospects (no suspects)" "suspect count" "0" "$s_count"
+
+# Test: Filter prospects by status=S
+response=$(api_request "GET" "/db/prospects?status=S" "$TOKEN_MEMBER_8")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "Member #8 SHOULD list suspects filtered by status=S" "200" "$http_code"
+p_count=$(echo "$body" | python3 -c "import sys, json; data=json.load(sys.stdin); print(sum(1 for x in data if x['status']=='P'))" 2>/dev/null)
+assert_field "status=S filter should return only suspects (no prospects)" "prospect count" "0" "$p_count"
+
+# Test: Update prospect
+if [ ! -z "$prospect_id" ]; then
+    update_data="{
+      \"id\": $prospect_id,
+      \"status\": \"P\",
+      \"number\": 9901,
+      \"name\": \"Updated Prospect Name\",
+      \"email\": \"prospect@example.com\"
+    }"
+    response=$(api_request "PUT" "/db/prospects/$prospect_id" "$TOKEN_MEMBER_8" "$update_data")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    assert_test "Member #8 SHOULD update a prospect" "200" "$http_code"
+    updated_name=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['name'])" 2>/dev/null)
+    assert_field "Prospect name should be updated" "name" "Updated Prospect Name" "$updated_name"
+fi
+
+# Test: Unauthenticated cannot read prospect
+if [ ! -z "$prospect_id" ]; then
+    response=$(api_request "GET" "/db/prospects/$prospect_id" "")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    assert_test "Unauthenticated user should NOT read prospect by ID" "401" "$http_code"
+fi
+
+# Test: Delete prospect
+if [ ! -z "$prospect_id" ]; then
+    response=$(api_request "DELETE" "/db/prospects/$prospect_id" "$TOKEN_MEMBER_8")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    assert_test "Member #8 SHOULD delete a prospect" "200" "$http_code"
+    prospect_id=""
+fi
+
+echo ""
+
+# ============================================================================
 echo -e "${CYAN}=== Cleanup Created Entries ===${NC}\n"
 # ============================================================================
 
@@ -900,6 +1009,11 @@ if [ ! -z "$like_test_entry_id" ]; then
     docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM 2003_likes WHERE id=$like_test_entry_id" 2>/dev/null
     docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2003_msgs WHERE id=$like_test_entry_id" 2>/dev/null
     echo -e "${GREEN}✓${NC} Cleaned up like test entry (ID: $like_test_entry_id)"
+fi
+
+if [ ! -z "$suspect_id" ]; then
+    docker exec sidan_sql mysql -uroot -pdbpassword dbschema -e "DELETE FROM cl2007_prospects WHERE id=$suspect_id" 2>/dev/null
+    echo -e "${GREEN}✓${NC} Cleaned up suspect (ID: $suspect_id)"
 fi
 
 echo ""

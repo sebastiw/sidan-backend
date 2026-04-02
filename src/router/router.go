@@ -223,6 +223,44 @@ func Mux(db data.Database) http.Handler {
 		),
 	).Methods("GET", "OPTIONS")
 
+	// Prospect endpoints (suspects and prospects via status=S|P)
+	dbPh := NewProspectHandler(db)
+	r.Handle("/db/prospects",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteMemberScope)(
+				http.HandlerFunc(dbPh.createProspectHandler),
+			),
+		),
+	).Methods("POST", "OPTIONS")
+	r.Handle("/db/prospects/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.ReadMemberScope)(
+				http.HandlerFunc(dbPh.readProspectHandler),
+			),
+		),
+	).Methods("GET", "OPTIONS")
+	r.Handle("/db/prospects/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteMemberScope)(
+				http.HandlerFunc(dbPh.updateProspectHandler),
+			),
+		),
+	).Methods("PUT", "OPTIONS")
+	r.Handle("/db/prospects/{id:[0-9]+}",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.WriteMemberScope)(
+				http.HandlerFunc(dbPh.deleteProspectHandler),
+			),
+		),
+	).Methods("DELETE", "OPTIONS")
+	r.Handle("/db/prospects",
+		authMiddleware.RequireAuth(
+			authMiddleware.RequireScope(a.ReadMemberScope)(
+				http.HandlerFunc(dbPh.readAllProspectHandler),
+			),
+		),
+	).Methods("GET", "OPTIONS")
+
 	// Arr endpoints
 	dbAh := NewArrHandler(db)
 	r.Handle("/db/arr",

@@ -45,6 +45,12 @@ type Database interface {
 	UpdateArr(arr *models.Arr) (*models.Arr, error)
 	DeleteArr(arr *models.Arr) (*models.Arr, error)
 
+	CreateProspect(prospect *models.Prospect) (*models.Prospect, error)
+	ReadProspect(id int64) (*models.Prospect, error)
+	ReadProspects(status string) ([]models.Prospect, error)
+	UpdateProspect(prospect *models.Prospect) (*models.Prospect, error)
+	DeleteProspect(prospect *models.Prospect) (*models.Prospect, error)
+
 	CreateArticle(article *models.Article) (*models.Article, error)
 	ReadArticle(id int64) (*models.Article, error)
 	ReadArticles(take int, skip int) ([]models.Article, error)
