@@ -109,6 +109,11 @@ paths:
             type: integer
             format: int64
             default: 20
+        - name: q
+          in: query
+          description: RSQL filter expression (e.g. `sig==foo`, `olsug=gt=-1`, `sig==foo,sig==bar`)
+          schema:
+            type: string
       responses:
         200:
           description: List of entries
@@ -720,7 +725,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT Bearer token obtained from OAuth2 authentication flow (/auth/login?provider=google)
+      description: "JWT Bearer token obtained via web OAuth2 flow (GET /auth/login?provider=<provider> → GET /auth/callback) or device flow (POST /auth/device/start → POST /auth/device/poll). Refreshable via POST /auth/device/refresh."
   schemas:
     APKUploadResult:
       type: object
@@ -776,6 +781,10 @@ components:
         status:
           type: integer
           format: int64
+          description: "Entry theme: 0=plain, 1=politik, 2=#27, 3=#44, 4=#31 vs #45, 5=nsfw"
+          enum: [0, 1, 2, 3, 4, 5]
+          default: 0
+          nullable: true
         cl:
           type: integer
           format: int64
@@ -795,6 +804,7 @@ components:
         olsug:
           type: integer
           format: int64
+          nullable: true
         enheter:
           type: integer
           format: int64

@@ -84,7 +84,7 @@ func redactEntry(entry *models.Entry) {
 	entry.Host = nil
 	entry.Lat = nil
 	entry.Lon = nil
-	entry.Olsug = 0
+	entry.Olsug = nil
 	entry.Enheter = 0
 	entry.SideKicks = nil
 	entry.Likes = 0

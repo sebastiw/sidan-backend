@@ -21,14 +21,14 @@ type Entry struct {
 	Time           string     `json:"time"`
 	DateTime       time.Time  `gorm:"column:datetime" json:"datetime"`
 	Msg            string     `json:"msg"`
-	Status         int64      `json:"status"`
+	Status         *int64     `gorm:"default:0" json:"status"` // 0=plain, 1=politik, 2=#27, 3=#44, 4=#31 vs #45, 5=nsfw
 	Cl             int64      `json:"cl"`
 	Sig            string     `json:"sig"`
 	Email          string     `json:"email"`
 	Place          string     `json:"place"`
 	Ip             *string    `json:"ip"`
 	Host           *string    `json:"host"`
-	Olsug          int64      `json:"olsug"`
+	Olsug          *int64     `gorm:"default:-1" json:"olsug"`
 	Enheter        int64      `json:"enheter"`
 	Lat            *float64   `json:"lat"`
 	Lon            *float64   `json:"lon"`
