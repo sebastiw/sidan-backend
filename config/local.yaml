@@ -36,6 +36,8 @@ oauth2:
     clientSecret: "secret"
     redirectURL: "google/dummy"
     scopes: ["openid", "email"]
+    deviceClientId: "4321"
+    deviceClientSecret: "terces"
   github:
     clientId: "54321"
     clientSecret: "really_secret"

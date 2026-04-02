@@ -34,6 +34,7 @@ type Database interface {
 	CreateMember(member *models.Member) (*models.Member, error)
 	ReadMember(id int64) (*models.Member, error)
 	ReadMemberByNumber(number int64) (*models.Member, error)
+	ReadMemberByEmail(email string) (*models.Member, error)
 	ReadMembers(onlyValid bool) ([]models.Member, error)
 	UpdateMember(member *models.Member) (*models.Member, error)
 	DeleteMember(member *models.Member) (*models.Member, error)

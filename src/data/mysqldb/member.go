@@ -16,6 +16,10 @@ func (d *MySQLDatabase) ReadMemberByNumber(number int64) (*models.Member, error)
 	return d.CommonDB.ReadMemberByNumber(number)
 }
 
+func (d *MySQLDatabase) ReadMemberByEmail(email string) (*models.Member, error) {
+	return d.CommonDB.ReadMemberByEmail(email)
+}
+
 func (d *MySQLDatabase) ReadMembers(onlyValid bool) ([]models.Member, error) {
 	return d.CommonDB.ReadMembers(onlyValid)
 }

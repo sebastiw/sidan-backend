@@ -1,6 +1,10 @@
 package commondb
 
 import (
+	"errors"
+
+	"gorm.io/gorm"
+
 	"github.com/sebastiw/sidan-backend/src/models"
 )
 
@@ -29,6 +33,19 @@ func (d *CommonDatabase) ReadMemberByNumber(number int64) (*models.Member, error
 	result := d.DB.First(&member, models.Member{Number: number})
 
 	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &member, nil
+}
+
+func (d *CommonDatabase) ReadMemberByEmail(email string) (*models.Member, error) {
+	var member models.Member
+
+	result := d.DB.Where("isvalid = 1 AND email = ?", email).First(&member)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, result.Error
 	}
 	return &member, nil

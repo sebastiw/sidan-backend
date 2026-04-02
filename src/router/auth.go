@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -144,20 +145,11 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find member by email in cl2007_members table
-	members, err := h.db.ReadMembers(true) // Get only valid members
+	member, err := h.db.ReadMemberByEmail(userInfo.Email)
 	if err != nil {
-		slog.Error("failed to read members", "error", err)
+		slog.Error("failed to read member", "error", err)
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
-	}
-
-	// Find member by email
-	var member *models.Member
-	for _, m := range members {
-		if m.Email != nil && *m.Email == userInfo.Email {
-			member = &m
-			break
-		}
 	}
 
 	if member == nil {
@@ -313,6 +305,253 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		"access_token": newToken,
 		"token_type":   "Bearer",
 		"expires_in":   28800, // 8 hours
+	})
+}
+
+// DeviceStart initiates the device authorization flow via the server
+// POST /auth/device/start
+// Body: {"provider": "google"}
+func (h *AuthHandler) DeviceStart(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Provider string `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Provider == "" {
+		http.Error(w, `{"error":"provider required"}`, http.StatusBadRequest)
+		return
+	}
+
+	oauth2Cfg, exists := config.Get().OAuth2[req.Provider]
+	if !exists {
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+
+	deviceClientID, deviceClientSecret := oauth2Cfg.DeviceCredentials()
+	providerCfg, err := auth.GetProviderConfig(req.Provider, deviceClientID, deviceClientSecret, "", oauth2Cfg.Scopes)
+	if err != nil {
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+
+	deviceResp, err := providerCfg.StartDeviceFlow(r.Context())
+	if err != nil {
+		slog.Error("device flow start failed", "provider", req.Provider, "error", err)
+		http.Error(w, `{"error":"failed to start device flow"}`, http.StatusInternalServerError)
+		return
+	}
+
+	sessionID := auth.GenerateState()
+	authState := &models.AuthState{
+		ID:           sessionID,
+		Provider:     req.Provider,
+		Nonce:        "device",
+		PKCEVerifier: deviceResp.DeviceCode,
+		ExpiresAt:    deviceResp.Expiry,
+	}
+	if err := h.db.CreateAuthState(authState); err != nil {
+		slog.Error("failed to store device state", "error", err)
+		http.Error(w, `{"error":"storage error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	browserURL := deviceResp.VerificationURIComplete
+	if browserURL == "" {
+		browserURL = deviceResp.VerificationURI
+	}
+
+	slog.Info("device flow started", "provider", req.Provider, "session", sessionID[:8]+"...")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"session_id":       sessionID,
+		"user_code":        deviceResp.UserCode,
+		"verification_url": deviceResp.VerificationURI,
+		"browser_url":      browserURL,
+		"interval":         deviceResp.Interval,
+		"expires_in":       int(time.Until(deviceResp.Expiry).Seconds()),
+	})
+}
+
+// DevicePoll polls for device flow completion and returns a sidan JWT when approved
+// POST /auth/device/poll
+// Body: {"session_id": "..."}
+func (h *AuthHandler) DevicePoll(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		SessionID string `json:"session_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.SessionID == "" {
+		http.Error(w, `{"error":"session_id required"}`, http.StatusBadRequest)
+		return
+	}
+
+	authState, err := h.db.GetAuthState(req.SessionID)
+	if err != nil {
+		http.Error(w, `{"error":"invalid or expired session"}`, http.StatusBadRequest)
+		return
+	}
+
+	oauth2Cfg := config.Get().OAuth2[authState.Provider]
+	deviceClientID, deviceClientSecret := oauth2Cfg.DeviceCredentials()
+	providerCfg, err := auth.GetProviderConfig(authState.Provider, deviceClientID, deviceClientSecret, "", nil)
+	if err != nil {
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+
+	accessToken, refreshToken, err := providerCfg.PollDeviceToken(authState.PKCEVerifier)
+	if err != nil {
+		if errors.Is(err, auth.ErrAuthPending) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusAccepted)
+			json.NewEncoder(w).Encode(map[string]string{"status": "pending"})
+			return
+		}
+		if errors.Is(err, auth.ErrSlowDown) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusAccepted)
+			json.NewEncoder(w).Encode(map[string]string{"status": "slow_down"})
+			return
+		}
+		slog.Warn("device poll failed", "provider", authState.Provider, "error", err)
+		h.db.DeleteAuthState(req.SessionID)
+		http.Error(w, `{"error":"authorization failed"}`, http.StatusUnauthorized)
+		return
+	}
+
+	h.db.DeleteAuthState(req.SessionID)
+
+	userInfo, err := providerCfg.GetUserInfo(accessToken)
+	if err != nil {
+		slog.Error("failed to get user info", "provider", authState.Provider, "error", err)
+		http.Error(w, `{"error":"failed to get user info"}`, http.StatusInternalServerError)
+		return
+	}
+
+	if !userInfo.EmailVerified {
+		http.Error(w, `{"error":"email not verified"}`, http.StatusForbidden)
+		return
+	}
+
+	member, err := h.db.ReadMemberByEmail(userInfo.Email)
+	if err != nil {
+		slog.Error("failed to read member", "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	if member == nil {
+		slog.Warn("device poll: email not registered", "email", userInfo.Email)
+		http.Error(w, `{"error":"email not registered"}`, http.StatusForbidden)
+		return
+	}
+
+	scopes := getScopesForMemberType(member)
+	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, authState.Provider+"-device", config.GetJWTSecret())
+	if err != nil {
+		slog.Error("JWT generation failed", "error", err)
+		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("device auth successful", "provider", authState.Provider, "member", member.Number)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token":  jwtToken,
+		"refresh_token": refreshToken,
+		"token_type":    "Bearer",
+		"expires_in":    28800,
+		"member": map[string]interface{}{
+			"number": member.Number,
+			"email":  userInfo.Email,
+		},
+		"scopes": scopes,
+	})
+}
+
+// DeviceRefresh exchanges a stored provider refresh token for a new sidan JWT
+// POST /auth/device/refresh
+// Body: {"refresh_token": "...", "provider": "google"}
+func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+		Provider     string `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.RefreshToken == "" {
+		http.Error(w, `{"error":"refresh_token required"}`, http.StatusBadRequest)
+		return
+	}
+	if req.Provider == "" {
+		http.Error(w, `{"error":"provider required"}`, http.StatusBadRequest)
+		return
+	}
+
+	oauth2Cfg, exists := config.Get().OAuth2[req.Provider]
+	if !exists {
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+
+	deviceClientID, deviceClientSecret := oauth2Cfg.DeviceCredentials()
+	providerCfg, err := auth.GetProviderConfig(req.Provider, deviceClientID, deviceClientSecret, "", nil)
+	if err != nil {
+		http.Error(w, `{"error":"unsupported provider"}`, http.StatusBadRequest)
+		return
+	}
+
+	accessToken, newRefreshToken, err := providerCfg.RefreshAccessToken(req.RefreshToken)
+	if err != nil {
+		slog.Warn("device refresh failed", "provider", req.Provider, "error", err)
+		http.Error(w, `{"error":"token refresh failed"}`, http.StatusUnauthorized)
+		return
+	}
+
+	userInfo, err := providerCfg.GetUserInfo(accessToken)
+	if err != nil {
+		slog.Error("failed to get user info after refresh", "provider", req.Provider, "error", err)
+		http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if !userInfo.EmailVerified {
+		http.Error(w, `{"error":"email not verified"}`, http.StatusForbidden)
+		return
+	}
+
+	member, err := h.db.ReadMemberByEmail(userInfo.Email)
+	if err != nil {
+		slog.Error("failed to read member", "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	if member == nil {
+		slog.Warn("device refresh: email not registered", "email", userInfo.Email)
+		http.Error(w, `{"error":"email not registered"}`, http.StatusForbidden)
+		return
+	}
+
+	scopes := getScopesForMemberType(member)
+	jwtToken, err := auth.GenerateJWT(member.Number, userInfo.Email, scopes, req.Provider+"-device", config.GetJWTSecret())
+	if err != nil {
+		slog.Error("JWT generation failed", "error", err)
+		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("device token refreshed", "provider", req.Provider, "member", member.Number)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token":  jwtToken,
+		"refresh_token": newRefreshToken,
+		"token_type":    "Bearer",
+		"expires_in":    28800,
+		"member": map[string]interface{}{
+			"number": member.Number,
+			"email":  userInfo.Email,
+		},
+		"scopes": scopes,
 	})
 }
 

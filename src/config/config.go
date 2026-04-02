@@ -58,10 +58,12 @@ type JWTConfiguration struct {
 }
 
 type OAuth2Configuration struct {
-	ClientID     string
-	ClientSecret string
-	RedirectURL  string
-	Scopes       []string
+	ClientID           string
+	ClientSecret       string
+	RedirectURL        string
+	Scopes             []string
+	DeviceClientID     string
+	DeviceClientSecret string
 }
 
 var (
@@ -136,6 +138,15 @@ func GetMail() *MailConfiguration {
 
 func GetFDroid() *FDroidConfiguration {
 	return &cfg.FDroid
+}
+
+// DeviceCredentials returns the client ID and secret to use for device flow.
+// Falls back to the main credentials if no device-specific ones are configured.
+func (c *OAuth2Configuration) DeviceCredentials() (clientID, clientSecret string) {
+	if c.DeviceClientID != "" {
+		return c.DeviceClientID, c.DeviceClientSecret
+	}
+	return c.ClientID, c.ClientSecret
 }
 
 func GetJWT() *JWTConfiguration {

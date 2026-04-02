@@ -82,12 +82,15 @@ func Mux(db data.Database) http.Handler {
 
 	// Create middleware for protected endpoints
 	authMiddleware := a.NewMiddleware(db)
-	
+
 	// Auth handlers (public endpoints)
 	authHandler := NewAuthHandler(db)
 	r.HandleFunc("/auth/login", authHandler.Login).Methods("GET", "OPTIONS")
 	r.HandleFunc("/auth/callback", authHandler.Callback).Methods("GET", "OPTIONS")
-	
+	r.HandleFunc("/auth/device/start", authHandler.DeviceStart).Methods("POST", "OPTIONS")
+	r.HandleFunc("/auth/device/poll", authHandler.DevicePoll).Methods("POST", "OPTIONS")
+	r.HandleFunc("/auth/device/refresh", authHandler.DeviceRefresh).Methods("POST", "OPTIONS")
+
 	// Auth handlers - authenticated endpoints
 	r.Handle("/auth/session", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.GetSession))).Methods("GET", "OPTIONS")
 	r.Handle("/auth/refresh", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Refresh))).Methods("POST", "OPTIONS")
@@ -100,7 +103,7 @@ func Mux(db data.Database) http.Handler {
 	// File endpoints
 	fh := FileHandler{}
 	fileServer := http.FileServer(http.Dir(config.GetServer().StaticPath))
-	r.Handle("/file/image", 
+	r.Handle("/file/image",
 		authMiddleware.RequireAuth(
 			authMiddleware.RequireScope(a.WriteImageScope)(
 				http.HandlerFunc(fh.createImageHandler),
