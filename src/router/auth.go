@@ -145,20 +145,11 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find member by email in cl2007_members table
-	members, err := h.db.ReadMembers(true) // Get only valid members
+	member, err := h.db.ReadMemberByEmail(userInfo.Email)
 	if err != nil {
-		slog.Error("failed to read members", "error", err)
+		slog.Error("failed to read member", "error", err)
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
-	}
-
-	// Find member by email
-	var member *models.Member
-	for _, m := range members {
-		if m.Email != nil && *m.Email == userInfo.Email {
-			member = &m
-			break
-		}
 	}
 
 	if member == nil {
@@ -441,19 +432,11 @@ func (h *AuthHandler) DevicePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	members, err := h.db.ReadMembers(true)
+	member, err := h.db.ReadMemberByEmail(userInfo.Email)
 	if err != nil {
-		slog.Error("failed to read members", "error", err)
+		slog.Error("failed to read member", "error", err)
 		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
 		return
-	}
-
-	var member *models.Member
-	for _, m := range members {
-		if m.Email != nil && *m.Email == userInfo.Email {
-			member = &m
-			break
-		}
 	}
 
 	if member == nil {
@@ -535,19 +518,11 @@ func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	members, err := h.db.ReadMembers(true)
+	member, err := h.db.ReadMemberByEmail(userInfo.Email)
 	if err != nil {
-		slog.Error("failed to read members", "error", err)
+		slog.Error("failed to read member", "error", err)
 		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
 		return
-	}
-
-	var member *models.Member
-	for _, m := range members {
-		if m.Email != nil && *m.Email == userInfo.Email {
-			member = &m
-			break
-		}
 	}
 
 	if member == nil {
