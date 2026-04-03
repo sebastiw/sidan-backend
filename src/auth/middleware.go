@@ -186,11 +186,15 @@ func GetMember(r *http.Request) *models.Member {
 	return member
 }
 
-// CleanupExpired removes expired auth states
+// CleanupExpired removes expired auth states and sessions
 func CleanupExpired(db data.Database) error {
-	// Delete expired states
 	if err := db.CleanupExpiredAuthStates(); err != nil {
-		slog.Error("failed to delete expired states", slog.String("error", err.Error()))
+		slog.Error("failed to delete expired auth states", slog.String("error", err.Error()))
+		return err
+	}
+
+	if err := db.CleanupExpiredSessions(); err != nil {
+		slog.Error("failed to delete expired sessions", slog.String("error", err.Error()))
 		return err
 	}
 
