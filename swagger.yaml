@@ -847,14 +847,282 @@ paths:
           description: File contents
         404:
           description: File not found
+  /auth/login:
+    get:
+      summary: Initiate OAuth2 web login
+      tags:
+        - auth
+      security: []
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          schema:
+            type: string
+            description: OAuth2 provider name (e.g. google, github)
+        - name: redirect_uri
+          in: query
+          description: Where to redirect after login with ?token=<JSON>
+          schema:
+            type: string
+      responses:
+        302:
+          description: Redirect to provider login page
+        400:
+          description: Missing or unknown provider
+  /auth/callback:
+    get:
+      summary: OAuth2 callback — exchanges code for sidan JWT and refresh token
+      tags:
+        - auth
+      security: []
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        302:
+          description: Redirect to redirect_uri with ?token=<JSON> if redirect_uri was provided
+        400:
+          description: Missing or invalid state/code
+        403:
+          description: Email not verified or not registered
+  /auth/session:
+    get:
+      summary: Get current session info
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Current member and session details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member:
+                    type: object
+                    properties:
+                      number:
+                        type: integer
+                      name:
+                        type: string
+                        nullable: true
+                      email:
+                        type: string
+                        nullable: true
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                  provider:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  issued_at:
+                    type: string
+                    format: date-time
+        401:
+          description: Unauthorized
+  /auth/refresh:
+    post:
+      summary: Exchange a sidan refresh token for a new JWT (with token rotation)
+      tags:
+        - auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        200:
+          description: New JWT and rotated refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        401:
+          description: Invalid or expired refresh token
+  /auth/logout:
+    post:
+      summary: Logout (JWT remains valid until expiry — discard client-side)
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Logged out
+        401:
+          description: Unauthorized
+  /auth/device/start:
+    post:
+      summary: Start device authorization flow
+      tags:
+        - auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+              properties:
+                provider:
+                  type: string
+                  description: OAuth2 provider name (e.g. google, github)
+      responses:
+        200:
+          description: Device code and user instructions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  user_code:
+                    type: string
+                  verification_url:
+                    type: string
+                  browser_url:
+                    type: string
+                  interval:
+                    type: integer
+                    description: Polling interval in seconds
+                  expires_in:
+                    type: integer
+        400:
+          description: Missing or unknown provider
+  /auth/device/poll:
+    post:
+      summary: Poll for device flow completion
+      tags:
+        - auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+              properties:
+                session_id:
+                  type: string
+      responses:
+        200:
+          description: Authorization complete — returns JWT and provider refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        202:
+          description: Still pending or slow_down
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [pending, slow_down]
+        401:
+          description: Authorization failed or denied
+  /auth/device/refresh:
+    post:
+      summary: Refresh device flow JWT using stored provider refresh token
+      tags:
+        - auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+                - provider
+              properties:
+                refresh_token:
+                  type: string
+                  description: Provider refresh token (from /auth/device/poll response)
+                provider:
+                  type: string
+                  description: OAuth2 provider name (e.g. google, github)
+      responses:
+        200:
+          description: New JWT and (possibly rotated) provider refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        401:
+          description: Refresh failed — re-authenticate via /auth/device/start
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: "JWT Bearer token obtained via web OAuth2 flow (GET /auth/login?provider=<provider> → GET /auth/callback) or device flow (POST /auth/device/start → POST /auth/device/poll). Refreshable via POST /auth/device/refresh."
+      description: "JWT Bearer token (8h expiry). Web flow: GET /auth/login → GET /auth/callback → returns access_token + refresh_token. Renew with POST /auth/refresh (refresh token rotation, 30d). Device flow: POST /auth/device/start → POST /auth/device/poll → returns access_token + provider refresh_token. Renew with POST /auth/device/refresh."
   schemas:
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: Sidan JWT (8 hour expiry)
+        refresh_token:
+          type: string
+          description: Refresh token for obtaining a new JWT. Web flow — use POST /auth/token. Device flow — use POST /auth/device/refresh.
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 28800
+        member:
+          type: object
+          properties:
+            number:
+              type: integer
+            email:
+              type: string
+            name:
+              type: string
+              nullable: true
+        scopes:
+          type: array
+          items:
+            type: string
     APKUploadResult:
       type: object
       properties:

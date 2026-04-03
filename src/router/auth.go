@@ -178,13 +178,28 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("login successful", "provider", authState.Provider, "member", member.Id, "email", userInfo.Email)
 
+	// Issue sidan refresh token (30 day session)
+	refreshToken := auth.GenerateState()
+	session := &models.Session{
+		Token:        refreshToken,
+		MemberNumber: member.Number,
+		Email:        userInfo.Email,
+		Provider:     authState.Provider,
+		ExpiresAt:    time.Now().Add(30 * 24 * time.Hour),
+	}
+	if err := h.db.CreateSession(session); err != nil {
+		slog.Error("failed to store session", "error", err)
+		http.Error(w, "storage error", http.StatusInternalServerError)
+		return
+	}
+
 	// If redirect_uri was provided, redirect with token
 	if authState.RedirectURI != "" {
-		// Build token JSON
 		tokenData := map[string]interface{}{
-			"access_token": jwtToken,
-			"token_type":   "Bearer",
-			"expires_in":   28800, // 8 hours in seconds
+			"access_token":  jwtToken,
+			"refresh_token": refreshToken,
+			"token_type":    "Bearer",
+			"expires_in":    28800,
 			"member": map[string]interface{}{
 				"number": member.Number,
 				"email":  userInfo.Email,
@@ -193,7 +208,6 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 			"scopes": scopes,
 		}
 
-		// Encode as JSON
 		tokenJSON, err := json.Marshal(tokenData)
 		if err != nil {
 			slog.Error("failed to encode token JSON", "error", err)
@@ -201,12 +215,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// URL-encode the JSON
-		tokenParam := url.QueryEscape(string(tokenJSON))
-
-		// Build redirect URL
-		redirectURL := authState.RedirectURI + "?token=" + tokenParam
-
+		redirectURL := authState.RedirectURI + "?token=" + url.QueryEscape(string(tokenJSON))
 		slog.Info("redirecting to app", "redirect_uri", authState.RedirectURI)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 		return
@@ -215,9 +224,10 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	// No redirect_uri - return JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"access_token": jwtToken,
-		"token_type":   "Bearer",
-		"expires_in":   28800, // 8 hours in seconds
+		"access_token":  jwtToken,
+		"refresh_token": refreshToken,
+		"token_type":    "Bearer",
+		"expires_in":    28800,
 		"member": map[string]interface{}{
 			"number": member.Number,
 			"email":  userInfo.Email,
@@ -273,39 +283,6 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
-}
-
-// Refresh generates a new JWT token
-// POST /auth/refresh
-// Authorization: Bearer <token>
-func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	// Get claims from context
-	claims := auth.GetClaims(r)
-	if claims == nil {
-		http.Error(w, `{"error":"no authentication"}`, http.StatusUnauthorized)
-		return
-	}
-
-	member := auth.GetMember(r)
-	if member == nil {
-		http.Error(w, `{"error":"member not found"}`, http.StatusInternalServerError)
-		return
-	}
-
-	// Generate new JWT with same scopes
-	newToken, err := auth.GenerateJWT(claims.MemberNumber, claims.Email, claims.Scopes, claims.Provider, config.GetJWTSecret())
-	if err != nil {
-		slog.Error("JWT refresh failed", "error", err)
-		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"access_token": newToken,
-		"token_type":   "Bearer",
-		"expires_in":   28800, // 8 hours
-	})
 }
 
 // DeviceStart initiates the device authorization flow via the server
@@ -552,6 +529,68 @@ func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
 			"email":  userInfo.Email,
 		},
 		"scopes": scopes,
+	})
+}
+
+// Token exchanges a sidan refresh token for a new JWT and rotated refresh token
+// POST /auth/refresh
+// Body: {"refresh_token": "..."}
+func (h *AuthHandler) Token(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.RefreshToken == "" {
+		http.Error(w, `{"error":"refresh_token required"}`, http.StatusBadRequest)
+		return
+	}
+
+	session, err := h.db.GetSession(req.RefreshToken)
+	if err != nil {
+		slog.Warn("invalid or expired refresh token", "error", err)
+		http.Error(w, `{"error":"invalid or expired refresh token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// Rotate: delete old session
+	h.db.DeleteSession(req.RefreshToken)
+
+	member, err := h.db.ReadMemberByNumber(session.MemberNumber)
+	if err != nil || member == nil {
+		http.Error(w, `{"error":"member not found"}`, http.StatusUnauthorized)
+		return
+	}
+
+	scopes := getScopesForMemberType(member)
+	jwtToken, err := auth.GenerateJWT(member.Number, session.Email, scopes, session.Provider, config.GetJWTSecret())
+	if err != nil {
+		slog.Error("JWT generation failed", "error", err)
+		http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// Issue new refresh token
+	newRefreshToken := auth.GenerateState()
+	newSession := &models.Session{
+		Token:        newRefreshToken,
+		MemberNumber: member.Number,
+		Email:        session.Email,
+		Provider:     session.Provider,
+		ExpiresAt:    time.Now().Add(30 * 24 * time.Hour),
+	}
+	if err := h.db.CreateSession(newSession); err != nil {
+		slog.Error("failed to store new session", "error", err)
+		http.Error(w, `{"error":"storage error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("token refreshed via refresh token", "member", member.Number, "provider", session.Provider)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token":  jwtToken,
+		"refresh_token": newRefreshToken,
+		"token_type":    "Bearer",
+		"expires_in":    28800,
 	})
 }
 
