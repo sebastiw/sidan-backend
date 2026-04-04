@@ -9,7 +9,7 @@ import (
 type Prospect struct {
 	Id      int64  `json:"id"`
 	Status  string `json:"status"`
-	Number  int64  `json:"number"`
+	Number  int64  `gorm:"uniqueIndex;not null" json:"number"`
 	Name    string `json:"name"`
 	Email   string `json:"email"`
 	Phone   string `json:"phone"`
