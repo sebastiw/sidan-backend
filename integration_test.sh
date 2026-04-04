@@ -882,10 +882,9 @@ response=$(api_request "GET" "/db/prospects" "$TOKEN_MEMBER_8")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 assert_test "Member #8 (read:member scope) SHOULD list prospects" "200" "$http_code"
 
-# Test: Create a prospect
+# Test: Create a prospect without number - should be auto-assigned
 prospect_data='{
   "status": "P",
-  "number": 9901,
   "name": "Test Prospect",
   "email": "prospect@example.com",
   "phone": "0701234567",
@@ -895,15 +894,16 @@ response=$(api_request "POST" "/db/prospects" "$TOKEN_MEMBER_8" "$prospect_data"
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 prospect_id=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
-assert_test "Member #8 SHOULD create a prospect" "200" "$http_code"
+prospect_number=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['number'])" 2>/dev/null)
+assert_test "Member #8 SHOULD create a prospect without number" "200" "$http_code"
 if [ ! -z "$prospect_id" ]; then
-    echo -e "  ${GREEN}Created prospect ID: $prospect_id${NC}"
+    echo -e "  ${GREEN}Created prospect ID: $prospect_id, auto-assigned number: $prospect_number${NC}"
 fi
+assert_test "Auto-assigned prospect number should be positive" "0" "$([ "$prospect_number" -gt 0 ] 2>/dev/null && echo 0 || echo 1)"
 
-# Test: Create a suspect
+# Test: Create a suspect without number - should be auto-assigned a different number
 suspect_data='{
   "status": "S",
-  "number": 9902,
   "name": "Test Suspect",
   "email": "suspect@example.com"
 }'
@@ -911,10 +911,13 @@ response=$(api_request "POST" "/db/prospects" "$TOKEN_MEMBER_8" "$suspect_data")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 suspect_id=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
-assert_test "Member #8 SHOULD create a suspect" "200" "$http_code"
+suspect_number=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin)['number'])" 2>/dev/null)
+assert_test "Member #8 SHOULD create a suspect without number" "200" "$http_code"
 if [ ! -z "$suspect_id" ]; then
-    echo -e "  ${GREEN}Created suspect ID: $suspect_id${NC}"
+    echo -e "  ${GREEN}Created suspect ID: $suspect_id, auto-assigned number: $suspect_number${NC}"
 fi
+assert_test "Auto-assigned suspect number should be positive" "0" "$([ "$suspect_number" -gt 0 ] 2>/dev/null && echo 0 || echo 1)"
+assert_test "Prospect and suspect should have different numbers" "0" "$([ "$prospect_number" != "$suspect_number" ] 2>/dev/null && echo 0 || echo 1)"
 
 # Test: Read single prospect
 if [ ! -z "$prospect_id" ]; then
@@ -948,7 +951,7 @@ if [ ! -z "$prospect_id" ]; then
     update_data="{
       \"id\": $prospect_id,
       \"status\": \"P\",
-      \"number\": 9901,
+      \"number\": $prospect_number,
       \"name\": \"Updated Prospect Name\",
       \"email\": \"prospect@example.com\"
     }"
