@@ -6,8 +6,8 @@ import (
 
 //swagger:response SideKick
 type SideKick struct {
-	Id     int64  `gorm:"primaryKey";json:"id"`
-	Number string `gorm:"primaryKey";json:"number"`
+	Id     int64  `gorm:"primaryKey" json:"id"`
+	Number string `gorm:"primaryKey" json:"number"`
 }
 
 func (SideKick) TableName() string {
