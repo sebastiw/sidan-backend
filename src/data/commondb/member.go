@@ -8,7 +8,25 @@ import (
 	"github.com/sebastiw/sidan-backend/src/models"
 )
 
+func (d *CommonDatabase) applyMemberDefaults(member *models.Member) error {
+	if member.Number == 0 {
+		var maxNumber int64
+		if err := d.DB.Model(&models.Member{}).Select("COALESCE(MAX(number), 2)").Scan(&maxNumber).Error; err != nil {
+			return err
+		}
+		member.Number = maxNumber + 1
+	}
+	if member.Isvalid == nil {
+		t := true
+		member.Isvalid = &t
+	}
+	return nil
+}
+
 func (d *CommonDatabase) CreateMember(member *models.Member) (*models.Member, error) {
+	if err := d.applyMemberDefaults(member); err != nil {
+		return nil, err
+	}
 	result := d.DB.Create(&member)
 	if result.Error != nil {
 		return nil, result.Error
