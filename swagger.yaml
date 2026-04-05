@@ -637,10 +637,8 @@ paths:
       summary: List articles (blaskan news)
       tags:
         - articles
-      security:
-        - BearerAuth: []
-        - {}
-      description: Returns articles - requires read:article scope for full access
+      security: []
+      description: Returns articles - public endpoint
       parameters:
         - name: skip
           in: query
@@ -694,10 +692,8 @@ paths:
       summary: Get article by ID
       tags:
         - articles
-      security:
-        - BearerAuth: []
-        - {}
-      description: Returns article - requires read:article scope
+      security: []
+      description: Returns article - public endpoint
       parameters:
         - name: id
           in: path

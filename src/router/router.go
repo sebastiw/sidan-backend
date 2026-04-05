@@ -314,13 +314,7 @@ func Mux(db data.Database) http.Handler {
 			),
 		),
 	).Methods("POST", "OPTIONS")
-	r.Handle("/db/articles/{id:[0-9]+}",
-		authMiddleware.RequireAuth(
-			authMiddleware.RequireScope(a.ReadArticleScope)(
-				http.HandlerFunc(dbArth.readArticleHandler),
-			),
-		),
-	).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/articles/{id:[0-9]+}", dbArth.readArticleHandler).Methods("GET", "OPTIONS")
 	r.Handle("/db/articles/{id:[0-9]+}",
 		authMiddleware.RequireAuth(
 			authMiddleware.RequireScope(a.WriteArticleScope)(
@@ -335,13 +329,7 @@ func Mux(db data.Database) http.Handler {
 			),
 		),
 	).Methods("DELETE", "OPTIONS")
-	r.Handle("/db/articles",
-		authMiddleware.RequireAuth(
-			authMiddleware.RequireScope(a.ReadArticleScope)(
-				http.HandlerFunc(dbArth.readAllArticleHandler),
-			),
-		),
-	).Methods("GET", "OPTIONS")
+	r.HandleFunc("/db/articles", dbArth.readAllArticleHandler).Methods("GET", "OPTIONS")
 
 	// F-Droid repository endpoints
 	// Upload must be registered before the file-server prefix to take precedence
