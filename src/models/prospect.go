@@ -20,6 +20,13 @@ func (Prospect) TableName() string {
   return "cl2007_prospects"
 }
 
+type ProspectLite struct {
+	Id      int64  `json:"id"`
+	Status  string `json:"status"`
+	Number  int64  `json:"number"`
+	History string `json:"history"`
+}
+
 func (p Prospect) Fmt() string {
 	s := make([]string, 0)
 	s = addI(s, "Id", p.Id)
