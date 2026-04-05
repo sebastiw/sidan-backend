@@ -66,6 +66,19 @@ if curl -s http://localhost:8080/db/entries?take=1 > /dev/null 2>&1; then
     echo -e "${YELLOW}Backend is already running. Using existing instance.${NC}"
     echo -e "${YELLOW}Note: Server will NOT be stopped after tests.${NC}\n"
 else
+    echo -e "${YELLOW}Waiting for MySQL to be ready...${NC}"
+    for i in {1..30}; do
+        if docker exec sidan_sql mysql -udbuser -pdbpassword dbschema -e "SELECT 1" > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ MySQL ready${NC}"
+            break
+        fi
+        if [ $i -eq 30 ]; then
+            echo -e "${RED}ERROR: MySQL not ready after 30 seconds${NC}"
+            exit 1
+        fi
+        sleep 1
+    done
+
     echo -e "${YELLOW}Starting backend server...${NC}"
     JWT_SECRET="$JWT_SECRET" go run src/sidan-backend.go > /tmp/sidan-backend.log 2>&1 &
     SERVER_PID=$!
