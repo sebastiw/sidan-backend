@@ -57,7 +57,7 @@ func (d *CommonDatabase) ReadProspects(status string) ([]models.Prospect, error)
 }
 
 func (d *CommonDatabase) UpdateProspect(prospect *models.Prospect) (*models.Prospect, error) {
-	result := d.DB.Save(&prospect)
+	result := d.DB.Model(prospect).Updates(prospect)
 	if result.Error != nil {
 		return nil, result.Error
 	}
