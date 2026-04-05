@@ -31,7 +31,7 @@ func (d *CommonDatabase) ReadArticles(take int, skip int) ([]models.Article, err
 }
 
 func (d *CommonDatabase) UpdateArticle(article *models.Article) (*models.Article, error) {
-	result := d.DB.Save(article)
+	result := d.DB.Model(article).Updates(article)
 	if result.Error != nil {
 		return nil, result.Error
 	}

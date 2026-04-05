@@ -81,8 +81,7 @@ func (d *CommonDatabase) ReadMembers(onlyValid bool) ([]models.Member, error) {
 }
 
 func (d *CommonDatabase) UpdateMember(member *models.Member) (*models.Member, error) {
-	result := d.DB.Save(&member)
-
+	result := d.DB.Model(member).Updates(member)
 	if result.Error != nil {
 		return nil, result.Error
 	}

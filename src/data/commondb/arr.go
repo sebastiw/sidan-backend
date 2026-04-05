@@ -31,7 +31,7 @@ func (d *CommonDatabase) ReadArrs(take int, skip int) ([]models.Arr, error) {
 }
 
 func (d *CommonDatabase) UpdateArr(arr *models.Arr) (*models.Arr, error) {
-	result := d.DB.Save(arr)
+	result := d.DB.Model(arr).Updates(arr)
 	if result.Error != nil {
 		return nil, result.Error
 	}

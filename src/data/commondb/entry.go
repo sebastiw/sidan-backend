@@ -159,7 +159,7 @@ func (d *CommonDatabase) ReadEntries(take int, skip int, rsqlFilter string) ([]m
 }
 
 func (d *CommonDatabase) UpdateEntry(entry *models.Entry) (*models.Entry, error) {
-	result := d.DB.Save(&entry)
+	result := d.DB.Model(entry).Updates(entry)
 
 	if result.Error != nil {
 		return nil, result.Error
