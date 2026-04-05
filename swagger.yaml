@@ -378,7 +378,8 @@ paths:
         - prospects
       security:
         - BearerAuth: []
-      description: Returns all prospects/suspects. Filter by type with status=P (prospect) or status=S (suspect). Requires read:member scope.
+        - {}
+      description: Returns ProspectLite (id, status, number, history) when unauthenticated, full data with read:member scope. Filter by type with status=P (prospect) or status=S (suspect).
       parameters:
         - name: status
           in: query
@@ -426,7 +427,8 @@ paths:
         - prospects
       security:
         - BearerAuth: []
-      description: Requires read:member scope
+        - {}
+      description: Returns ProspectLite (id, status, number, history) when unauthenticated, full data with read:member scope.
       parameters:
         - name: id
           in: path
@@ -1286,6 +1288,21 @@ components:
         password_resetstring:
           type: string
           nullable: true
+    ProspectLite:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [P, S]
+          description: "P = prospect, S = suspect"
+        number:
+          type: integer
+          format: int64
+        history:
+          type: string
     Prospect:
       type: object
       required:

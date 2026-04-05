@@ -104,3 +104,48 @@ func (ph ProspectHandler) readAllProspectHandler(w http.ResponseWriter, r *http.
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(prospects)
 }
+
+func (ph ProspectHandler) readProspectUnauthedHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
+
+	prospect, err := ph.db.ReadProspect(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(models.ProspectLite{
+		Id:      prospect.Id,
+		Status:  prospect.Status,
+		Number:  prospect.Number,
+		History: prospect.History,
+	})
+}
+
+func (ph ProspectHandler) readAllProspectUnauthedHandler(w http.ResponseWriter, r *http.Request) {
+	status := r.URL.Query().Get("status")
+	prospects, err := ph.db.ReadProspects(status)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("unable to render the error page: %v", err.Error()), http.StatusInternalServerError)
+	}
+
+	lite := make([]models.ProspectLite, len(prospects))
+	for i, p := range prospects {
+		lite[i] = models.ProspectLite{
+			Id:      p.Id,
+			Status:  p.Status,
+			Number:  p.Number,
+			History: p.History,
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(lite)
+}

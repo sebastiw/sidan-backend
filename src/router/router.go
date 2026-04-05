@@ -167,16 +167,11 @@ func Mux(db data.Database) http.Handler {
 				scopes := a.GetScopes(r)
 				if scopes != nil {
 					// Check for read:member scope
-					hasScope := false
 					for _, s := range scopes {
 						if s == a.ReadMemberScope {
-							hasScope = true
-							break
+							dbMh.readMemberHandler(w, r)
+							return
 						}
-					}
-					if hasScope {
-						dbMh.readMemberHandler(w, r)
-						return
 					}
 				}
 				// Not authenticated or no scope - return limited data
@@ -205,16 +200,11 @@ func Mux(db data.Database) http.Handler {
 				scopes := a.GetScopes(r)
 				if scopes != nil {
 					// Check for read:member scope
-					hasScope := false
 					for _, s := range scopes {
 						if s == a.ReadMemberScope {
-							hasScope = true
-							break
+							dbMh.readAllMemberHandler(w, r)
+							return
 						}
-					}
-					if hasScope {
-						dbMh.readAllMemberHandler(w, r)
-						return
 					}
 				}
 				// Not authenticated or no scope - return limited data
@@ -233,10 +223,21 @@ func Mux(db data.Database) http.Handler {
 		),
 	).Methods("POST", "OPTIONS")
 	r.Handle("/db/prospects/{id:[0-9]+}",
-		authMiddleware.RequireAuth(
-			authMiddleware.RequireScope(a.ReadMemberScope)(
-				http.HandlerFunc(dbPh.readProspectHandler),
-			),
+		authMiddleware.OptionalAuth(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// Check if authenticated
+				scopes := a.GetScopes(r)
+				if scopes != nil {
+					// Check for read:member scope
+					for _, s := range scopes {
+						if s == a.ReadMemberScope {
+							dbPh.readProspectHandler(w, r)
+							return
+						}
+					}
+				}
+				dbPh.readProspectUnauthedHandler(w, r)
+			}),
 		),
 	).Methods("GET", "OPTIONS")
 	r.Handle("/db/prospects/{id:[0-9]+}",
@@ -254,10 +255,21 @@ func Mux(db data.Database) http.Handler {
 		),
 	).Methods("DELETE", "OPTIONS")
 	r.Handle("/db/prospects",
-		authMiddleware.RequireAuth(
-			authMiddleware.RequireScope(a.ReadMemberScope)(
-				http.HandlerFunc(dbPh.readAllProspectHandler),
-			),
+		authMiddleware.OptionalAuth(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// Check if authenticated
+				scopes := a.GetScopes(r)
+				if scopes != nil {
+					// Check for read:member scope
+					for _, s := range scopes {
+						if s == a.ReadMemberScope {
+							dbPh.readAllProspectHandler(w, r)
+							return
+						}
+					}
+				}
+				dbPh.readAllProspectUnauthedHandler(w, r)
+			}),
 		),
 	).Methods("GET", "OPTIONS")
 

@@ -872,10 +872,15 @@ echo ""
 echo -e "${CYAN}=== Prospect/Suspect CRUD Tests ===${NC}\n"
 # ============================================================================
 
-# Test: Unauthenticated cannot list prospects
+# Test: Unauthenticated gets lite list (200, no name/email/phone)
 response=$(api_request "GET" "/db/prospects" "")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-assert_test "Unauthenticated user should NOT list prospects" "401" "$http_code"
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+assert_test "Unauthenticated user SHOULD list prospects (lite)" "200" "$http_code"
+has_name=$(echo "$body" | python3 -c "import sys, json; data=json.load(sys.stdin); print('yes' if any('name' in x for x in data) else 'no')" 2>/dev/null)
+assert_field "Unauthenticated prospect list should NOT contain name" "name present" "no" "$has_name"
+has_history=$(echo "$body" | python3 -c "import sys, json; data=json.load(sys.stdin); print('yes' if len(data)==0 or 'history' in data[0] else 'no')" 2>/dev/null)
+assert_field "Unauthenticated prospect list should contain history" "history present" "yes" "$has_history"
 
 # Test: Token without read:member scope cannot list prospects
 response=$(api_request "GET" "/db/prospects" "$TOKEN_MEMBER_8")
@@ -963,11 +968,18 @@ if [ ! -z "$prospect_id" ]; then
     assert_field "Prospect name should be updated" "name" "Updated Prospect Name" "$updated_name"
 fi
 
-# Test: Unauthenticated cannot read prospect
+# Test: Unauthenticated gets lite single prospect (200, no name/email/phone)
 if [ ! -z "$prospect_id" ]; then
     response=$(api_request "GET" "/db/prospects/$prospect_id" "")
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-    assert_test "Unauthenticated user should NOT read prospect by ID" "401" "$http_code"
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    assert_test "Unauthenticated user SHOULD read prospect by ID (lite)" "200" "$http_code"
+    has_name=$(echo "$body" | python3 -c "import sys, json; print('yes' if 'name' in json.load(sys.stdin) else 'no')" 2>/dev/null)
+    assert_field "Unauthenticated prospect should NOT contain name" "name present" "no" "$has_name"
+    has_history=$(echo "$body" | python3 -c "import sys, json; print('yes' if 'history' in json.load(sys.stdin) else 'no')" 2>/dev/null)
+    assert_field "Unauthenticated prospect should contain history" "history present" "yes" "$has_history"
+    lite_status=$(echo "$body" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', ''))" 2>/dev/null)
+    assert_field "Unauthenticated prospect should contain status" "status" "P" "$lite_status"
 fi
 
 # Test: Delete prospect
