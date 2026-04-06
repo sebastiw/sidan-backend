@@ -599,12 +599,7 @@ func (h *AuthHandler) Token(w http.ResponseWriter, r *http.Request) {
 func getScopesForMemberType(member *models.Member) []string {
 	// All valid members get basic scopes
 	if member.Isvalid != nil && *member.Isvalid {
-		scopes := []string{"write:email", "write:image", "write:member", "read:member", "modify:entry", "write:arr", "read:article", "write:article", "filtering"}
-		// Only specific members may upload APKs to the F-Droid repository
-		if member.Number == 8 || member.Number == 38 || member.Number == 68 {
-			scopes = append(scopes, "write:apk")
-		}
-		return scopes
+		return []string{"write:email", "write:image", "write:member", "read:member", "modify:entry", "write:arr", "read:article", "write:article", "filtering", "write:apk"}
 	}
 	// Inactive members get limited access
 	return []string{"read:member", "read:article"}
