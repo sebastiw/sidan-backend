@@ -62,6 +62,12 @@ type Database interface {
 	GetAuthState(id string) (*models.AuthState, error)
 	DeleteAuthState(id string) error
 	CleanupExpiredAuthStates() error
+
+	// Session operations (web flow refresh tokens)
+	CreateSession(session *models.Session) error
+	GetSession(token string) (*models.Session, error)
+	DeleteSession(token string) error
+	CleanupExpiredSessions() error
 }
 
 func NewDatabase() (Database, error) {

@@ -13,12 +13,12 @@ JWT Bearer token authentication with OAuth2 providers. Designed for mobile apps 
 
 **Google Cloud Console** (https://console.cloud.google.com/):
 1. Create OAuth 2.0 Client ID (Web application)
-2. Add redirect URI: `http://localhost:8080/auth/callback` (or your domain)
+2. Add redirect URI: `http://localhost:8080/auth/web/callback` (or your domain)
 3. Copy Client ID and Client Secret
 
 **GitHub** (https://github.com/settings/developers):
 1. Create OAuth App
-2. Authorization callback URL: `http://localhost:8080/auth/callback`
+2. Authorization callback URL: `http://localhost:8080/auth/web/callback`
 3. Copy Client ID and Client Secret
 
 ### 2. Configure Application
@@ -29,12 +29,12 @@ oauth2:
   google:
     clientId: "YOUR_GOOGLE_CLIENT_ID"
     clientSecret: "YOUR_GOOGLE_CLIENT_SECRET"
-    redirectURL: "http://localhost:8080/auth/callback"
+    redirectURL: "http://localhost:8080/auth/web/callback"
     scopes: ["openid", "email", "profile"]
   github:
     clientId: "YOUR_GITHUB_CLIENT_ID"
     clientSecret: "YOUR_GITHUB_CLIENT_SECRET"
-    redirectURL: "http://localhost:8080/auth/callback"
+    redirectURL: "http://localhost:8080/auth/web/callback"
     scopes: ["user:email"]
 ```
 
@@ -58,11 +58,11 @@ go run src/sidan-backend.go
 ## Authentication Flow
 
 ```
-User → /auth/login?provider=google
+User → /auth/web/login?provider=google
   ↓
 Google OAuth2 consent screen
   ↓
-/auth/callback (validates, generates JWT)
+/auth/web/callback (validates, generates JWT)
   ↓
 Returns JWT token in response body
   ↓
@@ -75,16 +75,17 @@ User authenticated ✓
 
 ### Login
 ```
-GET /auth/login?provider=google&redirect_uri=/dashboard
+GET /auth/web/login?provider=google&redirect_uri=/dashboard
 ```
 
 ### Callback (Returns JWT)
 ```
-GET /auth/callback?state=...&code=...
+GET /auth/web/callback?state=...&code=...
 
 Response:
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "...",
   "token_type": "Bearer",
   "expires_in": 28800,
   "member": {
@@ -117,7 +118,7 @@ Response:
 
 ### Logout
 ```
-POST /auth/logout
+POST /auth/web/logout
 Authorization: Bearer <token>
 
 Response: {"success": true}
@@ -125,12 +126,15 @@ Response: {"success": true}
 
 ### Refresh Token
 ```
-POST /auth/refresh
-Authorization: Bearer <token>
+POST /auth/web/refresh
+Content-Type: application/json
+
+{"refresh_token": "..."}
 
 Response:
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "...",
   "token_type": "Bearer",
   "expires_in": 28800
 }
@@ -168,8 +172,7 @@ Scopes automatically assigned based on member's `isvalid` status.
 ## Database Tables
 
 - `auth_states` - OAuth2 state (CSRF protection, 10min TTL)
-- `auth_tokens` - Encrypted OAuth2 access/refresh tokens
-- `auth_provider_links` - Links OAuth2 accounts to members
+- `oauth2_sessions` - Long-lived refresh tokens (30d TTL)
 
 ## Member Registration
 
@@ -188,10 +191,10 @@ VALUES (9999, 'John Doe', 'john@example.com', true);
 
 - ✅ **PKCE** - Protects against authorization code interception
 - ✅ **State validation** - CSRF protection
-- ✅ **Token encryption** - OAuth2 tokens encrypted with AES-256-GCM at rest
 - ✅ **JWT signatures** - HS256 with 512-bit secret
 - ✅ **Token expiry** - 8-hour JWT lifetime
-- ✅ **Automatic cleanup** - Expired OAuth2 states deleted every 15min
+- ✅ **Refresh token rotation** - Single-use refresh tokens (30d)
+- ✅ **Automatic cleanup** - Expired states and sessions deleted every 15min
 
 ## Client Implementation
 
@@ -199,12 +202,13 @@ VALUES (9999, 'John Doe', 'john@example.com', true);
 
 ```javascript
 // 1. Login - Redirect to OAuth2
-window.location.href = '/auth/login?provider=google'
+window.location.href = '/auth/web/login?provider=google'
 
 // 2. Handle callback - Extract JWT from response
-const response = await fetch('/auth/callback?...')
+const response = await fetch('/auth/web/callback?...')
 const data = await response.json()
 localStorage.setItem('access_token', data.access_token)
+localStorage.setItem('refresh_token', data.refresh_token)
 
 // 3. API requests - Send Bearer token
 const token = localStorage.getItem('access_token')
@@ -212,12 +216,23 @@ const res = await fetch('/db/entries', {
   headers: { 'Authorization': `Bearer ${token}` }
 })
 
-// 4. Logout
-await fetch('/auth/logout', {
+// 4. Refresh token when JWT expires
+const refresh = await fetch('/auth/web/refresh', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ refresh_token: localStorage.getItem('refresh_token') })
+})
+const refreshData = await refresh.json()
+localStorage.setItem('access_token', refreshData.access_token)
+localStorage.setItem('refresh_token', refreshData.refresh_token)
+
+// 5. Logout
+await fetch('/auth/web/logout', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${token}` }
 })
 localStorage.removeItem('access_token')
+localStorage.removeItem('refresh_token')
 ```
 
 ### Mobile (Swift/Kotlin)
@@ -251,14 +266,13 @@ request.addHeader("Authorization", "Bearer $token")
 **JWT System**: Token generation and validation  
 **OAuth2 Flow**: Provider abstraction (Google, GitHub)  
 **Middleware**: RequireAuth, RequireScope, OptionalAuth  
-**Blacklist**: Token revocation support
+**Session Store**: Refresh token storage in `oauth2_sessions` table
 
 ### Files
 
 ```
 src/auth/
   ├── jwt.go              # JWT sign/verify
-  ├── crypto.go           # OAuth2 token encryption (AES-256-GCM)
   ├── pkce.go             # PKCE verifier/challenge generation
   ├── provider.go         # OAuth2 provider abstraction
   └── middleware.go       # Auth middleware & cleanup
@@ -267,10 +281,10 @@ src/router/
   └── auth.go             # HTTP handlers (login, callback, session, logout, refresh)
 
 src/models/
-  └── auth.go             # Database models (AuthState, AuthToken, JWTBlacklist)
+  └── session.go          # Session model (oauth2_sessions table)
 
 src/data/commondb/
-  └── auth.go             # Database operations
+  └── session.go          # Session CRUD operations
 ```
 
 ## Troubleshooting
@@ -287,12 +301,12 @@ src/data/commondb/
 
 **"token expired"**:
 - JWT lifetime exceeded (8 hours)
-- Use `/auth/refresh` or re-login
+- Use `POST /auth/web/refresh` with a valid refresh token, or re-login
 - Note: Logout does not revoke JWTs (they remain valid until expiry)
 
 **"redirect_uri_mismatch"**:
 - Ensure redirect URI in Google/GitHub console matches config exactly
-- Must be: `http://localhost:8080/auth/callback` (or your domain)
+- Must be: `http://localhost:8080/auth/web/callback` (or your domain)
 
 **"email not registered"**:
 - Member email must exist in `cl2007_members` table
@@ -305,19 +319,10 @@ src/data/commondb/
 ## Production Deployment
 
 1. Set `JWT_SECRET` environment variable (required)
-2. Update OAuth2 redirect URIs to production domain
+2. Update OAuth2 redirect URIs to production domain (`/auth/web/callback`)
 3. Use HTTPS (required for secure tokens)
 4. Update `config/production.yaml` with production settings
 5. Notify users: re-login required after deployment (breaking change)
-
-## Migration from Cookie-Based Auth
-
-**Key Changes**:
-- Cookies → JWT Bearer tokens
-- Server sessions → Client-side tokens
-- `Cookie: session_id` → `Authorization: Bearer <token>`
-- ~80% faster auth validation (no DB lookup)
-- JWTs valid until expiry (logout is client-side only)
 
 ## Code Philosophy
 
@@ -326,7 +331,6 @@ This implementation follows a **lean and pragmatic** approach:
 - JWT validation in middleware (no database lookup)
 - Direct function calls over service layers
 - Standard library JWT patterns
-- ~1,700 lines total for auth system
 - Zero enterprise bloat
 
 See `AGENT.md` for code philosophy details.
