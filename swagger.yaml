@@ -847,7 +847,7 @@ paths:
           description: File contents
         404:
           description: File not found
-  /auth/login:
+  /auth/web/login:
     get:
       summary: Initiate OAuth2 web login
       tags:
@@ -870,7 +870,7 @@ paths:
           description: Redirect to provider login page
         400:
           description: Missing or unknown provider
-  /auth/callback:
+  /auth/web/callback:
     get:
       summary: OAuth2 callback — exchanges code for sidan JWT and refresh token
       tags:
@@ -900,47 +900,7 @@ paths:
           description: Missing or invalid state/code
         403:
           description: Email not verified or not registered
-  /auth/session:
-    get:
-      summary: Get current session info
-      tags:
-        - auth
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: Current member and session details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  member:
-                    type: object
-                    properties:
-                      number:
-                        type: integer
-                      name:
-                        type: string
-                        nullable: true
-                      email:
-                        type: string
-                        nullable: true
-                  scopes:
-                    type: array
-                    items:
-                      type: string
-                  provider:
-                    type: string
-                  expires_at:
-                    type: string
-                    format: date-time
-                  issued_at:
-                    type: string
-                    format: date-time
-        401:
-          description: Unauthorized
-  /auth/refresh:
+  /auth/web/refresh:
     post:
       summary: Exchange a sidan refresh token for a new JWT (with token rotation)
       tags:
@@ -966,7 +926,7 @@ paths:
                 $ref: '#/components/schemas/TokenResponse'
         401:
           description: Invalid or expired refresh token
-  /auth/logout:
+  /auth/web/logout:
     post:
       summary: Logout (JWT remains valid until expiry — discard client-side)
       tags:
@@ -1092,7 +1052,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: "JWT Bearer token (8h expiry). Web flow: GET /auth/login → GET /auth/callback → returns access_token + refresh_token. Renew with POST /auth/refresh (refresh token rotation, 30d). Device flow: POST /auth/device/start → POST /auth/device/poll → returns access_token + provider refresh_token. Renew with POST /auth/device/refresh."
+      description: "JWT Bearer token (8h expiry). Web flow: GET /auth/web/login → GET /auth/web/callback → returns access_token + refresh_token. Renew with POST /auth/web/refresh (refresh token rotation, 30d). Device flow: POST /auth/device/start → POST /auth/device/poll → returns access_token + provider refresh_token. Renew with POST /auth/device/refresh."
   schemas:
     TokenResponse:
       type: object

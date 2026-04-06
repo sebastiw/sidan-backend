@@ -24,7 +24,7 @@ type AuthHandler struct {
 }
 
 // Login initiates OAuth2 flow
-// GET /auth/login?provider=google&redirect_uri=https://...
+// GET /auth/web/login?provider=google&redirect_uri=https://...
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	provider := r.URL.Query().Get("provider")
 	redirectURI := r.URL.Query().Get("redirect_uri")
@@ -88,7 +88,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Callback handles OAuth2 callback
-// GET /auth/callback?state=...&code=...
+// GET /auth/web/callback?state=...&code=...
 func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	stateParam := r.URL.Query().Get("state")
 	code := r.URL.Query().Get("code")
@@ -269,7 +269,7 @@ func (h *AuthHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 }
 
 // Logout ends authentication (JWT remains valid until expiry)
-// POST /auth/logout
+// POST /auth/web/logout
 // Authorization: Bearer <token>
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Get claims from context
@@ -533,7 +533,7 @@ func (h *AuthHandler) DeviceRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 // Token exchanges a sidan refresh token for a new JWT and rotated refresh token
-// POST /auth/refresh
+// POST /auth/web/refresh
 // Body: {"refresh_token": "..."}
 func (h *AuthHandler) Token(w http.ResponseWriter, r *http.Request) {
 	var req struct {

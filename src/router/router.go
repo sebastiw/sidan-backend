@@ -92,9 +92,15 @@ func Mux(db data.Database) http.Handler {
 	r.HandleFunc("/auth/device/poll", authHandler.DevicePoll).Methods("POST", "OPTIONS")
 	r.HandleFunc("/auth/device/refresh", authHandler.DeviceRefresh).Methods("POST", "OPTIONS")
 
+	// Web auth aliases (preferred paths, /auth/{login,callback,refresh,logout} are deprecated)
+	r.HandleFunc("/auth/web/login", authHandler.Login).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/web/callback", authHandler.Callback).Methods("GET", "OPTIONS")
+	r.HandleFunc("/auth/web/refresh", authHandler.Token).Methods("POST", "OPTIONS")
+
 	// Auth handlers (authenticated endpoints)
 	r.Handle("/auth/session", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.GetSession))).Methods("GET", "OPTIONS")
 	r.Handle("/auth/logout", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Logout))).Methods("POST", "OPTIONS")
+	r.Handle("/auth/web/logout", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Logout))).Methods("POST", "OPTIONS")
 
 	// Start cleanup job (runs every 15 minutes)
 	a.StartCleanupJob(db, 15*time.Minute)
