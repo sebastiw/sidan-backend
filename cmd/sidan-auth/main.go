@@ -237,7 +237,7 @@ func startDeviceFlow(provider string) (*startFlowResponse, error) {
 		var errResp struct{ Error string `json:"error"` }
 		json.Unmarshal(respBody, &errResp)
 		if errResp.Error != "" {
-			return nil, fmt.Errorf(errResp.Error)
+			return nil, fmt.Errorf("%s", errResp.Error)
 		}
 		return nil, fmt.Errorf("API returned %d", resp.StatusCode)
 	}
@@ -269,7 +269,7 @@ func pollDeviceFlow(sessionID string) (*pollFlowResponse, bool, error) {
 		var errResp struct{ Error string `json:"error"` }
 		json.Unmarshal(respBody, &errResp)
 		if errResp.Error != "" {
-			return nil, false, fmt.Errorf(errResp.Error)
+			return nil, false, fmt.Errorf("%s", errResp.Error)
 		}
 		return nil, false, fmt.Errorf("API returned %d", resp.StatusCode)
 	}
@@ -300,7 +300,7 @@ func refreshJWT(provider, refreshToken string) (*refreshJWTResponse, error) {
 		var errResp struct{ Error string `json:"error"` }
 		json.Unmarshal(respBody, &errResp)
 		if errResp.Error != "" {
-			return nil, fmt.Errorf(errResp.Error)
+			return nil, fmt.Errorf("%s", errResp.Error)
 		}
 		return nil, fmt.Errorf("API returned %d", resp.StatusCode)
 	}

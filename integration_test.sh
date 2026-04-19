@@ -514,20 +514,23 @@ if [ ! -z "$restricted_entry_id" ] && [ "$restricted_entry_id" != "null" ]; then
     fi
 fi
 
-# Test: Secret to everyone (user_id=0) should be visible to all
+# Test: Secret to everyone (user_id=0) should be hidden from unauthenticated, visible to members
 if [ ! -z "$secret_entry_id" ]; then
     response=$(api_request "GET" "/db/entries/$secret_entry_id" "")
     msg=$(echo "$response" | jq -r '.msg')
-    
+    assert_field "Secret to everyone (user_id=0) should be hidden from unauthenticated" "msg" "hemlis" "$msg"
+
+    response=$(api_request "GET" "/db/entries/$secret_entry_id" "$TOKEN_MEMBER_8")
+    msg=$(echo "$response" | jq -r '.msg')
     if [ "$msg" != "hemlis" ] && [ ! -z "$msg" ]; then
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         PASSED_TESTS=$((PASSED_TESTS + 1))
-        echo -e "${GREEN}✓ PASS${NC}: Secret to everyone (user_id=0) visible to unauthenticated"
+        echo -e "${GREEN}✓ PASS${NC}: Secret to everyone (user_id=0) visible to authenticated member"
     else
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         FAILED_TESTS=$((FAILED_TESTS + 1))
-        FAILED_TEST_NAMES+=("Secret to everyone visible to all")
-        echo -e "${RED}✗ FAIL${NC}: Secret to everyone should be visible, got: $msg"
+        FAILED_TEST_NAMES+=("Secret to everyone visible to authenticated member")
+        echo -e "${RED}✗ FAIL${NC}: Secret to everyone should be visible to members, got: $msg"
     fi
 fi
 
@@ -604,11 +607,9 @@ echo -e "${CYAN}=== RSQL Filtering Tests ===${NC}\n"
 # Create test entries with specific data for RSQL filtering
 echo -e "  ${YELLOW}Creating test entries for RSQL filtering...${NC}"
 
-# Entry 1: 5 likes, sig="Alice"
+# Entry 1: 5 likes, sig="#8" (from token)
 rsql_entry_1=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_8" '{
     "msg": "Test message about beer from Alice",
-    "sig": "Alice",
-    "email": "alice@example.com",
     "place": "Stockholm"
 }')
 rsql_entry_1_id=$(echo "$rsql_entry_1" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
@@ -624,11 +625,9 @@ if [ ! -z "$rsql_entry_1_id" ]; then
         (CURDATE(), CURTIME(), $rsql_entry_1_id, 'user5', 'host5')" 2>/dev/null
 fi
 
-# Entry 2: 3 likes, sig="Bob"
+# Entry 2: 3 likes, sig="#7" (from token)
 rsql_entry_2=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_7" '{
     "msg": "Another test message from Bob about coding",
-    "sig": "Bob",
-    "email": "bob@example.com",
     "place": "Gothenburg"
 }')
 rsql_entry_2_id=$(echo "$rsql_entry_2" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
@@ -642,11 +641,9 @@ if [ ! -z "$rsql_entry_2_id" ]; then
         (CURDATE(), CURTIME(), $rsql_entry_2_id, 'user3', 'host3')" 2>/dev/null
 fi
 
-# Entry 3: 1 like, sig="Charlie"
+# Entry 3: 1 like, sig="#2" (from token)
 rsql_entry_3=$(api_request "POST" "/db/entries" "$TOKEN_MEMBER_2" '{
     "msg": "Message from Charlie discussing beer and wine",
-    "sig": "Charlie",
-    "email": "charlie@example.com",
     "place": "Malmö"
 }')
 rsql_entry_3_id=$(echo "$rsql_entry_3" | sed '/HTTP_CODE:/d' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
@@ -704,24 +701,24 @@ if [ "$http_code" = "200" ]; then
     fi
 fi
 
-# Test 3: Filter by signature (sig=="Alice")
-echo -e "${YELLOW}Testing RSQL: sig==\"Alice\"${NC}"
-response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22Alice%22&take=100" "$TOKEN_MEMBER_8")
+# Test 3: Filter by signature (sig=="#8", from token of member 8)
+echo -e "${YELLOW}Testing RSQL: sig==\"#8\"${NC}"
+response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22%238%22&take=100" "$TOKEN_MEMBER_8")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
-assert_test "RSQL filter 'sig==\"Alice\"' SHOULD work" "200" "$http_code"
+assert_test "RSQL filter 'sig==\"#8\"' SHOULD work" "200" "$http_code"
 
 if [ "$http_code" = "200" ]; then
-    contains_alice=$(echo "$body" | grep -c "\"id\":$rsql_entry_1_id" || echo "0")
-    if [ "$contains_alice" -ge 1 ]; then
+    contains_entry1=$(echo "$body" | grep -c "\"id\":$rsql_entry_1_id" || echo "0")
+    if [ "$contains_entry1" -ge 1 ]; then
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         PASSED_TESTS=$((PASSED_TESTS + 1))
-        echo -e "${GREEN}✓ PASS${NC}: Filter sig==\"Alice\" returns Alice's entry"
+        echo -e "${GREEN}✓ PASS${NC}: Filter sig==\"#8\" returns member #8's entry"
     else
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         FAILED_TESTS=$((FAILED_TESTS + 1))
         FAILED_TEST_NAMES+=("RSQL sig filter returns correct entry")
-        echo -e "${RED}✗ FAIL${NC}: Filter should return entry with sig='Alice'"
+        echo -e "${RED}✗ FAIL${NC}: Filter should return entry with sig='#8'"
     fi
 fi
 
@@ -729,13 +726,13 @@ fi
 echo -e "${YELLOW}Testing RSQL: msg==\"beer\"${NC}"
 # Note: This is a basic test - RSQL doesn't support LIKE/contains by default
 # We test exact match or substring if supported
-response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22Alice%22&take=100" "$TOKEN_MEMBER_8")
+response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22%238%22&take=100" "$TOKEN_MEMBER_8")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 assert_test "RSQL message filter SHOULD work" "200" "$http_code"
 
-# Test 5: Complex query - AND condition (likes>3 AND sig=="Alice")
-echo -e "${YELLOW}Testing RSQL: likes=gt=3;sig==\"Alice\"${NC}"
-response=$(api_request "GET" "/db/entries?q=likes%3Dgt%3D3%3Bsig%3D%3D%22Alice%22&take=100" "$TOKEN_MEMBER_8")
+# Test 5: Complex query - AND condition (likes>3 AND sig=="#8")
+echo -e "${YELLOW}Testing RSQL: likes=gt=3;sig==\"#8\"${NC}"
+response=$(api_request "GET" "/db/entries?q=likes%3Dgt%3D3%3Bsig%3D%3D%22%238%22&take=100" "$TOKEN_MEMBER_8")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 assert_test "RSQL complex filter with AND SHOULD work" "200" "$http_code"
@@ -754,13 +751,13 @@ if [ "$http_code" = "200" ]; then
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         FAILED_TESTS=$((FAILED_TESTS + 1))
         FAILED_TEST_NAMES+=("RSQL AND filter logic")
-        echo -e "${RED}✗ FAIL${NC}: AND filter should return only Alice with >3 likes (entry1=$contains_entry1, entry2=$not_contains_entry2)"
+        echo -e "${RED}✗ FAIL${NC}: AND filter should return only #8 with >3 likes (entry1=$contains_entry1, entry2=$not_contains_entry2)"
     fi
 fi
 
-# Test 6: Complex query - OR condition (sig=="Alice",sig=="Bob")
-echo -e "${YELLOW}Testing RSQL: sig==\"Alice\",sig==\"Bob\"${NC}"
-response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22Alice%22%2Csig%3D%3D%22Bob%22&take=100" "$TOKEN_MEMBER_8")
+# Test 6: Complex query - OR condition (sig=="#8",sig=="#7")
+echo -e "${YELLOW}Testing RSQL: sig==\"#8\",sig==\"#7\"${NC}"
+response=$(api_request "GET" "/db/entries?q=sig%3D%3D%22%238%22%2Csig%3D%3D%22%237%22&take=100" "$TOKEN_MEMBER_8")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 assert_test "RSQL complex filter with OR SHOULD work" "200" "$http_code"
@@ -776,7 +773,7 @@ if [ "$http_code" = "200" ]; then
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         FAILED_TESTS=$((FAILED_TESTS + 1))
         FAILED_TEST_NAMES+=("RSQL OR filter logic")
-        echo -e "${RED}✗ FAIL${NC}: OR filter should return both Alice and Bob entries"
+        echo -e "${RED}✗ FAIL${NC}: OR filter should return both #8 and #7 entries"
     fi
 fi
 

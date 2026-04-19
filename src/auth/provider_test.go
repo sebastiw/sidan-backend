@@ -3,6 +3,8 @@ package auth
 import (
 	"strings"
 	"testing"
+
+	"golang.org/x/oauth2"
 )
 
 func TestGetProviderConfig_Google(t *testing.T) {
@@ -20,8 +22,8 @@ func TestGetProviderConfig_Google(t *testing.T) {
 		t.Errorf("Expected clientID 'client123', got '%s'", cfg.ClientID)
 	}
 	
-	if !strings.Contains(cfg.AuthURL, "google") {
-		t.Errorf("Expected Google auth URL, got '%s'", cfg.AuthURL)
+	if !strings.Contains(cfg.Endpoint.AuthURL, "google") {
+		t.Errorf("Expected Google auth URL, got '%s'", cfg.Endpoint.AuthURL)
 	}
 	
 	if cfg.UserInfoURL == "" {
@@ -40,8 +42,8 @@ func TestGetProviderConfig_GitHub(t *testing.T) {
 		t.Errorf("Expected name 'github', got '%s'", cfg.Name)
 	}
 	
-	if !strings.Contains(cfg.AuthURL, "github") {
-		t.Errorf("Expected GitHub auth URL, got '%s'", cfg.AuthURL)
+	if !strings.Contains(cfg.Endpoint.AuthURL, "github") {
+		t.Errorf("Expected GitHub auth URL, got '%s'", cfg.Endpoint.AuthURL)
 	}
 }
 
@@ -62,7 +64,7 @@ func TestGetAuthURL(t *testing.T) {
 		Name:        "google",
 		ClientID:    "test-client",
 		RedirectURL: "http://localhost/callback",
-		AuthURL:     "https://accounts.google.com/o/oauth2/v2/auth",
+		Endpoint:    oauth2.Endpoint{AuthURL: "https://accounts.google.com/o/oauth2/v2/auth"},
 		Scopes:      []string{"email", "profile"},
 	}
 	
@@ -100,7 +102,7 @@ func TestGetAuthURL_GitHub(t *testing.T) {
 		Name:        "github",
 		ClientID:    "test-client",
 		RedirectURL: "http://localhost/callback",
-		AuthURL:     "https://github.com/login/oauth/authorize",
+		Endpoint:    oauth2.Endpoint{AuthURL: "https://github.com/login/oauth/authorize"},
 		Scopes:      []string{"user:email"},
 	}
 	
