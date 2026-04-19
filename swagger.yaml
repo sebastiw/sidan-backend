@@ -1118,7 +1118,6 @@ components:
       type: object
       required:
         - msg
-        - sig
       properties:
         id:
           type: integer
@@ -1146,9 +1145,13 @@ components:
           format: int64
         sig:
           type: string
+          readOnly: true
+          description: Set from bearer token on create
         email:
           type: string
           format: email
+          readOnly: true
+          description: Set from bearer token on create
         place:
           type: string
         ip:
