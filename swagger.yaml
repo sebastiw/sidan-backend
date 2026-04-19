@@ -127,7 +127,9 @@ paths:
       summary: Create a new entry
       tags:
         - entries
-      description: Create a new guestbook entry
+      description: Create a new guestbook entry. Sig and email are taken from the bearer token.
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:

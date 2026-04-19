@@ -33,6 +33,11 @@ func (eh EntryHandler) createEntryHandler(w http.ResponseWriter, r *http.Request
 	var e models.Entry
 	_ = json.NewDecoder(r.Body).Decode(&e)
 
+	// Set sig and email from bearer token (auth required)
+	claims := auth.GetClaims(r)
+	e.Sig = fmt.Sprintf("#%d", claims.MemberNumber)
+	e.Email = claims.Email
+
 	slog.Debug(ru.GetRequestId(r), "entry", e)
 	entry, err := eh.db.CreateEntry(&e)
 	if err != nil {

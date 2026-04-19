@@ -196,7 +196,7 @@ func (p *ProviderConfig) RefreshAccessToken(refreshToken string) (accessToken, n
 		return "", "", err
 	}
 	if result.Error != "" {
-		return "", "", fmt.Errorf("refresh failed: %s", result.ErrorDesc)
+		return "", "", fmt.Errorf("refresh failed: %s (%s)", result.Error, result.ErrorDesc)
 	}
 	return result.AccessToken, result.RefreshToken, nil
 }

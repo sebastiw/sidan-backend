@@ -130,7 +130,9 @@ func Mux(db data.Database) http.Handler {
 
 	// Entry endpoints
 	dbEh := NewEntryHandler(db)
-	r.HandleFunc("/db/entries", dbEh.createEntryHandler).Methods("POST", "OPTIONS")
+	r.Handle("/db/entries",
+		authMiddleware.RequireAuth(http.HandlerFunc(dbEh.createEntryHandler)),
+	).Methods("POST", "OPTIONS")
 	r.Handle("/db/entries/{id:[0-9]+}",
 		authMiddleware.OptionalAuth(http.HandlerFunc(dbEh.readEntryHandler)),
 	).Methods("GET", "OPTIONS")

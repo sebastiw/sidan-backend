@@ -32,8 +32,11 @@ func FilterEntryMessage(entry *models.Entry, viewerMemberID *int64) {
 		}
 	}
 
-	// Secret to everyone (user_id=0) → show full message
+	// Secret to everyone (user_id=0) → visible to all authenticated members, hidden from unauthenticated
 	if isSecretToEveryone {
+		if viewerMemberID == nil {
+			redactEntry(entry)
+		}
 		return
 	}
 

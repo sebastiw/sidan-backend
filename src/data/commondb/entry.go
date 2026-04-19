@@ -45,6 +45,14 @@ func (d *CommonDatabase) CreateEntry(entry *models.Entry) (*models.Entry, error)
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
+	// If Secret is set but no explicit permissions provided, insert a user_id=0 row
+	// (user_id=0 means "visible to all authenticated members, hidden from unauthenticated")
+	if entry.Secret && len(entry.Permissions) == 0 {
+		perm := models.Permission{Id: entry.Id, UserId: 0}
+		d.DB.Create(&perm)
+	}
+
 	return entry, nil
 }
 
