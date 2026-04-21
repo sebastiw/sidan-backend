@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/atotto/clipboard"
 )
 
 const defaultAPI = "https://api.chalmerslosers.com"
@@ -47,6 +49,8 @@ func main() {
 			tokenRefresh()
 		case "show":
 			tokenShow()
+		case "raw":
+			tokenRaw()
 		default:
 			printUsage()
 			os.Exit(1)
@@ -64,6 +68,7 @@ func printUsage() {
 	fmt.Println("  token add <provider>   Authenticate and get API token (provider: google, github)")
 	fmt.Println("  token refresh          Silently refresh expired token using stored refresh token")
 	fmt.Println("  token show             Show current token")
+	fmt.Println("  token raw              Print raw token value only")
 	fmt.Println()
 	fmt.Println("Environment:")
 	fmt.Println("  SIDAN_API_URL   API URL (default: https://api.chalmerslosers.com)")
@@ -162,6 +167,15 @@ func tokenShow() {
 	fmt.Println()
 	fmt.Println("Token:")
 	fmt.Println(cfg.AccessToken)
+}
+
+func tokenRaw() {
+	cfg, err := loadConfig()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "No token found. Run 'sidan-auth token add' first.")
+		os.Exit(1)
+	}
+	fmt.Print(cfg.AccessToken)
 }
 
 func tokenRefresh() {

@@ -19,6 +19,7 @@ require (
 
 require (
 	cloud.google.com/go v0.46.3 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/avast/apkparser v0.0.0-20251022140151-7294e274bf65 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
