@@ -350,5 +350,12 @@ func Mux(db data.Database) http.Handler {
 
 	// r.HandleFunc("/db", defaultHandler)
 
+	// Explicit root-level static files (whitelist)
+	for _, name := range []string{"robots.txt", "favicon.ico"} {
+		r.HandleFunc("/"+name, func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, config.GetServer().StaticPath+"/"+name)
+		}).Methods("GET")
+	}
+
 	return corsHeaders(ru.Tracing(nextRequestId)(LogHTTP(r)))
 }
