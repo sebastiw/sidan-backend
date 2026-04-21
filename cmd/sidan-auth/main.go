@@ -92,6 +92,9 @@ func tokenAdd(provider string) {
 	// Step 2: Show code and open browser
 	fmt.Println()
 	fmt.Printf("Code: %s\n", startResp.UserCode)
+	if err := clipboard.WriteAll(startResp.UserCode); err == nil {
+		fmt.Println("(copied to clipboard)")
+	}
 	browserURL := startResp.BrowserURL
 	if browserURL == "" {
 		browserURL = startResp.VerificationURL
